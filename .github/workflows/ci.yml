@@ -1,0 +1,60 @@
+# Runs every check on every push, the same ones run locally before a commit, on a fresh machine, so a broken change shows a
+# red ✗ before a project installs it: formatting, type checks, unit tests (including the style rules over css/ and the
+# showcase), that the committed type declarations match the JSDoc, and the accessibility check of the showcase in both themes.
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+# A newer push to the same branch replaces an older run still in progress, which also saves Actions minutes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Formatting (Prettier)
+        run: npm run format:check
+
+      - name: Type checks
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Type declarations are up to date
+        run: npm run types:check
+
+      # The browser download is big; reuse it between runs while the Playwright version is unchanged
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-firefox-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # Only the browser itself, without --with-deps: the runner image already has the libraries Firefox needs, and the apt
+      # step --with-deps adds was intermittently slow in the business site's CI
+      - name: Install Firefox for the accessibility check
+        timeout-minutes: 5
+        run: npx playwright install firefox
+
+      - name: Accessibility (axe and measured contrast, both themes)
+        run: npm run a11y
