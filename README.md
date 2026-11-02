@@ -28,6 +28,24 @@ export default defineNuxtConfig({ css: ["lifting-school-ui/css/index.css"] });
 Icons are plain SVG files: `import menuIcon from "lifting-school-ui/icons/menu.svg"`. Dark mode is the `dark` class on
 `<html>`; the project's own colour-mode toggle sets it.
 
+### Checking a project's styles
+
+Every project runs the style rules checker over its own source from one of its tests, with its own short list of deliberate
+exceptions, each with its reason (Vitest shown; the folder is `app` in a Nuxt project, `src` in a Vite one):
+
+```ts
+import { describeStyleProblem, findStyleProblemsUnder, type StyleException } from "lifting-school-ui/styleRules";
+
+const EXCEPTIONS: StyleException[] = [
+  { file: "app/components/Hero.vue", rule: "fontSize", property: "*", reason: "the hero keeps its own type" },
+];
+
+it("takes every colour, size, spacing value and duration from the tokens", () => {
+  const problems = findStyleProblemsUnder("app", EXCEPTIONS);
+  expect(problems.map(describeStyleProblem)).toEqual([]);
+});
+```
+
 ### Upgrading
 
 Change the tag in `package.json` (or run the install line above with the new tag), install, and check the project's pages in
@@ -55,14 +73,15 @@ Vite's dev server only serves files inside the project unless told otherwise, so
 | `css/components.css` | The shared classes: `.btn`, `.segmented`, `.menu`, `.field`/`.input`, `.choice`, `.range`, `.table`, `.card`/`.panel`, `.badge`, `.alert`, `.disclosure`, … |
 | `fonts/`             | Ubuntu Sans (text) and Montserrat (headings), both variable, with their licences.                                                                           |
 | `icons/`             | Interface icons (Lucide), brand marks (Simple Icons) and the logo, each named as its source names it. `icons/LICENSES.md` says where each comes from.       |
+| `js/plateColors.js`  | `plateColor(weight, lbs)`: which colour a plate of that weight is (`lifting-school-ui/plateColors`).                                                        |
+| `js/styleRules.js`   | The style rules checker, for a project's tests (`lifting-school-ui/styleRules`; Node only, since it reads files).                                           |
 
 ## The rules of the look
 
 Build from what is here before writing new CSS, in this library or in a project.
 
 - **Tokens, never typed values.** Colours, font sizes, radii, spacing and durations come from the tokens. A project checks its own
-  styles for hand-typed values with the style rules checker (coming to this library), listing its few deliberate exceptions with
-  their reasons.
+  styles for hand-typed values with the style rules checker (above), listing its few deliberate exceptions with their reasons.
 - **Few, clearly different steps** (less is more). Text: `--fontSizeSm/Md/Lg/Xl` plus the heading sizes `--fontSizeH1`..`H5` for
   display text that should be heading-sized without the heading font (prices, timers). Spacing: `--space1`..`4` (0.5, 1, 2, 4rem;
   each doubles, so a choice is never a close call). Radii: `--radius` (the default), `--radiusLg` (cards), `--radiusFull` (the

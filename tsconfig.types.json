@@ -1,0 +1,14 @@
+{
+  // Writes the type declarations (js/*.d.ts) from the modules' JSDoc, for projects written in TypeScript (npm run types).
+  // They are committed, since npm installs this package as it is, with no build step.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "js"
+  },
+  "include": ["js/**/*.js"],
+  // Stated so tsc does not leave out js/ itself: with no exclude it skips its own output folder, which here is also the input
+  "exclude": ["js/**/*.d.ts"]
+}
