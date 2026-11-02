@@ -1,0 +1,574 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { plateColor, type PlateColor } from "../js/plateColors.js";
+import { useTheme, type Theme } from "./theme";
+
+/**
+ * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
+ * already exists and a change can be checked in both themes before it is released. Ported from the business site's style
+ * guide. Its own scoped styles below only lay the samples out; everything they show is the library's.
+ */
+
+const { theme, setTheme } = useTheme();
+const THEMES: Theme[] = ["light", "dark"];
+
+/** The colour tokens, grouped as tokens.css defines them. */
+const COLOUR_GROUPS: { name: string; tokens: string[] }[] = [
+  { name: "Surfaces", tokens: ["--bgBase", "--bgMid", "--bgTop"] },
+  { name: "Text", tokens: ["--textFull", "--textMuted", "--textHero"] },
+  { name: "Borders", tokens: ["--borderFull", "--borderMuted", "--borderSubtle", "--raisedBorder"] },
+  { name: "Accent", tokens: ["--accentFull", "--accentMuted", "--accentSubtle", "--onAccent"] },
+  {
+    name: "Status",
+    tokens: ["--danger", "--dangerSubtle", "--success", "--successSubtle", "--infoSubtle"],
+  },
+  { name: "Plate edges", tokens: ["--plateRed", "--plateBlue", "--plateYellow", "--plateGreen", "--plateGrey"] },
+  {
+    name: "Plate faces",
+    tokens: ["--plateFaceRed", "--plateFaceBlue", "--plateFaceYellow", "--plateFaceGreen", "--plateFaceGrey"],
+  },
+  { name: "Other", tokens: ["--scrim", "--heroGlow"] },
+];
+
+/** The body text sizes (--fontSizeXs is only for tags that must fit a narrow row on a phone). */
+const TEXT_SIZES = ["--fontSizeXs", "--fontSizeSm", "--fontSizeMd", "--fontSizeLg", "--fontSizeXl"];
+
+/** The four spacing steps; each doubles the last. */
+const SPACING_STEPS = ["--space1", "--space2", "--space3", "--space4"];
+
+/** The radius tokens. */
+const RADII = ["--radius", "--radiusLg", "--radiusFull"];
+
+/** The standard plates of each unit, heaviest first, to show plateColor's answer for each. */
+const POUND_PLATES = [55, 45, 35, 25, 10, 5, 2.5];
+const KILO_PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+
+/** The badge class for a plate's colour, such as "badgeRed". */
+function plateBadgeClass(color: PlateColor): string {
+  const capitalized = color.charAt(0).toUpperCase() + color.slice(1);
+  return `badge${capitalized}`;
+}
+
+/** The plate's weight and unit as its badge text, such as "45 lb". */
+function plateLabel(weight: number, lbs: boolean): string {
+  const unit = lbs ? "lb" : "kg";
+  return `${weight} ${unit}`;
+}
+
+/**
+ * Every icon in icons/, by file name. Vite finds them at build time; only the showcase loads them all, while a project
+ * bundles just the ones it imports.
+ */
+const iconModules = import.meta.glob<string>("../icons/*.svg", { eager: true, query: "?url", import: "default" });
+const ICONS = Object.entries(iconModules)
+  .map(([path, url]) => ({ name: path.replace("../icons/", "").replace(".svg", ""), url }))
+  .sort((first, second) => first.name.localeCompare(second.name));
+
+/** Which option the segmented control sample has selected. */
+const period = ref("30D");
+const PERIODS = ["7D", "30D", "90D", "All"];
+
+/** The field samples: one filled in, one showing an error. */
+const sampleName = ref("Test Person");
+const sampleEmail = ref("not-an-email");
+const sampleGoal = ref("");
+const sampleNote = ref("");
+const sampleChoice = ref("yes");
+const sampleTicks = ref<string[]>(["Barbell"]);
+const sampleVolume = ref(60);
+
+/** Whether the disclosure sample is open. */
+const isDisclosureOpen = ref(false);
+
+/** Whether the cue sample is showing its highlight. */
+const isCueActive = ref(false);
+
+/** Flashes the cue sample's highlight for a moment, the way the interval timer does at an alert. */
+function flashCue(): void {
+  isCueActive.value = true;
+  window.setTimeout(() => {
+    isCueActive.value = false;
+  }, 1200);
+}
+
+const chevronIcon = iconModules["../icons/chevron-down.svg"];
+const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
+</script>
+
+<template>
+  <header class="showcaseHeader">
+    <p class="showcaseName">liftingSchoolUI</p>
+    <div class="segmented" role="group" aria-label="Theme">
+      <button
+        v-for="option in THEMES"
+        :key="option"
+        type="button"
+        class="segmentedItem"
+        :aria-pressed="theme === option"
+        @click="setTheme(option)"
+      >
+        {{ option === "light" ? "Light" : "Dark" }}
+      </button>
+    </div>
+  </header>
+
+  <main class="readingColumn showcase">
+    <h1 class="pageTitle">Showcase</h1>
+
+    <nav class="card contents" aria-label="Sections">
+      <a href="#colours">Colours</a>
+      <a href="#type">Type</a>
+      <a href="#spacing">Spacing and corners</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#segmented">Segmented control</a>
+      <a href="#surfaces">Surfaces</a>
+      <a href="#fields">Fields</a>
+      <a href="#tables">Table</a>
+      <a href="#messages">Badges and alerts</a>
+      <a href="#plates">Plates</a>
+      <a href="#menus">Menu</a>
+      <a href="#disclosure">Disclosure</a>
+      <a href="#highlights">Highlights</a>
+      <a href="#icons">Icons</a>
+    </nav>
+
+    <section class="showcaseSection" aria-labelledby="colours">
+      <h2 id="colours" class="h3">Colours</h2>
+      <div v-for="group in COLOUR_GROUPS" :key="group.name" class="colourGroup">
+        <h3 class="sectionTitle">{{ group.name }}</h3>
+        <div class="swatches">
+          <div v-for="token in group.tokens" :key="token" class="swatch">
+            <div class="swatchChip" :style="{ backgroundColor: `var(${token})` }"></div>
+            <code>{{ token }}</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="type">
+      <h2 id="type" class="h3">Type</h2>
+      <p>Headings are Montserrat; their tag is the outline and their class is the look (<code>.h1</code> to <code>.h6</code>).</p>
+      <p class="h1">Heading one</p>
+      <p class="h2">Heading two</p>
+      <p class="h3">Heading three</p>
+      <p class="h4">Heading four</p>
+      <p class="h5">Heading five</p>
+      <p class="h6">Heading six</p>
+      <p>Body text is Ubuntu Sans:</p>
+      <p v-for="size in TEXT_SIZES" :key="size" :style="{ fontSize: `var(${size})` }">
+        <code>{{ size }}</code> The quick brown fox lifts the lazy dog.
+      </p>
+      <p class="textMuted"><code>.textMuted</code> for supporting text.</p>
+      <p class="textAccent"><code>.textAccent</code> for a word that needs the accent.</p>
+      <p>A <a href="#type">link in text</a>.</p>
+      <p class="textHero">.textHero</p>
+      <p class="timeDisplay">01:23.4</p>
+      <ul>
+        <li>A list item</li>
+        <li>Another list item</li>
+      </ul>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="spacing">
+      <h2 id="spacing" class="h3">Spacing and corners</h2>
+      <div v-for="step in SPACING_STEPS" :key="step" class="spacingRow">
+        <code>{{ step }}</code>
+        <div class="spacingBar" :style="{ width: `var(${step})` }"></div>
+      </div>
+      <div class="row">
+        <div v-for="radius in RADII" :key="radius" class="radiusSample" :style="{ borderRadius: `var(${radius})` }">
+          <code>{{ radius }}</code>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="buttons">
+      <h2 id="buttons" class="h3">Buttons</h2>
+      <div class="row">
+        <button type="button" class="btn btnPrimary">.btnPrimary</button>
+        <button type="button" class="btn btnSecondary">.btnSecondary</button>
+        <button type="button" class="btn btnSubtle">.btnSubtle</button>
+        <button type="button" class="btn btnDanger">.btnDanger</button>
+        <button type="button" class="btn btnPrimary" disabled>Disabled</button>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btnSecondary btnSm">.btnSm</button>
+        <button type="button" class="btn btnSecondary btnIcon" aria-label="An icon button (.btnIcon)">
+          <img :src="arrowRightIcon" class="iconSmall" alt="" />
+        </button>
+        <button type="button" class="btn btnSecondary btnEdged" style="--edgeColor: var(--plateBlue)">.btnEdged</button>
+        <a href="#buttons" class="btn btnPrimary">A link as .btnPrimary</a>
+      </div>
+      <button type="button" class="btn btnPrimary btnBlock">.btnBlock</button>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="segmented">
+      <h2 id="segmented" class="h3">Segmented control</h2>
+      <div class="segmented" role="group" aria-label="Time period">
+        <button
+          v-for="option in PERIODS"
+          :key="option"
+          type="button"
+          class="segmentedItem"
+          :aria-pressed="period === option"
+          @click="period = option"
+        >
+          {{ option }}
+        </button>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="surfaces">
+      <h2 id="surfaces" class="h3">Surfaces</h2>
+      <div class="card sampleCard">
+        <div class="cardHeader">
+          <h3 class="h3 cardTitle">.card</h3>
+          <button type="button" class="btn btnSecondary btnSm">Action</button>
+        </div>
+        <p>A card holds content. Its title row is <code>.cardHeader</code> with a <code>.cardTitle</code>.</p>
+        <h4 class="sectionTitle">.sectionTitle</h4>
+        <div class="panel samplePanel">
+          <p>A <code>.panel</code> groups things inside a card.</p>
+        </div>
+        <p class="listItemTitle">.listItemTitle</p>
+        <p class="textMuted">The detail line under it.</p>
+      </div>
+      <a href="#surfaces" class="card cardLink sampleCard">
+        <p>A <code>.card.cardLink</code> is a card that is a link: point at it.</p>
+      </a>
+      <div class="card toolCard">
+        <h3 class="h5">.card.toolCard</h3>
+        <p>A tool's card: a padded column of its parts, one step apart.</p>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="fields">
+      <h2 id="fields" class="h3">Fields</h2>
+      <div class="card sampleCard">
+        <div class="field">
+          <label class="fieldLabel" for="sampleName">Name</label>
+          <input id="sampleName" v-model="sampleName" type="text" autocomplete="off" class="input" />
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="sampleEmail">Email</label>
+          <input
+            id="sampleEmail"
+            v-model="sampleEmail"
+            type="email"
+            autocomplete="off"
+            class="input"
+            aria-invalid="true"
+            aria-describedby="sampleEmailError"
+          />
+          <span id="sampleEmailError" class="fieldError">Please enter a valid email address.</span>
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="sampleGoal">Goal</label>
+          <select id="sampleGoal" v-model="sampleGoal" class="input" aria-describedby="sampleGoalNote">
+            <option value="">Select…</option>
+            <option value="strength">Strength</option>
+          </select>
+          <span id="sampleGoalNote" class="fieldNote">Optional</span>
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="sampleNote">Note</label>
+          <textarea id="sampleNote" v-model="sampleNote" class="input" placeholder="A text area"></textarea>
+        </div>
+        <div class="field">
+          <label class="fieldLabel" for="sampleVolume">Volume (<code>.range</code>)</label>
+          <div class="row">
+            <input id="sampleVolume" v-model.number="sampleVolume" type="range" min="0" max="100" class="range" />
+            <span>{{ sampleVolume }}%</span>
+          </div>
+        </div>
+        <div class="field">
+          <fieldset class="bareFieldset">
+            <legend class="fieldLabel">A radio group</legend>
+            <div class="row">
+              <label class="choice"><input v-model="sampleChoice" type="radio" value="yes" class="radio" /> Yes</label>
+              <label class="choice"><input v-model="sampleChoice" type="radio" value="no" class="radio" /> No</label>
+            </div>
+          </fieldset>
+        </div>
+        <div class="field panel boxedGroup">
+          <fieldset class="bareFieldset">
+            <legend class="fieldLabel">A boxed checkbox group</legend>
+            <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Barbell" class="checkbox" /> Barbell</label>
+            <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Bands" class="checkbox" /> Bands</label>
+          </fieldset>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="tables">
+      <h2 id="tables" class="h3">Table</h2>
+      <table class="table">
+        <caption>
+          .table
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Package</th>
+            <th scope="col" class="tableNumber">Price</th>
+            <th scope="col" class="tableNumber">.tableNumber</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">12 sessions</th>
+            <td class="tableNumber">$855</td>
+            <td class="tableNumber">$71.25</td>
+          </tr>
+          <tr>
+            <th scope="row">48 sessions</th>
+            <td class="tableNumber">$2,880</td>
+            <td class="tableNumber">$60.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="messages">
+      <h2 id="messages" class="h3">Badges and alerts</h2>
+      <div class="row">
+        <span class="badge">.badge</span>
+        <span class="badge">Strength</span>
+        <span class="badge badgeInfo">.badgeInfo</span>
+      </div>
+      <div class="alert alertDanger">.alert.alertDanger: something went wrong.</div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="plates">
+      <h2 id="plates" class="h3">Plates</h2>
+      <p>Each standard plate as a badge in its colour, as <code>plateColor(weight, lbs)</code> gives it.</p>
+      <div class="row">
+        <span v-for="weight in POUND_PLATES" :key="weight" class="badge" :class="plateBadgeClass(plateColor(weight, true))">
+          {{ plateLabel(weight, true) }}
+        </span>
+      </div>
+      <div class="row">
+        <span v-for="weight in KILO_PLATES" :key="weight" class="badge" :class="plateBadgeClass(plateColor(weight, false))">
+          {{ plateLabel(weight, false) }}
+        </span>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="menus">
+      <h2 id="menus" class="h3">Menu</h2>
+      <nav class="menu sampleMenu" aria-label="Sample menu">
+        <a href="#menus" class="menuItem" aria-current="page">The current page</a>
+        <a href="#menus" class="menuItem">Another page</a>
+        <button type="button" class="menuItem">A button row</button>
+      </nav>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="disclosure">
+      <h2 id="disclosure" class="h3">Disclosure</h2>
+      <div class="card sampleCard">
+        <h3 class="sectionTitle">
+          <button
+            type="button"
+            class="disclosure"
+            :aria-expanded="isDisclosureOpen"
+            aria-controls="disclosureBody"
+            @click="isDisclosureOpen = !isDisclosureOpen"
+          >
+            .disclosure
+            <img :src="chevronIcon" class="iconSmall disclosureChevron" alt="" />
+          </button>
+        </h3>
+        <p v-show="isDisclosureOpen" id="disclosureBody">The section the disclosure opens.</p>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="highlights">
+      <h2 id="highlights" class="h3">Highlights</h2>
+      <div class="row">
+        <p class="cue highlightSample" :class="{ cueActive: isCueActive }">.cue</p>
+        <button type="button" class="btn btnSecondary btnSm" @click="flashCue">Flash the cue</button>
+      </div>
+      <div class="row">
+        <p class="target highlightSample">.target</p>
+        <p class="targetDanger highlightSample">.targetDanger</p>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="icons">
+      <h2 id="icons" class="h3">Icons</h2>
+      <p>
+        <code>.iconSmall</code>, named as on <a href="https://lucide.dev/icons">lucide.dev</a> and
+        <a href="https://simpleicons.org">simpleicons.org</a>.
+      </p>
+      <ul class="icons">
+        <li v-for="icon in ICONS" :key="icon.name" class="iconTile">
+          <img :src="icon.url" class="iconSmall" alt="" />
+          <code>{{ icon.name }}</code>
+        </li>
+      </ul>
+    </section>
+  </main>
+</template>
+
+<style scoped>
+/* The page's own layout; everything it shows is the library's classes */
+.showcaseHeader {
+  align-items: center;
+  background-color: var(--bgMid);
+  border-bottom: 1px solid var(--raisedBorder);
+  display: flex;
+  height: var(--headerHeight);
+  justify-content: space-between;
+  left: 0;
+  padding-inline: var(--space2);
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.showcaseName {
+  font-family: var(--fontHeading);
+  font-size: var(--fontSizeMd);
+  font-weight: 700;
+  width: auto;
+}
+
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space3);
+  padding-block: var(--space3);
+}
+
+.contents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space1) var(--space2);
+  padding: var(--space2);
+}
+
+.showcaseSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space2);
+}
+
+.colourGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space1);
+}
+
+.swatches {
+  display: grid;
+  gap: var(--space2);
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fontSizeSm);
+  gap: var(--space1);
+}
+
+.swatchChip {
+  border: 1px solid var(--borderMuted);
+  border-radius: var(--radius);
+  height: 3rem;
+}
+
+.spacingRow {
+  align-items: center;
+  display: flex;
+  gap: var(--space2);
+}
+
+.spacingRow code {
+  width: 6rem;
+}
+
+.spacingBar {
+  background-color: var(--accentFull);
+  border-radius: var(--radius);
+  height: var(--space1);
+}
+
+.radiusSample {
+  align-items: center;
+  background-color: var(--bgTop);
+  border: 1px solid var(--borderMuted);
+  display: flex;
+  font-size: var(--fontSizeSm);
+  height: 4rem;
+  justify-content: center;
+  width: 8rem;
+}
+
+.sampleCard {
+  color: var(--textFull);
+  display: flex;
+  flex-direction: column;
+  font-weight: var(--weightBody);
+  gap: var(--space2);
+  padding: var(--space2);
+}
+
+.samplePanel {
+  padding: var(--space2);
+}
+
+.sampleMenu {
+  width: 16rem;
+}
+
+/* A fieldset is only a wrapper for its legend here: no border, padding or minimum width of its own */
+.bareFieldset {
+  border: none;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.bareFieldset legend {
+  padding: 0;
+}
+
+.boxedGroup {
+  padding: var(--space2);
+}
+
+.highlightSample {
+  border-radius: var(--radius);
+  padding: var(--space1);
+  width: auto;
+}
+
+.icons {
+  display: grid;
+  gap: var(--space1);
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.iconTile {
+  align-items: center;
+  display: flex;
+  font-size: var(--fontSizeSm);
+  gap: var(--space1);
+  margin: 0;
+}
+
+.iconTile .iconSmall {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+</style>

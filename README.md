@@ -103,6 +103,13 @@ Build from what is here before writing new CSS, in this library or in a project.
 - **Accessibility (WCAG 2.2 AA)** is built in: every colour pair in the tokens is measured (the comments give the ratios), the focus
   ring and reduced-motion rule cover everything, and no class relies on colour alone. A change that lowers a contrast ratio is a bug.
 
+## Working on the library
+
+`npm run dev` opens the showcase (http://localhost:4100): every token, class and icon of the library in use, with a light/dark
+switch, so a change can be seen in both themes before it is released. `npm run a11y` checks the built showcase against WCAG 2.2
+AA in both themes (axe, plus a contrast check measured from the drawn pixels). `npm test`, `npm run typecheck` and
+`npm run format:check` cover the rest; `CLAUDE.md` lists every command and the release steps.
+
 ## Planned
 
 - **Lucide icons as Vue components** (`@lucide/vue`, written `<Carrot />`) instead of SVG files shown with `<img>`. An inline icon is

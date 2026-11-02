@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>liftingSchoolUI showcase</title>
+    <!-- Applies the saved theme before the first paint, so a dark-mode visit never flashes light. Same key as theme.ts. -->
+    <script>
+      try {
+        const saved = localStorage.getItem("theme");
+        const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        const isDark = saved === "dark" || (saved === null && prefersDark);
+        if (isDark) document.documentElement.classList.add("dark");
+      } catch {
+        // Storage can be blocked; the page then starts in light mode
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

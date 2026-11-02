@@ -8,9 +8,14 @@ repo.
 
 ## Commands
 
+- `npm run dev`: the showcase on http://localhost:4100, every token, class and icon in use, with a light/dark switch. Check a
+  change to the look there, in both themes, before releasing it; a new class or token gets a sample there.
+- `npm run a11y`: builds the showcase and checks it in both themes in headless Firefox: axe (WCAG 2.2 AA) and a pixel-measured
+  text contrast check (`scripts/a11y.mjs`). Must pass before a release.
 - `npm test`: Vitest, single run (`npm run test:watch` to watch). Tests live in `tests/`; they include the style rules run over
-  the library's own `css/`, with its few exceptions listed in `tests/styleRules.test.js`.
-- `npm run typecheck`: type-checks the JavaScript modules and tests from their JSDoc (`tsconfig.json`, `checkJs`). Must pass.
+  the library's own `css/` (its few exceptions are listed in `tests/styleRules.test.js`) and over the showcase (none).
+- `npm run typecheck`: type-checks the JavaScript modules and tests from their JSDoc (`tsconfig.json`, `checkJs`) and the
+  showcase with vue-tsc (`tsconfig.showcase.json`). Must pass.
 - `npm run types`: writes the type declarations `js/*.d.ts` from the JSDoc (`tsconfig.types.json`). Run it after changing a
   module's exports or JSDoc types, and commit the result; `npm run types:check` fails when the committed ones are out of date.
 - `npm run format`: formats every file with Prettier (`.prettierrc.json`); `npm run format:check` only reports. Format before

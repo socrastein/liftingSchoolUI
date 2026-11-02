@@ -184,4 +184,9 @@ describe("the library's stylesheets", () => {
     const problems = findStyleProblemsUnder("css", LIBRARY_EXCEPTIONS);
     expect(problems.map(describeStyleProblem)).toEqual([]);
   });
+
+  it("include the showcase's own layout, which follows the same rules with no exceptions", () => {
+    const problems = findStyleProblemsUnder("showcase");
+    expect(problems.map(describeStyleProblem)).toEqual([]);
+  });
 });
