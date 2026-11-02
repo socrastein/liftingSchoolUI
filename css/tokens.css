@@ -1,0 +1,182 @@
+/*
+ * Design tokens: every colour, size, spacing and timing value of The Lifting School's look, shared by every site and app of
+ * the business. Components use these and never raw values.
+ * Light-mode values are in :root and dark-mode values in .dark (the class a project's colour-mode toggle puts on <html>).
+ */
+
+:root {
+  /* Tells the browser which theme its own parts are drawn in (a drop-down's list of options, scrollbars, the date picker),
+     so they match the page; dark mode sets it to dark below */
+  color-scheme: light;
+
+  /* Surfaces. The page is a cool lavender-grey and the one near-white face (bgMid and bgTop are the same colour here, because
+     three near-whites could not be told apart) sits on it. What separates them is the change of hue, the thin edge and the
+     soft shadow in components.css, not a difference in brightness. Dark mode has three steps, which do read there. */
+  --bgBase: #e9edf7;
+  --bgMid: #fbfcff;
+  --bgTop: #fbfcff;
+
+  --textFull: #131316;
+  --textMuted: #464654;
+  /* Large decorative text and the hero gradient only: 3.4:1 on the page, 3.9:1 on the face. */
+  --textHero: #5a74f5;
+
+  --borderFull: #1b0036;
+  --borderMuted: #48464f;
+  /* A light divider between the rows of a list or table; it follows the theme because it is mixed from --borderMuted */
+  --borderSubtle: color-mix(in srgb, var(--borderMuted) 30%, transparent);
+
+  --accentFull: #900090;
+  --accentMuted: #5d325d;
+  /* Text (and icons) on a solid accent fill, such as a button or the current menu item. */
+  --onAccent: #f8f8fb;
+
+  /* Faint washes of the accent and danger colours, for the background of a hovered, selected or tagged element or a
+     warning box. 10% is the strongest wash that keeps text on it (accent, danger or normal) at 4.5:1 or better on
+     every background, in both modes. They follow the theme because they are mixed from the tokens above. */
+  --accentSubtle: color-mix(in srgb, var(--accentFull) 10%, transparent);
+  --dangerSubtle: color-mix(in srgb, var(--danger) 10%, transparent);
+
+  /* What lifts a card or a button off the page in light mode: a thin edge of the dark border colour at 14%, and a soft
+     blue-grey shadow in two layers (a tight one for contact, a wide faint one for depth). Dark mode has neither: its
+     surfaces are told apart by tone. --shadowPressed is a button sinking when pressed. */
+  --raisedBorder: color-mix(in srgb, var(--borderFull) 14%, transparent);
+  --shadowRaised: 0 1px 2px rgb(40 50 110 / 0.16), 0 6px 18px -8px rgb(40 50 110 / 0.16);
+  --shadowPressed: inset 0 2px 4px rgb(40 50 110 / 0.16);
+  /* A little deeper, for a card that is a link while the pointer is on it */
+  --shadowRaisedHover: 0 2px 4px rgb(40 50 110 / 0.16), 0 10px 26px -8px rgb(40 50 110 / 0.2);
+
+  /* Corner rounding. --radius is the default softness for almost everything (controls, images, small panels),
+     --radiusLg is for large surfaces such as cards, and --radiusFull makes a pill. Circles use 50%. */
+  --radius: 0.5rem;
+  --radiusLg: 1rem;
+  --radiusFull: 999px;
+
+  /* Typefaces: Ubuntu Sans for text, Montserrat for headings and other display text. Both are variable fonts. */
+  --fontBody: "Ubuntu Sans", system-ui, sans-serif;
+  /* The weight of body text: a little heavier than regular (400), which looked thin in Ubuntu Sans. A variable font takes any
+     weight, so this can be tuned in steps of 10. */
+  --weightBody: 450;
+  --fontHeading: "Montserrat", system-ui, sans-serif;
+
+  /* Text sizes: small print and labels, normal text, body paragraphs, and larger supporting text.
+     Headings get their sizes from the .h1 to .h6 classes. --fontSizeXs is the exception to "no extra-small" (2026-11-02): only
+     for tags that must fit a very narrow row, such as the weight log's prev and start badges on a phone. */
+  --fontSizeXs: 0.75rem;
+  --fontSizeSm: 0.875rem;
+  --fontSizeMd: 1rem;
+  --fontSizeLg: 1.125rem;
+  --fontSizeXl: 1.25rem;
+
+  /* The heading sizes, largest to smallest (h6 is --fontSizeXl). The .h1 to .h6 classes use them, and so does display text
+     that should be heading-sized without looking like a heading (a price, a timer, a total). */
+  --fontSizeH1: 3rem;
+  --fontSizeH2: 2.5rem;
+  --fontSizeH3: 2rem;
+  --fontSizeH4: 1.75rem;
+  --fontSizeH5: 1.5rem;
+
+  /* The one size bigger than a heading: a figure that is the whole point of the page and is read from across a room (the
+     timers). It grows with the screen, from 3.5rem on a phone up to 6rem, so it stays as big as the width allows. */
+  --fontSizeDisplay: clamp(3.5rem, 16vw, 6rem);
+
+  /* Spacing for gaps, padding and margins. Each step is double the last, so a choice is never a close call:
+     --space1 between closely related things, --space2 the normal gap, --space3 between sections,
+     --space4 between page-level bands. */
+  --space1: 0.5rem;
+  --space2: 1rem;
+  --space3: 2rem;
+  --space4: 4rem;
+
+  /* How long a change takes: the quick feedback of a hover, focus or press, and the slower movement of something sliding,
+     opening or fading in. */
+  --duration: 0.2s;
+  --durationSlow: 0.6s;
+
+  /* Red for errors and other warnings, as text, borders and tints. At least 4.5:1 on both light surfaces above and on its own
+     10% tint over each of them (4.7:1 at worst, on the page). */
+  --danger: #b71c28;
+
+  /* Green for something that went well or up. At least 4.5:1 on both light surfaces and on its own 10% tint over each of
+     them (4.9:1 at worst, on the page). */
+  --success: #176b3b;
+  --successSubtle: color-mix(in srgb, var(--success) 10%, transparent);
+
+  /* A 10% wash of blue, for information that is neither good nor bad (the weight log's "start" badge). Mixed from the plate
+     blue, so it follows the theme. The normal text colour on it measures 13.7:1 on the page and 15.6:1 on the face in light
+     mode, and 13.5:1 on the page, 11.9:1 on the mid surface and 10.3:1 on the face in dark mode. */
+  --infoSubtle: color-mix(in srgb, var(--plateBlue) 10%, transparent);
+
+  /* The colours of competition plates (Rogue's), drawn as the border of a plate badge. At least 3:1 against the raised face
+     (--bgTop) in this mode: blue 6.4, yellow 3.2, green 5.1, red 5.2, grey 10.9. Yellow is the one that gives up some
+     brightness for it: the vivid plate yellow is 1.6:1 on a near-white face. The badge's text is the normal text colour. */
+  --plateBlue: #1f55c7;
+  --plateYellow: #b38600;
+  --plateGreen: #1a7d36;
+  --plateRed: #cc2a2a;
+  --plateGrey: #3b3b40;
+
+  /* The faces of the plates drawn on the bar: the plate colours at full strength, the same in both modes because they are the
+     colours of real objects. White text on each, except on yellow, which takes near-black. Text on its face: blue 6.6:1,
+     green 5.2:1, red 5.3:1, grey 11.1:1, yellow 10.6:1 (before the plates' shading, which lightens and darkens the face). */
+  --plateFaceBlue: #1f55c7;
+  --plateFaceYellow: #f5c400;
+  --plateFaceGreen: #1a7d36;
+  --plateFaceRed: #cc2a2a;
+  --plateFaceGrey: #3b3b40;
+  --onPlateFace: #ffffff;
+  --onPlateFaceYellow: #1a1a1a;
+
+  /* The dimming behind a dialog, in both modes */
+  --scrim: rgb(0 0 0 / 0.4);
+
+  /* The soft glow behind the hero's logo: the other mode's accent, so it stays gentle against this mode's page */
+  --heroGlow: #ff95ff;
+
+  /* Height of the fixed header at the top of every page. Used to offset the page content and anything scrolled or focused
+     into view. */
+  --headerHeight: 3rem;
+}
+
+/* On a small phone the h2 size steps down to the h3 size, so a long single word in a heading ("accountability") still fits
+   the screen. The hero uses the h1 size, so it is unchanged. */
+@media (max-width: 400px) {
+  :root {
+    --fontSizeH2: 2rem;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+  --bgBase: #1a1a1a;
+  --bgMid: #242424;
+  --bgTop: #2f2f2f;
+
+  --textFull: #f2f3f4;
+  --textMuted: #c4c8d4;
+  --textHero: #5bcefa;
+
+  --borderFull: #f4f2f4;
+  --borderMuted: #cec6ce;
+
+  --accentFull: #ff95ff;
+  --accentMuted: #ddb6dd;
+  --onAccent: #242424;
+
+  --raisedBorder: transparent;
+  --shadowRaised: none;
+  --shadowPressed: none;
+  --shadowRaisedHover: none;
+
+  /* Dark-mode error red: at least 5:1 on the dark backgrounds and on the 8% banner tint. */
+  --danger: #ff8a95;
+  --success: #5fd98f;
+  --heroGlow: #900090;
+
+  /* The plate colours again, for the dark face (--bgTop, #2f2f2f): blue 4.9, yellow 8.2, green 5.6, red 4.8, grey 4.8 */
+  --plateBlue: #6c9bff;
+  --plateYellow: #f5c400;
+  --plateGreen: #3fbf63;
+  --plateRed: #ff6b6b;
+  --plateGrey: #9a9aa3;
+}

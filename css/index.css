@@ -1,0 +1,12 @@
+/*
+ * The whole look in one import, in the order it must load: the tokens first, then the base styles that use them (fonts, reset,
+ * typography; base.css pulls in animations.css itself), then the shared component classes.
+ *
+ *   Vite:  import "lifting-school-ui/css/index.css";       (once, in main.ts)
+ *   Nuxt:  css: ["lifting-school-ui/css/index.css"]          (nuxt.config.ts)
+ *
+ * A project's own styles load after this, so they can build on it.
+ */
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";

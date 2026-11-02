@@ -1,0 +1,794 @@
+/*
+ * Component classes shared by every site and app of The Lifting School: the standard button, field, surfaces, menu, tag and
+ * so on. A style that more than one component needs goes here; a style that only one component needs stays in that
+ * component's <style scoped> block. The examples in these comments name the business site's pages, where most of these
+ * classes were first made.
+ */
+
+/*
+ * Buttons. Every button, and every link dressed as one, says .btn plus one variant: .btnPrimary (the accent fill, for the
+ * action a page is about), .btnSecondary (a plain face, for the alternative), .btnSubtle (the accent wash, for a quiet action
+ * that must not be hit by accident) or .btnDanger (for something destructive).
+ * Add .btnEdged and set --edgeColor for a coloured edge. Add .btnBlock to make it the full width of its container. Like a card, a button is lifted by a soft edge and shadow in
+ * light mode and by tone in dark mode, and it sinks a little when pressed; there is no gloss and no lift on hover.
+ * A component adds only its layout (for example how much room it takes in a row), never its own colours.
+ */
+.btn {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--fontSizeMd);
+  font-weight: 700;
+  height: 3rem;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0 var(--space3);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color var(--duration) ease,
+    box-shadow var(--duration) ease;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+.btn:active:not(:disabled) {
+  box-shadow: var(--shadowPressed);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btnBlock {
+  width: 100%;
+}
+
+/* A square button that holds only an icon; give it an aria-label, since it has no text */
+.btnIcon {
+  padding: 0;
+  width: 3rem;
+}
+
+/* The small size, for a button that sits in a heading row or beside text rather than closing a form */
+.btnSm {
+  font-size: var(--fontSizeSm);
+  height: 2.5rem;
+  padding: 0 var(--space2);
+}
+
+/* The accent fill, with a rim a shade darker than itself. Written for links too: the global a:link and a:visited colours
+   would otherwise paint the label the same purple as the button. */
+.btnPrimary,
+.btnPrimary:link,
+.btnPrimary:visited {
+  background-color: var(--accentFull);
+  border-color: color-mix(in srgb, var(--accentFull) 88%, black);
+  box-shadow: var(--shadowRaised);
+  color: var(--onAccent);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background-color: var(--accentMuted);
+}
+
+.btnSecondary {
+  background-color: var(--bgTop);
+  border-color: var(--raisedBorder);
+  box-shadow: var(--shadowRaised);
+  color: var(--textFull);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background-color: var(--accentSubtle);
+}
+
+/* A quiet button for something the page offers but a person should not hit by accident, such as Clear: the accent wash, no raised
+   face. Its text is on the 10% wash, which the accent text colour clears at 4.5:1. */
+.btnSubtle {
+  background-color: var(--accentSubtle);
+  border-color: transparent;
+  color: var(--accentFull);
+}
+
+.btnSubtle:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accentFull) 20%, transparent);
+}
+
+.btnDanger {
+  background-color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 88%, black);
+  box-shadow: var(--shadowRaised);
+  color: var(--onAccent);
+}
+
+.btnDanger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--danger) 82%, var(--textFull));
+}
+
+/* Dark mode has no rims or shadows. A secondary button there would be the same tone as the card it sits on, so it is
+   a step lighter. */
+.dark .btnPrimary,
+.dark .btnDanger {
+  border-color: transparent;
+}
+
+.dark .btnSecondary {
+  background-color: color-mix(in srgb, var(--textFull) 10%, var(--bgTop));
+}
+
+/* A coloured edge, for a button that stands for a thing with a colour of its own (the plate counter's plate buttons): the
+   element sets --edgeColor to a theme token, such as var(--plateBlue), and the edge takes it. It beats the variants' own edges.
+   The text still says what the button does, so the colour is never the only clue. */
+.btn.btnEdged {
+  border: 2px solid var(--edgeColor);
+}
+
+/*
+ * Segmented control: a track holding two or more buttons of which exactly one is selected, such as a time period or a mode.
+ * Mark the selected button with aria-pressed="true" (which also tells a screen reader which it is); that is all the styling
+ * looks at. When the items are links to pages instead (the stopwatch and the interval timer), the one for the page you are on
+ * carries aria-current="page", which NuxtLink and RouterLink add, and is marked the same way. The track is a little recessed and the selected button is filled with the accent.
+ */
+.segmented {
+  background-color: var(--bgBase);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  width: fit-content;
+}
+
+.segmentedItem {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--textMuted);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font-size: var(--fontSizeSm);
+  font-weight: 600;
+  justify-content: center;
+  padding: var(--space1) var(--space2);
+  text-decoration: none;
+  transition: background-color var(--duration) ease;
+  white-space: nowrap;
+}
+
+.segmentedItem:hover:not([aria-pressed="true"], [aria-current="page"]) {
+  background-color: var(--accentSubtle);
+  color: var(--textFull);
+}
+
+.segmentedItem[aria-pressed="true"],
+.segmentedItem[aria-current="page"] {
+  background-color: var(--accentFull);
+  color: var(--onAccent);
+  font-weight: 700;
+}
+
+/*
+ * Menus: a list of links that drops down from a button (the header's Tools) or opens from the phone menu button. .menu is the
+ * floating surface, lifted like a card in light mode and given a faint edge in dark mode, where there is no shadow; .menuItem
+ * is one row, a link or a button. The link to the page being shown carries aria-current="page" (NuxtLink and RouterLink add it), and that
+ * is what marks it; a row that opens a group holding that page (Tools) carries aria-current="true" and is marked the same way.
+ */
+.menu {
+  background-color: var(--bgTop);
+  border: 1px solid var(--raisedBorder);
+  border-radius: var(--radius);
+  box-shadow: var(--shadowRaised);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space1);
+}
+
+.dark .menu {
+  border-color: color-mix(in srgb, var(--textFull) 20%, transparent);
+}
+
+/* Written for links too: the global a:link and a:visited colours would otherwise paint every row in the accent */
+.menuItem,
+.menuItem:link,
+.menuItem:visited {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--textFull);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--fontSizeMd);
+  font-weight: 600;
+  min-height: 2.5rem;
+  padding: 0 var(--space1);
+  text-decoration: none;
+  width: 100%;
+}
+
+.menuItem:hover {
+  background-color: var(--accentSubtle);
+}
+
+/* The page you are on ("page"), or the group it belongs to ("true": Tools, on a tool's page) */
+.menuItem[aria-current="page"],
+.menuItem[aria-current="true"] {
+  background-color: var(--accentFull);
+  color: var(--onAccent);
+}
+
+/* An icon in that row (the Tools arrow) follows the text onto the accent: the icons are black, inverted in dark mode, and
+   --onAccent is the opposite (near-white in light mode, dark grey in dark mode) */
+.menuItem[aria-current] .iconSmall {
+  filter: invert(1);
+}
+
+.dark .menuItem[aria-current] .iconSmall {
+  filter: none;
+}
+
+/*
+ * Popups: how a popup (PopupTransition wraps it) opens and closes. Opening, it fades in and slides 4px away from the button that
+ * opened it; closing, it fades and slides back. FloatingPanel's data-side says which way is "away": down for a popup below its
+ * button, up for one above it. The global reduced-motion rule makes both near instant.
+ */
+.popup-enter-active,
+.popup-leave-active {
+  transition:
+    opacity var(--duration) ease-out,
+    transform var(--duration) ease-out;
+}
+
+.popup-leave-active {
+  transition-timing-function: ease-in;
+}
+
+.popup-enter-from,
+.popup-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.popup-enter-from[data-side="above"],
+.popup-leave-to[data-side="above"] {
+  transform: translateY(4px);
+}
+
+/* The ⋮ icon is drawn in the colour of its button's text */
+.actionsIcon {
+  fill: currentColor;
+}
+
+/*
+ * Fields. A field is its label, its control and the note or error under it, spaced as one unit (.field); the control is
+ * .input, whether it is an <input>, a <select> or a <textarea>. An invalid control says so with aria-invalid="true", which is
+ * also what the styling looks at, so there is no separate "error" class. Keyboard focus draws the global focus ring.
+ */
+.field {
+  margin-bottom: var(--space2);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+/* The label above a control, or the legend above a group of controls (they look the same) */
+.fieldLabel {
+  color: var(--textFull);
+  display: block;
+  font-size: var(--fontSizeSm);
+  font-weight: 600;
+  margin-bottom: var(--space1);
+}
+
+/* The "Optional" note under a control */
+.fieldNote {
+  color: var(--textMuted);
+  display: block;
+  font-size: var(--fontSizeSm);
+  font-style: italic;
+  margin-top: var(--space1);
+}
+
+/* The error message under a control */
+.fieldError {
+  color: var(--danger);
+  display: block;
+  font-size: var(--fontSizeSm);
+  font-weight: 500;
+  line-height: 1.3;
+  margin-top: var(--space1);
+}
+
+.input {
+  /* The page colour, so a field reads as a well set into the card around it */
+  background-color: var(--bgBase);
+  border: 1px solid var(--borderMuted);
+  border-radius: var(--radius);
+  color: var(--textFull);
+  font-size: var(--fontSizeMd);
+  padding: var(--space1) var(--space2);
+  transition: border-color var(--duration) ease;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--textMuted);
+  opacity: 0.7;
+}
+
+.input:hover {
+  border-color: var(--borderFull);
+}
+
+.input:focus {
+  border-color: var(--accentFull);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.input[aria-invalid="true"]:focus-visible {
+  outline-color: var(--danger);
+}
+
+/* A drop-down: the browser's own arrow is replaced by a small triangle drawn from two gradients in the muted text colour, so
+   it follows the theme with no extra rule for dark mode */
+select.input {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--textMuted) 50%), linear-gradient(135deg, var(--textMuted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.25rem) center,
+    calc(100% - 0.9rem) center;
+  background-repeat: no-repeat;
+  background-size: 0.35rem 0.35rem;
+  cursor: pointer;
+  padding-right: var(--space3);
+}
+
+/* The list that opens from a drop-down is drawn by the browser; it takes these colours for its rows (Firefox would otherwise use
+   its own, from the desktop theme). The highlighted row stays the browser's own highlight, which a page cannot restyle. */
+select.input option {
+  background-color: var(--bgTop);
+  color: var(--textFull);
+}
+
+textarea.input {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+/*
+ * A brief highlight of the part of a page that has just changed, for a person who asked to be shown (the interval timer's flash).
+ * .cue marks the part, and .cueActive is added to it for a moment. The highlight is an outline in the accent colour, not a tint
+ * behind the text: a tint lowered the contrast of the faded idle phase below 3:1 in light mode (measured by the axe scan), and an
+ * outline leaves the text's background alone. An outline also takes no room, so it can go on anything (the readout, a button)
+ * without the page shifting when it appears. It fades in and out, and under reduced motion the global rule in base.css makes that
+ * instant: the highlight still comes and goes, it just does not animate, and it comes and goes only once per alert, never
+ * repeatedly.
+ */
+.cue {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color var(--durationSlow) ease;
+}
+
+.cueActive {
+  outline-color: var(--accentFull);
+}
+
+/*
+ * Marks the thing a control is about to act on, while the pointer or keyboard focus is on that control (the plate counter points
+ * out the plates on the bar that a plate button or badge stands for). .target is an outline in the accent colour; .targetDanger
+ * is the same in the danger colour, for what a press would delete. Like .cue it is an outline, so it takes no room and nothing
+ * shifts when it appears, and it is never the only sign: the control itself says what it does.
+ */
+.target {
+  outline: 3px solid var(--accentFull);
+}
+
+.targetDanger {
+  outline: 3px solid var(--danger);
+}
+
+/*
+ * A slider (<input type="range">): drawn in the accent colour, and free to shrink inside a row so it never pushes the row wider
+ * than its box. Put a label on it as for any other control.
+ */
+.range {
+  accent-color: var(--accentFull);
+  flex: 1;
+  min-width: 0;
+}
+
+.range:disabled {
+  opacity: 0.35;
+}
+
+/*
+ * Choices: a radio button or a checkbox inside its own label, so the whole label is the target (.choice), with the box drawn
+ * by .radio or .checkbox. A group of them sits in a FormFieldGroup (a fieldset with a legend).
+ */
+.choice {
+  align-items: center;
+  border-radius: var(--radius);
+  color: var(--textFull);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--fontSizeSm);
+  gap: var(--space1);
+  padding: var(--space1);
+  transition: background-color var(--duration) ease;
+}
+
+.choice:hover {
+  background-color: var(--accentSubtle);
+}
+
+.radio,
+.checkbox {
+  appearance: none;
+  border: 2px solid var(--borderMuted);
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 1.125rem;
+  margin: 0;
+  position: relative;
+  transition:
+    background-color var(--duration) ease,
+    border-color var(--duration) ease;
+  width: 1.125rem;
+}
+
+.radio {
+  border-radius: 50%;
+}
+
+/* Half the usual corner: a full one would make a small square look like a radio button */
+.checkbox {
+  border-radius: calc(var(--radius) / 2);
+}
+
+.radio:checked,
+.checkbox:checked {
+  border-color: var(--accentFull);
+}
+
+/* The dot of a selected radio button */
+.radio::after {
+  background-color: var(--accentFull);
+  border-radius: 50%;
+  content: "";
+  height: 0.5rem;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--duration) ease;
+  width: 0.5rem;
+}
+
+.radio:checked::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* The tick of a ticked checkbox, drawn as two borders of a small rotated box */
+.checkbox:checked {
+  background-color: var(--accentFull);
+}
+
+.checkbox::after {
+  border: solid var(--onAccent);
+  border-width: 0 2px 2px 0;
+  content: "";
+  height: 0.55rem;
+  left: 50%;
+  position: absolute;
+  top: 45%;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0);
+  transition: transform var(--duration) ease;
+  width: 0.3rem;
+}
+
+.checkbox:checked::after {
+  transform: translate(-50%, -50%) rotate(45deg) scale(1);
+}
+
+/* Off-screen, not display:none, so a bot still sees it. A person never does: a form that finds it filled sends nothing. */
+.honeypot {
+  height: 1px;
+  left: -9999px;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+/*
+ * A data table, such as a list of prices: a caption above it, small uppercase column headings, and a light rule between rows.
+ * Give a cell of figures the .tableNumber class to right-align it with figures of equal width, so the columns line up. Use
+ * <th scope="col"> for the column headings and <th scope="row"> for the first cell of each row.
+ */
+.table {
+  border-collapse: collapse;
+  font-size: var(--fontSizeMd);
+  width: 100%;
+}
+
+.table caption {
+  font-weight: 700;
+  padding-bottom: var(--space1);
+  text-align: left;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--borderSubtle);
+  padding: var(--space1);
+  text-align: left;
+}
+
+.table thead th {
+  border-bottom-color: var(--borderMuted);
+  color: var(--textMuted);
+  font-size: var(--fontSizeSm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.table .tableNumber {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/*
+ * The column a page of reading sits in (the About page, a blog post): centred on the page, at a line length that is comfortable
+ * to read (about 70 characters of body text), with room at the sides on a phone. The page arranges what is inside it.
+ */
+.readingColumn {
+  margin-inline: auto;
+  max-width: 40rem;
+  padding-inline: var(--space2);
+  width: 100%;
+}
+
+/*
+ * The visible title at the top of a page other than home (the page's h1), centred above its content, which starts one step
+ * below. The words match the menu link that leads to the page, so a visitor knows they landed where they meant to.
+ */
+.pageTitle {
+  margin-block-end: var(--space3);
+  padding-inline: var(--space2);
+  text-align: center;
+}
+
+/*
+ * The two surfaces. A card is a face that holds content and is lifted off the page: in light mode by a thin edge and a soft
+ * shadow, in dark mode by being a lighter tone (see --raisedBorder and --shadowRaised). A panel groups things and has the
+ * edge only. A component adds just its own size, layout and padding, never its own outline or shadow.
+ */
+.card {
+  background-color: var(--bgTop);
+  border: 1px solid var(--raisedBorder);
+  border-radius: var(--radiusLg);
+  box-shadow: var(--shadowRaised);
+}
+
+/* A card that is itself a link (a blog post's card): on hover its edge takes a hint of the accent and its shadow deepens a
+   little. Nothing moves. */
+.cardLink {
+  transition:
+    border-color var(--duration) ease,
+    box-shadow var(--duration) ease;
+}
+
+.cardLink:hover {
+  border-color: color-mix(in srgb, var(--accentFull) 40%, transparent);
+  box-shadow: var(--shadowRaisedHover);
+}
+
+.panel {
+  background-color: var(--bgMid);
+  border: 1px solid var(--raisedBorder);
+  border-radius: var(--radiusLg);
+}
+
+/*
+ * A card's title row: the title (.cardTitle) and any controls beside it, with a rule under it. It wraps onto two lines on a
+ * narrow screen.
+ */
+.cardHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--borderMuted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space2);
+  justify-content: space-between;
+  padding-bottom: var(--space1);
+}
+
+/* Headings take the full width everywhere else; in a header row the title is only as wide as its text, so the controls fit
+   beside it when there is room */
+.cardHeader > :is(h1, h2, h3, h4, h5, h6) {
+  width: auto;
+}
+
+/*
+ * The small uppercase heading that starts a section inside a card (a group of form fields, a part of the review), with a
+ * rule under it. Works on a heading or on a fieldset's legend.
+ */
+.sectionTitle {
+  border-bottom: 1px solid var(--borderMuted);
+  color: var(--accentFull);
+  font-size: var(--fontSizeMd);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space2) 0;
+  padding-bottom: var(--space1);
+  text-transform: uppercase;
+  width: 100%;
+}
+
+/* Uppercase heading at the top of a card */
+.cardTitle {
+  font-size: var(--fontSizeXl);
+  font-weight: 700;
+  color: var(--textFull);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/*
+ * A card on the tools pages (the weight log's four): a column of its own parts, spaced one step apart and padded, as wide as its
+ * column up to a comfortable reading width. Add it beside .card.
+ */
+.toolCard {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space2);
+  max-width: 34rem;
+  padding: var(--space2);
+  width: 100%;
+}
+
+/* A small tag, such as a blog post's category: the one pill shape in the look, flat, in the accent wash */
+.badge {
+  background-color: var(--accentSubtle);
+  border-radius: var(--radiusFull);
+  color: var(--accentFull);
+  display: inline-block;
+  font-size: var(--fontSizeSm);
+  font-weight: 600;
+  line-height: 1.6;
+  padding: 0 var(--space1);
+}
+
+/*
+ * A badge in the blue wash instead of the accent one, for a second kind of tag beside a plain .badge (the weight log's "prev"
+ * and "start"). The text is the normal text colour, so it keeps full contrast on the tint.
+ */
+.badgeInfo {
+  background-color: var(--infoSubtle);
+  color: var(--textFull);
+}
+
+/*
+ * A badge with a coloured edge, for a thing that has a colour of its own: the colour-coded weight plates (the plate counter's
+ * list). The text and background are the page's normal ones, so the text always has full contrast; only the border carries the
+ * colour. Always put the meaning in the badge's text too, so the colour is never the only clue.
+ */
+.badgeBlue,
+.badgeYellow,
+.badgeGreen,
+.badgeRed,
+.badgeGrey {
+  background-color: transparent;
+  border: 2px solid;
+  color: var(--textFull);
+  font-weight: 700;
+}
+
+.badgeBlue {
+  border-color: var(--plateBlue);
+}
+
+.badgeYellow {
+  border-color: var(--plateYellow);
+}
+
+.badgeGreen {
+  border-color: var(--plateGreen);
+}
+
+.badgeRed {
+  border-color: var(--plateRed);
+}
+
+.badgeGrey {
+  border-color: var(--plateGrey);
+}
+
+/*
+ * A box with a message that needs attention, such as the problems with a form or a failed send, with the room below it. The
+ * variant gives it its colour: .alertDanger for something that went wrong. When it appears in response to an action, give it
+ * role="alert" so a screen reader announces it.
+ */
+.alert {
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--fontSizeSm);
+  margin-bottom: var(--space2);
+  padding: var(--space2);
+}
+
+.alertDanger {
+  background-color: var(--dangerSubtle);
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/*
+ * A timer's time, at the display size: what you look at mid-set, so it is the same big figure on the stopwatch and on both rows
+ * of the interval timer. Digits are all the same width so the time does not jitter as it counts.
+ */
+.timeDisplay {
+  color: var(--textFull);
+  font-size: var(--fontSizeDisplay);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+/*
+ * Disclosure: a full-width button that opens and closes the section below it, with a chevron that turns when it is open.
+ * Whether it is open is aria-expanded, which is what the chevron reads (and what a screen reader announces). Put an
+ * <img class="iconSmall disclosureChevron" alt=""> inside the button after its label. The button sits inside the section's
+ * heading and takes its whole look (size, weight, colour, capitals) from it, so the heading class (.h5, .sectionTitle, ...)
+ * decides how important the title looks.
+ */
+.disclosure {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  font: inherit;
+  gap: var(--space1);
+  justify-content: space-between;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  width: 100%;
+}
+
+.disclosureChevron {
+  height: 1rem;
+  transition: transform var(--duration) ease;
+  width: 1rem;
+}
+
+.disclosure[aria-expanded="true"] .disclosureChevron {
+  transform: rotate(180deg);
+}
+
+/*
+ * The title line of an item in a list, such as a saved preset's name: bold, with the faded detail line (.textMuted) under it.
+ */
+.listItemTitle {
+  font-weight: 700;
+}

@@ -1,0 +1,292 @@
+@import "./animations.css";
+
+/*
+ * Base styles: fonts, the reset, typography and the small utility classes. Nothing in here is a component.
+ */
+
+/*
+ * Ubuntu Sans, the variable version of Ubuntu: one file holds every weight from 100 to 800. It replaced the static Ubuntu
+ * files because, on a Linux desktop set to full font hinting, those looked harsh and pixelated while the variable Montserrat
+ * stayed smooth (likely because the hinting snaps static fonts to the pixel grid and leaves variable ones alone).
+ */
+@font-face {
+  font-display: swap;
+  font-family: "Ubuntu Sans";
+  font-style: normal;
+  font-weight: 100 800;
+  src: url("../fonts/ubuntuSans/ubuntu-sans-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Ubuntu Sans";
+  font-style: italic;
+  font-weight: 100 800;
+  src: url("../fonts/ubuntuSans/ubuntu-sans-latin-wght-italic.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../fonts/montserrat/Montserrat-Variable.ttf");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Montserrat";
+  font-style: italic;
+  font-weight: 100 900;
+  src: url("../fonts/montserrat/Montserrat-Variable-Italic.ttf");
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--borderFull);
+}
+
+/* Form controls ignore the page font unless told to inherit it */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+html {
+  /* Keeps anything scrolled or focused into view clear of the fixed header (WCAG 2.4.11), plus a little breathing room */
+  scroll-padding-top: calc(var(--headerHeight) + 1rem);
+}
+
+/*
+ * Keyboard focus: anything a keyboard user lands on gets the same clear ring in the accent colour (WCAG 2.4.7 and 2.4.13).
+ * Only :focus-visible, so a mouse click does not draw one. A component that already marks focus its own way overrides this.
+ */
+:focus-visible {
+  outline: 2px solid var(--accentFull);
+  outline-offset: 2px;
+}
+
+/*
+ * For people who ask their system for less motion: animations and transitions finish at once, and smooth scrolling is
+ * off. This covers every component, including ones added later (WCAG 2.3.3).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  /* Leaves room for the fixed nav bar */
+  padding: var(--headerHeight) 0 0 0;
+  margin: 0;
+  font-family: var(--fontBody);
+  font-weight: var(--weightBody);
+  /* Room between lines for easy reading; headings set their own, tighter line height */
+  line-height: 1.5;
+  color: var(--textFull);
+  background-color: var(--bgBase);
+}
+
+div {
+  max-width: 100%;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input {
+  border-radius: var(--radius);
+}
+
+/*
+ * A button starts with no look of its own: the browser's grey box is removed and its text inherits, so a bare <button> (an
+ * icon, a disclosure, a ×) looks like whatever is inside it. A button that should look like a button says .btn, and a
+ * segmented control or menu row says .segmentedItem or .menuItem (components.css).
+ */
+button {
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: inherit;
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+a:link {
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--accentFull);
+}
+
+a:visited {
+  text-decoration: none;
+  color: var(--accentMuted);
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+/*
+ * Headings: the tag says where a heading sits in the page outline (h1 is the page title, h2 a section, h3 a
+ * subsection, and so on, with no levels skipped), and the matching class (.h1 to .h6) gives any element the
+ * same look. That lets the outline be correct without changing the appearance: for example, a subsection
+ * that should look like an h4 is written <h3 class="h4">, and a line of text that should look like a heading
+ * but is not one is written <p class="h3">.
+ */
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3,
+h4,
+.h4,
+h5,
+.h5,
+h6,
+.h6 {
+  width: 100%;
+  font-family: var(--fontHeading);
+  text-wrap: balance;
+  color: var(--textFull);
+  margin: 0;
+  line-height: 1.25;
+}
+
+h1,
+.h1 {
+  font-size: var(--fontSizeH1);
+  font-weight: 800;
+}
+h2,
+.h2 {
+  font-size: var(--fontSizeH2);
+  font-weight: 800;
+}
+h3,
+.h3 {
+  font-size: var(--fontSizeH3);
+  font-weight: 700;
+}
+h4,
+.h4 {
+  font-size: var(--fontSizeH4);
+  font-weight: 600;
+}
+
+h5,
+.h5 {
+  font-size: var(--fontSizeH5);
+  font-weight: 600;
+}
+
+h6,
+.h6 {
+  font-size: var(--fontSizeXl);
+  font-weight: 500;
+}
+
+/*
+ * Hides something from the eye but keeps it for screen readers and search engines, without taking up any
+ * space. Used for page titles (h1) on pages whose design has no visible title.
+ */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+hr {
+  width: 80%;
+  color: var(--accentFull);
+}
+
+ul,
+ol {
+  font-size: var(--fontSizeLg);
+  margin-top: var(--space2);
+  padding-left: var(--space2);
+}
+
+li {
+  margin: var(--space1) 0 0 var(--space1);
+}
+
+p {
+  margin: 0;
+  width: 100%;
+  font-size: var(--fontSizeLg);
+  text-align: left;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.center {
+  text-align: center;
+}
+
+.textMuted {
+  color: var(--textMuted);
+}
+
+.textAccent {
+  color: var(--accentFull);
+}
+
+.textHero {
+  font-size: 4rem;
+  font-weight: 900;
+  background-image: linear-gradient(to right, var(--accentFull), var(--textHero));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* A small black icon (an SVG drawn in black), turned white in dark mode */
+.iconSmall {
+  background-size: cover;
+  height: 2rem;
+  width: 2rem;
+}
+
+.dark .iconSmall {
+  filter: invert(1);
+}
