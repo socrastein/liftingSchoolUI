@@ -9,6 +9,7 @@ import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
+import ScrollToTop from "../components/ScrollToTop.vue";
 import ThemeButton from "../components/ThemeButton.vue";
 
 /**
@@ -412,6 +413,11 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           <button type="button" class="menuItem menuItemDanger">Delete</button>
         </ActionsMenu>
       </div>
+      <p>
+        <code>ScrollToTop</code> is the arrow that appears in the bottom right corner once you are two screens down this page, and
+        jumps back to the top.
+      </p>
+      <ScrollToTop />
       <p><code>ConfirmDialog</code> asks a question that has to be answered first, before something that cannot be taken back.</p>
       <div class="row">
         <button type="button" class="btn btnSecondary" @click="isDialogOpen = true">Delete the sample</button>
