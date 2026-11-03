@@ -71,15 +71,21 @@ html {
 
 /*
  * For people who ask their system for less motion: animations and transitions finish at once, and smooth scrolling is
- * off. This covers every component, including ones added later (WCAG 2.3.3).
+ * off. This covers every component, including ones added later (WCAG 2.3.3). Near-zero durations rather than none, so
+ * Vue's transition events still fire and nothing waits on an animation that never ends. Delays are zeroed too, so a
+ * staggered list (a drop-down's options appearing one after another) appears all at once instead of item by item, and
+ * ::backdrop is included so a dialog's dimmed background does not fade either.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  *::backdrop {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
