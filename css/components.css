@@ -559,6 +559,77 @@ textarea.input {
   transform: translate(-50%, -50%) rotate(45deg) scale(1);
 }
 
+/*
+ * A switch: an on/off setting that takes effect at once, as opposed to a checkbox, which is an answer submitted later. Underneath
+ * is a real checkbox (.switchInput, with role="switch" so a screen reader says on or off), laid invisibly over the drawn track
+ * (.switchTrack) and knob (.switchKnob) so it takes the clicks and the focus. On and off differ by the knob's side as well as
+ * colour, so colour is never the only signal. The whole label (.switch) is the target. Use the ToggleSwitch component, or write
+ * the same markup:
+ *   <label class="switch"><input class="switchInput" type="checkbox" role="switch" />
+ *     <span class="switchTrack" aria-hidden="true"><span class="switchKnob"></span></span> Label</label>
+ */
+.switch {
+  align-items: center;
+  color: var(--textFull);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--fontSizeSm);
+  gap: var(--space1);
+  /* 24px tall at least: the WCAG 2.2 AA minimum target size */
+  min-height: 1.5rem;
+  position: relative;
+}
+
+.switchInput {
+  cursor: pointer;
+  height: 1.25rem;
+  left: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  width: 2.25rem;
+}
+
+.switchTrack {
+  background-color: var(--bgBase);
+  border: solid 1px var(--borderMuted);
+  border-radius: var(--radiusFull);
+  flex: none;
+  height: 1.25rem;
+  position: relative;
+  transition: background-color var(--durationFast);
+  width: 2.25rem;
+}
+
+.switchKnob {
+  background-color: var(--textMuted);
+  border-radius: 50%;
+  height: 0.875rem;
+  left: 0.125rem;
+  position: absolute;
+  top: 0.125rem;
+  transition:
+    transform var(--durationFast),
+    background-color var(--durationFast);
+  width: 0.875rem;
+}
+
+.switchInput:checked + .switchTrack {
+  background-color: var(--accentFull);
+  border-color: var(--accentFull);
+}
+
+.switchInput:checked + .switchTrack .switchKnob {
+  background-color: var(--bgTop);
+  transform: translateX(1rem);
+}
+
+/* The hidden box has the focus; the track shows it */
+.switchInput:focus-visible + .switchTrack {
+  outline: 2px solid var(--accentFull);
+  outline-offset: 2px;
+}
+
 /* Off-screen, not display:none, so a bot still sees it. A person never does: a form that finds it filled sends nothing. */
 .honeypot {
   height: 1px;

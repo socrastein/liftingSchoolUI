@@ -8,6 +8,7 @@ import ConfirmDialog from "../components/ConfirmDialog.vue";
 import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
+import ToggleSwitch from "../components/ToggleSwitch.vue";
 import ThemeButton from "../components/ThemeButton.vue";
 
 /**
@@ -99,6 +100,7 @@ const sampleNote = ref("");
 const sampleChoice = ref("yes");
 const sampleTicks = ref<string[]>(["Barbell"]);
 const sampleVolume = ref(60);
+const sampleSwitch = ref(true);
 
 /** Whether the disclosure sample is open. */
 const isDisclosureOpen = ref(false);
@@ -311,6 +313,9 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
             <input id="sampleVolume" v-model.number="sampleVolume" type="range" min="0" max="100" class="range" />
             <span>{{ sampleVolume }}%</span>
           </div>
+        </div>
+        <div class="field">
+          <ToggleSwitch v-model="sampleSwitch" label="A switch (ToggleSwitch)" />
         </div>
         <FormFieldGroup legend="A radio group (FormFieldGroup)" optional>
           <div class="row">
