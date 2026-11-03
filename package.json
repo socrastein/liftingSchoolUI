@@ -3,6 +3,9 @@
   "version": "0.4.3",
   "description": "The Lifting School's shared look: design tokens, base styles, component classes, fonts, icons and helpers for every site and app of the business.",
   "type": "module",
+  "bin": {
+    "check-placeholder-copy": "js/checkPlaceholderCopy.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/socrastein/liftingSchoolUI.git"
@@ -34,6 +37,14 @@
     "./colorScheme": {
       "types": "./js/colorScheme.d.ts",
       "default": "./js/colorScheme.js"
+    },
+    "./placeholderCopy": {
+      "types": "./js/placeholderCopy.d.ts",
+      "default": "./js/placeholderCopy.js"
+    },
+    "./placeholderCopyCheck": {
+      "types": "./js/placeholderCopyCheck.d.ts",
+      "default": "./js/placeholderCopyCheck.js"
     }
   },
   "scripts": {

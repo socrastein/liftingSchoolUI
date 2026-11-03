@@ -9,6 +9,7 @@
     "declarationDir": "js"
   },
   "include": ["js/**/*.js"],
-  // Stated so tsc does not leave out js/ itself: with no exclude it skips its own output folder, which here is also the input
-  "exclude": ["js/**/*.d.ts"]
+  // Stated so tsc does not leave out js/ itself: with no exclude it skips its own output folder, which here is also the input.
+  // The check-placeholder-copy command is run, never imported, so it gets no declarations.
+  "exclude": ["js/**/*.d.ts", "js/checkPlaceholderCopy.js"]
 }
