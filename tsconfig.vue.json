@@ -1,5 +1,6 @@
 {
-  // Type-checks the showcase page (npm run typecheck runs it with vue-tsc)
+  // Type-checks everything written in Vue and TypeScript: the shared components, their tests and the showcase page
+  // (npm run typecheck runs it with vue-tsc)
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -8,8 +9,9 @@
     "moduleResolution": "Bundler",
     "jsx": "preserve",
     "noEmit": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["showcase/**/*.ts", "showcase/**/*.vue"]
+  "include": ["components/**/*.vue", "tests/components/**/*.ts", "showcase/**/*.ts", "showcase/**/*.vue"]
 }

@@ -2,6 +2,8 @@
 import { ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useTheme, type Theme } from "./theme";
+import AnchoredCard from "../components/AnchoredCard.vue";
+import PopupTransition from "../components/PopupTransition.vue";
 
 /**
  * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
@@ -79,6 +81,11 @@ const sampleVolume = ref(60);
 
 /** Whether the disclosure sample is open. */
 const isDisclosureOpen = ref(false);
+
+/** The anchored card sample: the button that opens it, and what was typed in it. */
+const cardOpener = ref<HTMLButtonElement | null>(null);
+const isCardOpen = ref(false);
+const cardNote = ref("");
 
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
@@ -363,6 +370,31 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <button type="button" class="menuItem" disabled>A disabled row</button>
         <button type="button" class="menuItem menuItemDanger">A danger row</button>
       </nav>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="popups">
+      <h2 id="popups" class="h3">Popups</h2>
+      <p>
+        <code>AnchoredCard</code> opens beside the button that opened it, positioned by <code>FloatingPanel</code> and eased in
+        and out by <code>PopupTransition</code>.
+      </p>
+      <div class="row">
+        <button
+          ref="cardOpener"
+          type="button"
+          class="btn btnSecondary"
+          :aria-expanded="isCardOpen"
+          @click="isCardOpen = !isCardOpen"
+        >
+          Add a note
+        </button>
+        <PopupTransition>
+          <AnchoredCard v-if="isCardOpen && cardOpener" :anchor="cardOpener" heading="A note" @close="isCardOpen = false">
+            <label class="fieldLabel" for="sampleCardNote">Note</label>
+            <textarea id="sampleCardNote" v-model="cardNote" class="input" rows="2"></textarea>
+          </AnchoredCard>
+        </PopupTransition>
+      </div>
     </section>
 
     <section class="showcaseSection" aria-labelledby="disclosure">

@@ -193,6 +193,11 @@ describe("the library's stylesheets", () => {
     expect(problems.map(describeStyleProblem)).toEqual([]);
   });
 
+  it("include the shared components' own layout, which follows the same rules with no exceptions", () => {
+    const problems = findStyleProblemsUnder("components");
+    expect(problems.map(describeStyleProblem)).toEqual([]);
+  });
+
   it("include the showcase's own layout, which follows the same rules with no exceptions", () => {
     const problems = findStyleProblemsUnder("showcase");
     expect(problems.map(describeStyleProblem)).toEqual([]);

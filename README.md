@@ -36,6 +36,22 @@ export default defineNuxtConfig({ css: ["lifting-school-ui/css/index.css"] });
 Icons are plain SVG files: `import menuIcon from "lifting-school-ui/icons/menu.svg"`. Dark mode is the `dark` class on
 `<html>`; the project's own colour-mode toggle sets it.
 
+### The shared Vue components
+
+The components in `components/` are shipped as Vue source (`<script setup lang="ts">`), not built, so each project compiles
+them with its own Vite, exactly like its own components, and its own `vue-tsc` type-checks them. Import each one by its path:
+
+```ts
+import AnchoredCard from "lifting-school-ui/components/AnchoredCard.vue";
+```
+
+- **Vue and `@vueuse/core`** are peer dependencies: the project installs them, and the components use the project's copy.
+- **Nuxt** also compiles them when it renders pages on the server, which it only does for a package it is told about:
+  `build: { transpile: ["lifting-school-ui"] }` in `nuxt.config.ts`. A Vite app needs nothing extra.
+- **A fixed header** is marked with `data-fixed-header`, so a popup measures it and never opens underneath it
+  (`js/fixedHeader.js`, also `lifting-school-ui/fixedHeader` for a project's own popups).
+- Their words that a project might want to change (a button's label) are props with defaults.
+
 ### Checking a project's styles
 
 Every project runs the style rules checker over its own source from one of its tests, with its own short list of deliberate
@@ -84,16 +100,18 @@ Vite's dev server only serves files inside the project unless told otherwise, so
 
 ## What is in it
 
-| Path                 | What it is                                                                                                                                                  |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `css/index.css`      | The one import: loads the three files below in order.                                                                                                       |
-| `css/tokens.css`     | Every value: colours (light in `:root`, dark in `.dark`), font sizes, spacing, radii, shadows, durations, the plate colours.                                |
-| `css/base.css`       | Fonts, the reset, typography, the focus ring, the reduced-motion rule and the few utilities. Pulls in `css/animations.css`.                                 |
-| `css/components.css` | The shared classes: `.btn`, `.segmented`, `.menu`, `.field`/`.input`, `.choice`, `.range`, `.table`, `.card`/`.panel`, `.badge`, `.alert`, `.disclosure`, … |
-| `fonts/`             | Ubuntu Sans (text) and Montserrat (headings), both variable, with their licences.                                                                           |
-| `icons/`             | Interface icons (Lucide), brand marks (Simple Icons) and the logo, each named as its source names it. `icons/LICENSES.md` says where each comes from.       |
-| `js/plateColors.js`  | `plateColor(weight, lbs)`: which colour a plate of that weight is (`lifting-school-ui/plateColors`).                                                        |
-| `js/styleRules.js`   | The style rules checker, for a project's tests (`lifting-school-ui/styleRules`; Node only, since it reads files).                                           |
+| Path                 | What it is                                                                                                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `css/index.css`      | The one import: loads the three files below in order.                                                                                                                 |
+| `css/tokens.css`     | Every value: colours (light in `:root`, dark in `.dark`), font sizes, spacing, radii, shadows, durations, the plate colours.                                          |
+| `css/base.css`       | Fonts, the reset, typography, the focus ring, the reduced-motion rule and the few utilities. Pulls in `css/animations.css`.                                           |
+| `css/components.css` | The shared classes: `.btn`, `.segmented`, `.menu`, `.field`/`.input`, `.choice`, `.range`, `.table`, `.card`/`.panel`, `.badge`, `.alert`, `.disclosure`, …           |
+| `fonts/`             | Ubuntu Sans (text) and Montserrat (headings), both variable, with their licences.                                                                                     |
+| `icons/`             | Interface icons (Lucide), brand marks (Simple Icons) and the logo, each named as its source names it. `icons/LICENSES.md` says where each comes from.                 |
+| `js/plateColors.js`  | `plateColor(weight, lbs)`: which colour a plate of that weight is (`lifting-school-ui/plateColors`).                                                                  |
+| `js/styleRules.js`   | The style rules checker, for a project's tests (`lifting-school-ui/styleRules`; Node only, since it reads files).                                                     |
+| `js/fixedHeader.js`  | `fixedHeaderBottom()`: where the page's fixed header (marked `data-fixed-header`) ends, for popups (`lifting-school-ui/fixedHeader`).                                 |
+| `components/`        | The shared Vue components: `PopupTransition` (how a popup eases in and out), `FloatingPanel` (where it is drawn) and `AnchoredCard` (a small card beside its button). |
 
 ## The rules of the look
 
