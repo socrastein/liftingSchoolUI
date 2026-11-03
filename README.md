@@ -17,7 +17,7 @@ allow-git=root
 Then install over HTTPS (not `github:…`, which records an SSH address in the lockfile that a CI runner cannot clone):
 
 ```sh
-npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.2.0"
+npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.2.1"
 ```
 
 The package name is kebab-case (`lifting-school-ui`) because npm requires lowercase names; everything inside it is camelCase.
@@ -60,7 +60,7 @@ Remove the library, then install the new tag:
 
 ```sh
 npm uninstall lifting-school-ui
-npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.2.0"
+npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.2.1"
 ```
 
 Changing the tag in place (editing `package.json` and running `npm install`, or installing the new tag over the old) fails
