@@ -4,6 +4,7 @@ import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useTheme, type Theme } from "./theme";
 import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
+import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 
 /**
@@ -290,22 +291,19 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
             <span>{{ sampleVolume }}%</span>
           </div>
         </div>
-        <div class="field">
-          <fieldset class="bareFieldset">
-            <legend class="fieldLabel">A radio group</legend>
-            <div class="row">
-              <label class="choice"><input v-model="sampleChoice" type="radio" value="yes" class="radio" /> Yes</label>
-              <label class="choice"><input v-model="sampleChoice" type="radio" value="no" class="radio" /> No</label>
-            </div>
-          </fieldset>
-        </div>
-        <div class="field panel boxedGroup">
-          <fieldset class="bareFieldset">
-            <legend class="fieldLabel">A boxed checkbox group</legend>
-            <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Barbell" class="checkbox" /> Barbell</label>
-            <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Bands" class="checkbox" /> Bands</label>
-          </fieldset>
-        </div>
+        <FormFieldGroup legend="A radio group (FormFieldGroup)" optional>
+          <div class="row">
+            <label class="choice"><input v-model="sampleChoice" type="radio" value="yes" class="radio" /> Yes</label>
+            <label class="choice"><input v-model="sampleChoice" type="radio" value="no" class="radio" /> No</label>
+          </div>
+        </FormFieldGroup>
+        <FormFieldGroup legend="A boxed checkbox group" boxed>
+          <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Barbell" class="checkbox" /> Barbell</label>
+          <label class="choice"><input v-model="sampleTicks" type="checkbox" value="Bands" class="checkbox" /> Bands</label>
+        </FormFieldGroup>
+        <FormFieldGroup legend="A group with an error" error="Pick at least one.">
+          <label class="choice"><input type="checkbox" class="checkbox" /> Anything</label>
+        </FormFieldGroup>
       </div>
     </section>
 
@@ -571,22 +569,6 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 
 .sampleMenu {
   width: 16rem;
-}
-
-/* A fieldset is only a wrapper for its legend here: no border, padding or minimum width of its own */
-.bareFieldset {
-  border: none;
-  margin: 0;
-  min-width: 0;
-  padding: 0;
-}
-
-.bareFieldset legend {
-  padding: 0;
-}
-
-.boxedGroup {
-  padding: var(--space2);
 }
 
 .highlightSample {
