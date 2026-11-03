@@ -41,9 +41,17 @@
   box-shadow: var(--shadowPressed);
 }
 
+/*
+ * A button that can't be used right now: solid and recessed (the page's base colour, muted text, no edge or shadow), never faded
+ * with opacity, which lets whatever is behind it show through and turns its shadow into a smudge. Every variant looks the same
+ * when disabled, so "off" never depends on which button it is. Its words still say what it does; the cursor says it is off.
+ */
 .btn:disabled {
+  background-color: var(--bgBase);
+  border-color: var(--bgBase);
+  box-shadow: none;
+  color: var(--textMuted);
   cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .btnBlock {
