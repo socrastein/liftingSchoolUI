@@ -88,10 +88,18 @@
   --space3: 2rem;
   --space4: 4rem;
 
-  /* How long a change takes: the quick feedback of a hover, focus or press, and the slower movement of something sliding,
-     opening or fading in. */
-  --duration: 0.2s;
+  /* How long a change takes. Each step doubles, like the spacing, so a choice between two is never a close call:
+     --durationFast for quick feedback and small things (a hover, focus or press, a chevron turning, a popup opening or closing)
+     and for anything leaving; --duration for something larger arriving or moving (a dialog opening, a card or row easing in, a
+     card sliding to its new place); --durationSlow for a deliberate change meant to be noticed (a highlight fading). */
+  --durationFast: 0.15s;
+  --duration: 0.3s;
   --durationSlow: 0.6s;
+
+  /* How a change moves: ease-out on the way in (starts quick, settles gently), so an arrival feels responsive, and ease-in on the
+     way out (starts gently, ends quick), so a departure gets out of the way. The standard cubic ease-out and ease-in curves. */
+  --easeOut: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --easeIn: cubic-bezier(0.55, 0.055, 0.675, 0.19);
 
   /* Red for errors and other warnings, as text, borders and tints. At least 4.5:1 on both light surfaces above and on its own
      10% tint over each of them (4.7:1 at worst, on the page). */

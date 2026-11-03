@@ -28,8 +28,8 @@
   text-align: center;
   text-decoration: none;
   transition:
-    background-color var(--duration) ease,
-    box-shadow var(--duration) ease;
+    background-color var(--durationFast) ease,
+    box-shadow var(--durationFast) ease;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
@@ -159,7 +159,7 @@
   justify-content: center;
   padding: var(--space1) var(--space2);
   text-decoration: none;
-  transition: background-color var(--duration) ease;
+  transition: background-color var(--durationFast) ease;
   white-space: nowrap;
 }
 
@@ -244,12 +244,12 @@
 .popup-enter-active,
 .popup-leave-active {
   transition:
-    opacity var(--duration) ease-out,
-    transform var(--duration) ease-out;
+    opacity var(--durationFast) var(--easeOut),
+    transform var(--durationFast) var(--easeOut);
 }
 
 .popup-leave-active {
-  transition-timing-function: ease-in;
+  transition-timing-function: var(--easeIn);
 }
 
 .popup-enter-from,
@@ -317,7 +317,7 @@
   color: var(--textFull);
   font-size: var(--fontSizeMd);
   padding: var(--space1) var(--space2);
-  transition: border-color var(--duration) ease;
+  transition: border-color var(--durationFast) ease;
   width: 100%;
 }
 
@@ -429,7 +429,7 @@ textarea.input {
   font-size: var(--fontSizeSm);
   gap: var(--space1);
   padding: var(--space1);
-  transition: background-color var(--duration) ease;
+  transition: background-color var(--durationFast) ease;
 }
 
 .choice:hover {
@@ -446,8 +446,8 @@ textarea.input {
   margin: 0;
   position: relative;
   transition:
-    background-color var(--duration) ease,
-    border-color var(--duration) ease;
+    background-color var(--durationFast) ease,
+    border-color var(--durationFast) ease;
   width: 1.125rem;
 }
 
@@ -475,7 +475,7 @@ textarea.input {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform var(--duration) ease;
+  transition: transform var(--durationFast) ease;
   width: 0.5rem;
 }
 
@@ -497,7 +497,7 @@ textarea.input {
   position: absolute;
   top: 45%;
   transform: translate(-50%, -50%) rotate(45deg) scale(0);
-  transition: transform var(--duration) ease;
+  transition: transform var(--durationFast) ease;
   width: 0.3rem;
 }
 
@@ -593,8 +593,8 @@ textarea.input {
    little. Nothing moves. */
 .cardLink {
   transition:
-    border-color var(--duration) ease,
-    box-shadow var(--duration) ease;
+    border-color var(--durationFast) ease,
+    box-shadow var(--durationFast) ease;
 }
 
 .cardLink:hover {
@@ -778,7 +778,7 @@ textarea.input {
 
 .disclosureChevron {
   height: 1rem;
-  transition: transform var(--duration) ease;
+  transition: transform var(--durationFast) ease;
   width: 1rem;
 }
 
