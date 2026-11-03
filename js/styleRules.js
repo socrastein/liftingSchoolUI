@@ -52,8 +52,8 @@ const COLOUR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(\s*[0-9]/;
 /** A length written by hand, such as 0.75rem, 12px or 1.2em (a number directly followed by a length unit). */
 const LENGTH_LITERAL = /(-?\d*\.?\d+)(rem|px|em)\b/g;
 
-/** A duration written by hand, such as 0.3s or 150ms. */
-const DURATION_LITERAL = /(?<![\w.-])\d*\.?\d+m?s\b/;
+/** A duration written by hand, such as 0.3s or 150ms, with its number as the first group. */
+const DURATION_LITERAL = /(?<![\w.-])(\d*\.?\d+)m?s\b/g;
 
 /**
  * A length this small is a hairline adjustment (a 2px nudge to line something up, or a radius 2px smaller than the one
@@ -227,8 +227,20 @@ function ruleBrokenBy(property, value) {
   if (property === "font-size" && !FONT_SIZE_VALUE.test(value)) return "fontSize";
   if (property === "border-radius" && hasLayoutLengthLiteral(value)) return "radius";
   if (SPACING_PROPERTY.test(property) && hasLayoutLengthLiteral(value)) return "spacing";
-  if (TIMING_PROPERTY.test(property) && DURATION_LITERAL.test(value)) return "timing";
+  if (TIMING_PROPERTY.test(property) && hasDurationLiteral(value)) return "timing";
   return null;
+}
+
+/**
+ * True when the value has a duration written by hand that is longer than nothing. A zero duration (0s, 0ms) is no duration at
+ * all, the way 0 is no length, so it needs no token: it means "at once", as in the reduced-motion rule's zeroed delays.
+ *
+ * @param {string} value A CSS value.
+ * @returns {boolean}
+ */
+function hasDurationLiteral(value) {
+  const durations = [...value.matchAll(DURATION_LITERAL)];
+  return durations.some((duration) => Number(duration[1]) !== 0);
 }
 
 /**

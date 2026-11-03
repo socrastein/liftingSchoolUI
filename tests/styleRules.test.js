@@ -87,6 +87,14 @@ describe("findStyleProblems", () => {
     expect(findStyleProblems("a.css", css)).toEqual([]);
   });
 
+  it("allows a zero duration, which is no duration at all, but not a real one beside it", () => {
+    const css = [".a {", "  transition-delay: 0s;", "  animation-delay: 0ms;", "  transition: opacity 0s, color 0.3s;", "}"].join(
+      "\n",
+    );
+    const problems = findStyleProblems("a.css", css);
+    expect(problems.map((problem) => problem.value)).toEqual(["opacity 0s, color 0.3s"]);
+  });
+
   it("ignores values written in comments", () => {
     const css = "/* the old value was font-size: 0.8rem; */\n.a {\n  /* color: #fff; */\n  color: var(--textFull);\n}";
     expect(findStyleProblems("a.css", css)).toEqual([]);
