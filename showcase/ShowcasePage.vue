@@ -4,6 +4,7 @@ import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useTheme, type Theme } from "./theme";
 import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
 import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
@@ -89,6 +90,7 @@ const isDisclosureOpen = ref(false);
 const cardOpener = ref<HTMLButtonElement | null>(null);
 const isCardOpen = ref(false);
 const cardNote = ref("");
+const isDialogOpen = ref(false);
 
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
@@ -383,6 +385,17 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           <button type="button" class="menuItem">Edit</button>
           <button type="button" class="menuItem menuItemDanger">Delete</button>
         </ActionsMenu>
+      </div>
+      <p><code>ConfirmDialog</code> asks a question that has to be answered first, before something that cannot be taken back.</p>
+      <div class="row">
+        <button type="button" class="btn btnSecondary" @click="isDialogOpen = true">Delete the sample</button>
+        <ConfirmDialog
+          v-if="isDialogOpen"
+          question="Delete the sample and all its history?"
+          confirm-label="Delete sample"
+          @confirm="isDialogOpen = false"
+          @cancel="isDialogOpen = false"
+        />
       </div>
       <div class="row">
         <button
