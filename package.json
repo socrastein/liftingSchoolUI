@@ -30,6 +30,10 @@
     "./fixedHeader": {
       "types": "./js/fixedHeader.d.ts",
       "default": "./js/fixedHeader.js"
+    },
+    "./colorScheme": {
+      "types": "./js/colorScheme.d.ts",
+      "default": "./js/colorScheme.js"
     }
   },
   "scripts": {
