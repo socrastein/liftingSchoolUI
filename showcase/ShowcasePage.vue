@@ -4,6 +4,7 @@ import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useTheme, type Theme } from "./theme";
 import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
+import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 
@@ -255,23 +256,20 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
     <section class="showcaseSection" aria-labelledby="fields">
       <h2 id="fields" class="h3">Fields</h2>
       <div class="card sampleCard">
-        <div class="field">
-          <label class="fieldLabel" for="sampleName">Name</label>
-          <input id="sampleName" v-model="sampleName" type="text" autocomplete="off" class="input" />
-        </div>
-        <div class="field">
-          <label class="fieldLabel" for="sampleEmail">Email</label>
-          <input
-            id="sampleEmail"
-            v-model="sampleEmail"
-            type="email"
-            autocomplete="off"
-            class="input"
-            aria-invalid="true"
-            aria-describedby="sampleEmailError"
-          />
-          <span id="sampleEmailError" class="fieldError">Please enter a valid email address.</span>
-        </div>
+        <FormField id="sampleName" label="Name (FormField, with a hint)" hint="As it should appear on the plan." v-slot="field">
+          <input v-bind="field" v-model="sampleName" type="text" autocomplete="off" class="input" />
+        </FormField>
+        <FormField
+          id="sampleEmail"
+          label="Email (FormField, with an error)"
+          error="Please enter a valid email address."
+          v-slot="field"
+        >
+          <input v-bind="field" v-model="sampleEmail" type="email" autocomplete="off" class="input" />
+        </FormField>
+        <FormField id="sampleOptional" label="Nickname (FormField, optional)" optional v-slot="field">
+          <input v-bind="field" type="text" autocomplete="off" class="input" />
+        </FormField>
         <div class="field">
           <label class="fieldLabel" for="sampleGoal">Goal</label>
           <select id="sampleGoal" v-model="sampleGoal" class="input" aria-describedby="sampleGoalNote">
