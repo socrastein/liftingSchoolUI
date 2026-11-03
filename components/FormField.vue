@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { focusField } from "../js/formFocus.js";
 
 /**
  * One labelled form field: the label, the control, and its hint, error or "Optional" note, wired together so assistive
@@ -89,17 +90,12 @@ const controlAttributes = computed<FieldControlAttributes>(() => ({
   "aria-describedby": describedBy.value,
   labelledBy: props.isCombobox ? labelId.value : undefined,
 }));
-
-/** A click on a combobox's label: focus the combobox, as a click on a <label for> focuses its control. */
-function focusControl(): void {
-  document.querySelector<HTMLElement>(`[data-field="${props.id}"]`)?.focus();
-}
 </script>
 
 <template>
   <div class="field">
     <!-- A combobox is named by the label's id; a click on the label still focuses it, as on a native control. -->
-    <span v-if="isCombobox" :id="labelId" class="fieldLabel" :class="{ visuallyHidden: hideLabel }" @click="focusControl">{{
+    <span v-if="isCombobox" :id="labelId" class="fieldLabel" :class="{ visuallyHidden: hideLabel }" @click="focusField(id)">{{
       label
     }}</span>
     <label v-else class="fieldLabel" :class="{ visuallyHidden: hideLabel }" :for="id">{{ label }}</label>
