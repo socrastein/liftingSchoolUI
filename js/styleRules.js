@@ -288,7 +288,7 @@ function describeRule(rule) {
     colour: "colours come from the colour tokens",
     fontSize: "font sizes are a --fontSize… token",
     radius: "corner radii are --radius, --radiusLg, --radiusFull, 50% or 0 (or a hairline of 2px or less)",
-    spacing: "gaps, padding and margins are --space1 to --space4 (or a hairline of 2px or less)",
+    spacing: "gaps, padding and margins are --spaceHalf to --space4 (or a hairline of 2px or less)",
     timing: "durations are --durationFast, --duration or --durationSlow",
   };
   return descriptions[rule];

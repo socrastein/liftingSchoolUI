@@ -102,7 +102,7 @@ Build from what is here before writing new CSS, in this library or in a project.
 - **Tokens, never typed values.** Colours, font sizes, radii, spacing and durations come from the tokens. A project checks its own
   styles for hand-typed values with the style rules checker (above), listing its few deliberate exceptions with their reasons.
 - **Few, clearly different steps** (less is more). Text: `--fontSizeSm/Md/Lg/Xl` plus the heading sizes `--fontSizeH1`..`H5` for
-  display text that should be heading-sized without the heading font (prices, timers). Spacing: `--space1`..`4` (0.5, 1, 2, 4rem;
+  display text that should be heading-sized without the heading font (prices, timers). Spacing: `--spaceHalf` and `--space1`..`4` (0.25, 0.5, 1, 2, 4rem;
   each doubles, so a choice is never a close call). Radii: `--radius` (the default), `--radiusLg` (cards), `--radiusFull` (the
   badge, the one pill). Time: `--durationFast`, `--duration` and `--durationSlow` (0.15, 0.3, 0.6s; each doubles), with `--easeOut` for
   what arrives and `--easeIn` for what leaves. Tints: one 10% wash per colour (`--accentSubtle`,

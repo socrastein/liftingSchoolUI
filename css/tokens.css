@@ -85,8 +85,10 @@
   --fontSizeDisplay: clamp(3.5rem, 16vw, 6rem);
 
   /* Spacing for gaps, padding and margins. Each step is double the last, so a choice is never a close call:
+     --spaceHalf inside dense controls and editors (a table cell, the gap between an icon and its label, a compact field),
      --space1 between closely related things, --space2 the normal gap, --space3 between sections,
      --space4 between page-level bands. */
+  --spaceHalf: 0.25rem;
   --space1: 0.5rem;
   --space2: 1rem;
   --space3: 2rem;

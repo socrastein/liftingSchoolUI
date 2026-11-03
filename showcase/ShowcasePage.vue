@@ -34,7 +34,7 @@ const COLOUR_GROUPS: { name: string; tokens: string[] }[] = [
 const TEXT_SIZES = ["--fontSizeXs", "--fontSizeSm", "--fontSizeMd", "--fontSizeLg", "--fontSizeXl"];
 
 /** The four spacing steps; each doubles the last. */
-const SPACING_STEPS = ["--space1", "--space2", "--space3", "--space4"];
+const SPACING_STEPS = ["--spaceHalf", "--space1", "--space2", "--space3", "--space4"];
 
 /** The radius tokens. */
 const RADII = ["--radius", "--radiusLg", "--radiusFull"];
