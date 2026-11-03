@@ -6,14 +6,22 @@ keeps its own copy of the brand, so a change made here reaches all of them.
 
 ## Using it in a project
 
-Install it straight from GitHub, pinned to a release tag (it is not on the npm registry):
+Install it straight from GitHub, pinned to a release tag (it is not on the npm registry). npm 12 refuses git dependencies
+unless a project opts in, so first add a `.npmrc` beside the project's `package.json` with:
 
-```sh
-npm install github:socrastein/liftingSchoolUI#v0.1.0
+```ini
+# Allows only the git dependencies listed in this project's own package.json (this library), not ones other packages pull in
+allow-git=root
 ```
 
-That adds `"lifting-school-ui": "github:socrastein/liftingSchoolUI#v0.1.0"` to `package.json`. The package name is kebab-case
-because npm requires lowercase names; everything inside it is camelCase.
+Then install over HTTPS (not `github:…`, which records an SSH address in the lockfile that a CI runner cannot clone):
+
+```sh
+npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.1.0"
+```
+
+The package name is kebab-case (`lifting-school-ui`) because npm requires lowercase names; everything inside it is camelCase.
+Installing runs no code: the library has no install or prepare scripts.
 
 Load the whole look once, before the project's own styles:
 
@@ -100,8 +108,37 @@ Build from what is here before writing new CSS, in this library or in a project.
   35 yellow, 25 green; kilograms 25 red, 20 blue, 15 yellow, 10 green; every lighter plate grey. `--plateRed` and the rest are for
   edges and badges (adjusted per theme for contrast); `--plateFaceRed` and the rest are the plates' true colours, the same in both
   themes.
+- **Type:** Ubuntu Sans for text (`--fontBody`), Montserrat for headings (`--fontHeading`), both variable fonts. Keep body fonts
+  variable: the static Ubuntu files looked harsh on a Linux desktop with full font hinting.
+- **State lives in ARIA, not in classes**: `aria-pressed`, `aria-current`, `aria-invalid` and `aria-expanded` are what the styling
+  reads, so the look and what a screen reader hears cannot disagree.
+- **A component's own `<style scoped>` holds only its layout** (size, position, how it arranges its children), never its own
+  colours, outlines or shadows. A look that two components need becomes a shared class here.
 - **Accessibility (WCAG 2.2 AA)** is built in: every colour pair in the tokens is measured (the comments give the ratios), the focus
-  ring and reduced-motion rule cover everything, and no class relies on colour alone. A change that lowers a contrast ratio is a bug.
+  ring and reduced-motion rule cover everything, and no class relies on colour alone. A change that lowers a contrast ratio is a bug:
+  measure a new colour pair in both themes, and run `npm run a11y`.
+
+## The shared classes
+
+All camelCase; a part or variant is the block's name plus a suffix, as `.card` → `.cardHeader`. The showcase shows each in use.
+
+- **Surfaces:** `.card` (a lifted face that holds content), `.panel` (a group inside a card), `.cardLink` (a card that is a link:
+  hover deepens it), `.cardHeader` with `.cardTitle` (a card's title row), `.sectionTitle` (the small uppercase heading of a
+  section), `.toolCard` (a tool's card: a padded column of its parts), and `.readingColumn` (the centred column of a page you read).
+- **Controls:** `.btn` with `.btnPrimary`, `.btnSecondary`, `.btnSubtle` or `.btnDanger`, plus `.btnSm`, `.btnIcon` (square, needs
+  an `aria-label`), `.btnBlock` and `.btnEdged` (a coloured edge from `--edgeColor`, set to a theme token). A bare `<button>` has no
+  look at all (the global rule is a reset), so a button that should look like one says `.btn`. `.segmented` + `.segmentedItem` for
+  one-of-several choices; the chosen item is `aria-pressed="true"`. `.disclosure` for a heading that opens a section, and
+  `.range` for a slider.
+- **Forms:** `.field` (label, control and note as one unit), `.fieldLabel`, `.input` (input, select and textarea alike; invalid is
+  drawn from `aria-invalid`), `.fieldNote`, `.fieldError`, `.choice` with `.radio` or `.checkbox`, and `.honeypot`.
+- **Data:** `.table` (caption, small uppercase column headings, light row rules), with `.tableNumber` on cells of figures so a
+  column of prices lines up. `.timeDisplay` for a timer's big figure, and `.listItemTitle` for the title line of a list item.
+- **Messages and navigation:** `.badge` (plus `.badgeInfo`, and `.badgeBlue` … `.badgeGrey`: a plate colour as the border),
+  `.alert` with `.alertDanger` (give it `role="alert"` when it appears after an action), `.menu` + `.menuItem` (the current page's
+  row is `aria-current="page"`, which NuxtLink and RouterLink set), and `.pageTitle` (a page's visible title).
+- **Highlights:** `.cue` + `.cueActive` (a brief outline on the part of a page that just changed), `.target` and `.targetDanger`
+  (what a control is about to act on).
 
 ## Working on the library
 
