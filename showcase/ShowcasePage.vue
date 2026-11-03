@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
-import { useTheme, type Theme } from "./theme";
+import { useColorScheme } from "../js/colorScheme.js";
 import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
+import ThemeButton from "../components/ThemeButton.vue";
 
 /**
  * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
@@ -15,8 +16,24 @@ import PopupTransition from "../components/PopupTransition.vue";
  * guide. Its own scoped styles below only lay the samples out; everything they show is the library's.
  */
 
-const { theme, setTheme } = useTheme();
-const THEMES: Theme[] = ["light", "dark"];
+/** The two themes the showcase can show, in the order of its Light / Dark control. */
+const THEMES = ["light", "dark"] as const;
+type Theme = (typeof THEMES)[number];
+
+/** Where the chosen theme is saved; index.html reads the same key before the first paint. */
+const THEME_KEY = "theme";
+
+const { isDark } = useColorScheme({ storageKey: THEME_KEY });
+
+/** Whether the given theme is the one showing. */
+function isShowing(theme: Theme): boolean {
+  return (theme === "dark") === isDark.value;
+}
+
+/** Shows the given theme and saves the choice. */
+function show(theme: Theme): void {
+  isDark.value = theme === "dark";
+}
 
 /** The colour tokens, grouped as tokens.css defines them. */
 const COLOUR_GROUPS: { name: string; tokens: string[] }[] = [
@@ -110,17 +127,21 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 <template>
   <header class="showcaseHeader">
     <p class="showcaseName">liftingSchoolUI</p>
-    <div class="segmented" role="group" aria-label="Theme">
-      <button
-        v-for="option in THEMES"
-        :key="option"
-        type="button"
-        class="segmentedItem"
-        :aria-pressed="theme === option"
-        @click="setTheme(option)"
-      >
-        {{ option === "light" ? "Light" : "Dark" }}
-      </button>
+    <div class="row">
+      <div class="segmented" role="group" aria-label="Theme">
+        <button
+          v-for="option in THEMES"
+          :key="option"
+          type="button"
+          class="segmentedItem"
+          :aria-pressed="isShowing(option)"
+          @click="show(option)"
+        >
+          {{ option === "light" ? "Light" : "Dark" }}
+        </button>
+      </div>
+      <!-- The shared ThemeButton on the same key: it and the control beside it always agree -->
+      <ThemeButton :storage-key="THEME_KEY" />
     </div>
   </header>
 

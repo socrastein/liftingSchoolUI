@@ -4,12 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>liftingSchoolUI showcase</title>
-    <!-- Applies the saved theme before the first paint, so a dark-mode visit never flashes light. Same key as theme.ts. -->
+    <!-- Applies the saved theme before the first paint, so a dark-mode visit never flashes light. Same key and values as
+         useColorScheme ("light", "dark", or "auto" / nothing saved to follow the system). -->
     <script>
       try {
         const saved = localStorage.getItem("theme");
         const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
-        const isDark = saved === "dark" || (saved === null && prefersDark);
+        const followsSystem = saved === null || saved === "auto";
+        const isDark = saved === "dark" || (followsSystem && prefersDark);
         if (isDark) document.documentElement.classList.add("dark");
       } catch {
         // Storage can be blocked; the page then starts in light mode
