@@ -18,6 +18,10 @@
 
   --textFull: #131316;
   --textMuted: #464654;
+  /* A control that cannot be used right now (a disabled button or menu row): clearly faded, 2.7:1 on the face and 2.4:1 on the
+     page. WCAG 2.2 exempts inactive controls from text contrast (1.4.3), so this is the one text colour allowed below 4.5:1;
+     --textMuted (9:1) reads as ordinary text, which is why "off" needs its own colour. Never for anything that can be used. */
+  --textDisabled: #9a9aa8;
   /* Large decorative text and the hero gradient only: 3.4:1 on the page, 3.9:1 on the face. */
   --textHero: #5a74f5;
 
@@ -162,6 +166,8 @@
 
   --textFull: #f2f3f4;
   --textMuted: #c4c8d4;
+  /* Disabled controls (see light mode): 2.9:1 on the face, 3.7:1 on the page. */
+  --textDisabled: #707480;
   --textHero: #5bcefa;
 
   --borderFull: #f4f2f4;

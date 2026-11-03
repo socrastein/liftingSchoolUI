@@ -43,7 +43,7 @@
 }
 
 /*
- * A button that can't be used right now: solid and recessed (the page's base colour, muted text, no edge or shadow), never faded
+ * A button that can't be used right now: solid and recessed (the page's base colour, faded text, no edge or shadow), never faded
  * with opacity, which lets whatever is behind it show through and turns its shadow into a smudge. Every variant looks the same
  * when disabled, so "off" never depends on which button it is. Its words still say what it does; the cursor says it is off.
  */
@@ -51,7 +51,7 @@
   background-color: var(--bgBase);
   border-color: var(--bgBase);
   box-shadow: none;
-  color: var(--textMuted);
+  color: var(--textDisabled);
   cursor: not-allowed;
 }
 
@@ -254,11 +254,11 @@
   background-color: var(--dangerSubtle);
 }
 
-/* A row that cannot be used right now (Move up on the first item): muted, no hover wash, and the cursor says it is off */
+/* A row that cannot be used right now (Move up on the first item): faded, no hover wash, and the cursor says it is off */
 .menuItem:disabled,
 .menuItem:disabled:hover {
   background-color: transparent;
-  color: var(--textMuted);
+  color: var(--textDisabled);
   cursor: not-allowed;
 }
 
