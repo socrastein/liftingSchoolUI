@@ -45,6 +45,10 @@
     "./placeholderCopyCheck": {
       "types": "./js/placeholderCopyCheck.d.ts",
       "default": "./js/placeholderCopyCheck.js"
+    },
+    "./dateUtils": {
+      "types": "./js/dateUtils.d.ts",
+      "default": "./js/dateUtils.js"
     }
   },
   "scripts": {
