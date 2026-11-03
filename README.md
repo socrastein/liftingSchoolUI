@@ -56,8 +56,19 @@ it("takes every colour, size, spacing value and duration from the tokens", () =>
 
 ### Upgrading
 
-Change the tag in `package.json` (or run the install line above with the new tag), install, and check the project's pages in
-both themes. Each release's changes are in this repo's commit history between the two tags.
+Remove the library, then install the new tag:
+
+```sh
+npm uninstall lifting-school-ui
+npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.1.1"
+```
+
+Changing the tag in place (editing `package.json` and running `npm install`, or installing the new tag over the old) fails
+with `EALLOWGIT` under npm 12: with `allow-git=root` it accepts a project's own git dependency when it is added, but not when
+it replaces an older version of it (seen with npm 12.2.1). Removing it first makes the upgrade an addition. A fresh `npm ci`
+(CI, another machine) is not affected.
+
+Then check the project's pages in both themes. Each release's changes are in this repo's commit history between the two tags.
 
 ### Working on the look and a project at the same time
 
