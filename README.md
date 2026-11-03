@@ -17,7 +17,7 @@ allow-git=root
 Then install over HTTPS (not `github:…`, which records an SSH address in the lockfile that a CI runner cannot clone):
 
 ```sh
-npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.1.0"
+npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.1.1"
 ```
 
 The package name is kebab-case (`lifting-school-ui`) because npm requires lowercase names; everything inside it is camelCase.
