@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useTheme, type Theme } from "./theme";
+import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 
@@ -378,6 +379,15 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <code>AnchoredCard</code> opens beside the button that opened it, positioned by <code>FloatingPanel</code> and eased in
         and out by <code>PopupTransition</code>.
       </p>
+      <p>
+        <code>ActionsMenu</code> is the ⋮ button: a short list of actions for a row, drawn by the same <code>FloatingPanel</code>.
+      </p>
+      <div class="row">
+        <ActionsMenu label="Actions for the sample row" toggle-id="sampleActions">
+          <button type="button" class="menuItem">Edit</button>
+          <button type="button" class="menuItem menuItemDanger">Delete</button>
+        </ActionsMenu>
+      </div>
       <div class="row">
         <button
           ref="cardOpener"

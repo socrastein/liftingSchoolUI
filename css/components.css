@@ -65,6 +65,17 @@
   width: 3rem;
 }
 
+/* A button with no face at all, for a small icon that sits in a row of content (the ⋮ of a menu): muted until it is hovered or
+   expanded. It has no size of its own; the component that uses it sets the target. */
+.btnGhost {
+  color: var(--textMuted);
+}
+
+.btnGhost:hover:not(:disabled),
+.btnGhost[aria-expanded="true"] {
+  color: var(--textFull);
+}
+
 /* The small size, for a button that sits in a heading row or beside text rather than closing a form */
 .btnSm {
   font-size: var(--fontSizeSm);

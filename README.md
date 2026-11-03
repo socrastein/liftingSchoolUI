@@ -100,18 +100,18 @@ Vite's dev server only serves files inside the project unless told otherwise, so
 
 ## What is in it
 
-| Path                 | What it is                                                                                                                                                            |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `css/index.css`      | The one import: loads the three files below in order.                                                                                                                 |
-| `css/tokens.css`     | Every value: colours (light in `:root`, dark in `.dark`), font sizes, spacing, radii, shadows, durations, the plate colours.                                          |
-| `css/base.css`       | Fonts, the reset, typography, the focus ring, the reduced-motion rule and the few utilities. Pulls in `css/animations.css`.                                           |
-| `css/components.css` | The shared classes: `.btn`, `.segmented`, `.menu`, `.field`/`.input`, `.choice`, `.range`, `.table`, `.card`/`.panel`, `.badge`, `.alert`, `.disclosure`, …           |
-| `fonts/`             | Ubuntu Sans (text) and Montserrat (headings), both variable, with their licences.                                                                                     |
-| `icons/`             | Interface icons (Lucide), brand marks (Simple Icons) and the logo, each named as its source names it. `icons/LICENSES.md` says where each comes from.                 |
-| `js/plateColors.js`  | `plateColor(weight, lbs)`: which colour a plate of that weight is (`lifting-school-ui/plateColors`).                                                                  |
-| `js/styleRules.js`   | The style rules checker, for a project's tests (`lifting-school-ui/styleRules`; Node only, since it reads files).                                                     |
-| `js/fixedHeader.js`  | `fixedHeaderBottom()`: where the page's fixed header (marked `data-fixed-header`) ends, for popups (`lifting-school-ui/fixedHeader`).                                 |
-| `components/`        | The shared Vue components: `PopupTransition` (how a popup eases in and out), `FloatingPanel` (where it is drawn) and `AnchoredCard` (a small card beside its button). |
+| Path                 | What it is                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `css/index.css`      | The one import: loads the three files below in order.                                                                                                                                                        |
+| `css/tokens.css`     | Every value: colours (light in `:root`, dark in `.dark`), font sizes, spacing, radii, shadows, durations, the plate colours.                                                                                 |
+| `css/base.css`       | Fonts, the reset, typography, the focus ring, the reduced-motion rule and the few utilities. Pulls in `css/animations.css`.                                                                                  |
+| `css/components.css` | The shared classes: `.btn`, `.segmented`, `.menu`, `.field`/`.input`, `.choice`, `.range`, `.table`, `.card`/`.panel`, `.badge`, `.alert`, `.disclosure`, …                                                  |
+| `fonts/`             | Ubuntu Sans (text) and Montserrat (headings), both variable, with their licences.                                                                                                                            |
+| `icons/`             | Interface icons (Lucide), brand marks (Simple Icons) and the logo, each named as its source names it. `icons/LICENSES.md` says where each comes from.                                                        |
+| `js/plateColors.js`  | `plateColor(weight, lbs)`: which colour a plate of that weight is (`lifting-school-ui/plateColors`).                                                                                                         |
+| `js/styleRules.js`   | The style rules checker, for a project's tests (`lifting-school-ui/styleRules`; Node only, since it reads files).                                                                                            |
+| `js/fixedHeader.js`  | `fixedHeaderBottom()`: where the page's fixed header (marked `data-fixed-header`) ends, for popups (`lifting-school-ui/fixedHeader`).                                                                        |
+| `components/`        | The shared Vue components: `PopupTransition` (how a popup eases in and out), `FloatingPanel` (where it is drawn), `AnchoredCard` (a small card beside its button) and `ActionsMenu` (the ⋮ list of actions). |
 
 ## The rules of the look
 
@@ -156,7 +156,7 @@ All camelCase; a part or variant is the block's name plus a suffix, as `.card` �
   hover deepens it), `.cardHeader` with `.cardTitle` (a card's title row), `.sectionTitle` (the small uppercase heading of a
   section), `.toolCard` (a tool's card: a padded column of its parts), and `.readingColumn` (the centred column of a page you read).
 - **Controls:** `.btn` with `.btnPrimary`, `.btnSecondary`, `.btnSubtle`, `.btnDanger` or `.btnDangerSubtle` (for a button that only asks before something destructive), plus `.btnSm`, `.btnIcon` (square, needs
-  an `aria-label`), `.btnBlock` and `.btnEdged` (a coloured edge from `--edgeColor`, set to a theme token). A bare `<button>` has no
+  an `aria-label`), `.btnGhost` (no face, for a small icon in a row, such as the ⋮ of `ActionsMenu`), `.btnBlock` and `.btnEdged` (a coloured edge from `--edgeColor`, set to a theme token). A bare `<button>` has no
   look at all (the global rule is a reset), so a button that should look like one says `.btn`. `.segmented` + `.segmentedItem` for
   one-of-several choices; the chosen item is `aria-pressed="true"`. `.disclosure` for a heading that opens a section, and
   `.range` for a slider.
