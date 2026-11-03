@@ -25,12 +25,18 @@
   src: url("../fonts/ubuntuSans/ubuntu-sans-latin-wght-italic.woff2") format("woff2-variations");
 }
 
+/*
+ * Montserrat, for headings: the variable version, one file per style holding every weight from 100 to 900. Like Ubuntu Sans,
+ * these are Fontsource's Latin subsets (the 232 characters of English and Western European text), compressed as woff2: about
+ * 38 KB each instead of the full font's 690 KB. A character outside the subset (an arrow, a Greek letter) is drawn from a system
+ * font instead, so keep headings to Latin text.
+ */
 @font-face {
   font-display: swap;
   font-family: "Montserrat";
   font-style: normal;
   font-weight: 100 900;
-  src: url("../fonts/montserrat/Montserrat-Variable.ttf");
+  src: url("../fonts/montserrat/montserrat-latin-wght-normal.woff2") format("woff2-variations");
 }
 
 @font-face {
@@ -38,7 +44,7 @@
   font-family: "Montserrat";
   font-style: italic;
   font-weight: 100 900;
-  src: url("../fonts/montserrat/Montserrat-Variable-Italic.ttf");
+  src: url("../fonts/montserrat/montserrat-latin-wght-italic.woff2") format("woff2-variations");
 }
 
 * {
