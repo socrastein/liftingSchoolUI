@@ -189,6 +189,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <button type="button" class="btn btnSecondary">.btnSecondary</button>
         <button type="button" class="btn btnSubtle">.btnSubtle</button>
         <button type="button" class="btn btnDanger">.btnDanger</button>
+        <button type="button" class="btn btnDangerSubtle">.btnDangerSubtle</button>
         <button type="button" class="btn btnPrimary" disabled>Disabled</button>
       </div>
       <div class="row">
@@ -359,6 +360,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <a href="#menus" class="menuItem" aria-current="page">The current page</a>
         <a href="#menus" class="menuItem">Another page</a>
         <button type="button" class="menuItem">A button row</button>
+        <button type="button" class="menuItem" disabled>A disabled row</button>
+        <button type="button" class="menuItem menuItemDanger">A danger row</button>
       </nav>
     </section>
 

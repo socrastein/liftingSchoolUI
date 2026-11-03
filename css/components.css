@@ -8,7 +8,8 @@
 /*
  * Buttons. Every button, and every link dressed as one, says .btn plus one variant: .btnPrimary (the accent fill, for the
  * action a page is about), .btnSecondary (a plain face, for the alternative), .btnSubtle (the accent wash, for a quiet action
- * that must not be hit by accident) or .btnDanger (for something destructive).
+ * that must not be hit by accident), .btnDanger (for something destructive) or .btnDangerSubtle (the danger wash, for a button
+ * that only asks before something destructive).
  * Add .btnEdged and set --edgeColor for a coloured edge. Add .btnBlock to make it the full width of its container. Like a card, a button is lifted by a soft edge and shadow in
  * light mode and by tone in dark mode, and it sinks a little when pressed; there is no gloss and no lift on hover.
  * A component adds only its layout (for example how much room it takes in a row), never its own colours.
@@ -120,6 +121,20 @@
   background-color: color-mix(in srgb, var(--danger) 82%, var(--textFull));
 }
 
+/* The quiet danger button, for one that only opens a confirmation (Delete client asks first): the danger wash, no raised face,
+   so the page's main action stays the loudest thing on it. The confirmation's own button is the solid .btnDanger. The danger text
+   clears 4.5:1 on the 10% wash over every surface in both themes (4.75:1 at worst, light mode on --bgBase); a stronger wash on
+   hover would not (4.0:1 at 20%), so hovering brings in the danger edge instead. */
+.btnDangerSubtle {
+  background-color: var(--dangerSubtle);
+  border-color: transparent;
+  color: var(--danger);
+}
+
+.btnDangerSubtle:hover:not(:disabled) {
+  border-color: var(--danger);
+}
+
 /* Dark mode has no rims or shadows. A secondary button there would be the same tone as the card it sits on, so it is
    a step lighter. */
 .dark .btnPrimary,
@@ -225,6 +240,26 @@
 
 .menuItem:hover {
   background-color: var(--accentSubtle);
+}
+
+/* A row that destroys something (Remove): marked by its words and the danger colour, never the colour alone. The danger text
+   clears 4.5:1 on its hover wash, as on .btnDangerSubtle. */
+.menuItemDanger,
+.menuItemDanger:link,
+.menuItemDanger:visited {
+  color: var(--danger);
+}
+
+.menuItemDanger:hover {
+  background-color: var(--dangerSubtle);
+}
+
+/* A row that cannot be used right now (Move up on the first item): muted, no hover wash, and the cursor says it is off */
+.menuItem:disabled,
+.menuItem:disabled:hover {
+  background-color: transparent;
+  color: var(--textMuted);
+  cursor: not-allowed;
 }
 
 /* The page you are on ("page"), or the group it belongs to ("true": Tools, on a tool's page) */
