@@ -99,6 +99,18 @@ const PERIODS = ["7D", "30D", "90D", "All"];
 const sampleName = ref("Test Person");
 const sampleEmail = ref("not-an-email");
 const sampleGoal = ref("");
+const sampleCountry = ref("United States");
+/** The searchable sample's options: enough countries to filter. */
+const SAMPLE_COUNTRIES = [
+  "United States",
+  "Canada",
+  "Côte d'Ivoire",
+  "India",
+  "Indonesia",
+  "Ireland",
+  "Mexico",
+  "United Kingdom",
+].map((name) => ({ value: name, label: name }));
 /** The sample drop-down's options. */
 const SAMPLE_GOALS = [
   { value: "strength", label: "Strength" },
@@ -313,6 +325,18 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
             placeholder="Select…"
             size="regular"
             @change="sampleGoal = $event"
+          />
+        </FormField>
+        <FormField id="sampleCountry" label="Country (DropdownSelect, searchable)" is-combobox v-slot="field">
+          <DropdownSelect
+            v-bind="field"
+            :combo-id="field.id"
+            :options="SAMPLE_COUNTRIES"
+            :value="sampleCountry"
+            placeholder="Type to search…"
+            size="regular"
+            searchable
+            @change="sampleCountry = $event"
           />
         </FormField>
         <div class="field">

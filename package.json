@@ -57,6 +57,10 @@
     "./dropdownOption": {
       "types": "./js/dropdownOption.d.ts",
       "default": "./js/dropdownOption.js"
+    },
+    "./optionSearch": {
+      "types": "./js/optionSearch.d.ts",
+      "default": "./js/optionSearch.js"
     }
   },
   "scripts": {

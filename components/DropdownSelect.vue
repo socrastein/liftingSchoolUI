@@ -5,6 +5,7 @@ import FloatingPanel from "./FloatingPanel.vue";
 import PopupTransition from "./PopupTransition.vue";
 import { fixedHeaderBottom } from "../js/fixedHeader.js";
 import type { DropdownOption } from "../js/dropdownOption.js";
+import { optionNamed, optionsMatching } from "../js/optionSearch.js";
 
 /**
  * A drop-down list that picks one option: the replacement for a native
@@ -57,6 +58,15 @@ import type { DropdownOption } from "../js/dropdownOption.js";
  * visible label's id (`labelledBy`) or, with no visible label, by
  * `label`.
  *
+ * With `searchable`, for a long list (a country), the box is a text box:
+ * typing narrows the list to the options whose label, or one of its
+ * words, starts with the text (js/optionSearch.js), and a phone opens its
+ * keyboard. ↑/↓ move the highlight, Enter picks it, Escape closes and puts
+ * the current option back in the box, and so does leaving the box without
+ * picking. Text that is exactly an option's label picks it, so a
+ * browser's autofill (give it `autocomplete`) still works. Typing to
+ * jump, Space and Home/End are the text box's own then.
+ *
  * It only reports: `change` carries the chosen option's value, and only
  * when it differs from `value`.
  */
@@ -81,6 +91,8 @@ const props = defineProps<{
    * full-size form's fields, with options as tall as a comfortable tap on a phone.
    */
   size?: "compact" | "regular";
+  /** A text box that narrows the list as you type, for a long list (see above). */
+  searchable?: boolean;
 }>();
 
 const emit = defineEmits<{ (event: "change", value: T): void }>();
@@ -101,13 +113,27 @@ const listMinWidth = ref("");
 /** The list may be as tall as the room beside the box, measured when it opens. */
 const listMaxHeight = ref("");
 
+/**
+ * With `searchable`: what has been typed in the box since it last showed the current option; null while it shows that.
+ */
+const filterText = ref<string | null>(null);
+
+/** The options in the list: those matching what has been typed, or every option. */
+const shownOptions = computed(() => {
+  const isFiltering = props.searchable && filterText.value !== null;
+  return isFiltering ? optionsMatching(props.options, filterText.value ?? "") : props.options;
+});
+
 /** FloatingPanel's gap from the box (4px) plus its margin from the window's edge (8px). */
 const LIST_MARGIN_PX = 12;
 
-/** The index of the current option; -1 when `value` is none of them. */
-const selectedIndex = computed(() => props.options.findIndex((option) => option.value === props.value));
+/** The index of the current option in the list; -1 when `value` is none of them (or typing has filtered it out). */
+const selectedIndex = computed(() => shownOptions.value.findIndex((option) => option.value === props.value));
 
-const selectedOption = computed(() => props.options[selectedIndex.value]);
+const selectedOption = computed(() => props.options.find((option) => option.value === props.value));
+
+/** What the searchable box shows: what has been typed, or else the current option's label. */
+const searchBoxText = computed(() => filterText.value ?? selectedOption.value?.label ?? "");
 
 /** The highlighted option's element id, for aria-activedescendant; undefined while closed. */
 const activeOptionId = computed(() => {
@@ -126,7 +152,7 @@ function optionId(index: number): string {
  * starting next to the box.
  */
 function staggerPosition(index: number): Record<string, number> {
-  const fromBottom = props.options.length - 1 - index;
+  const fromBottom = shownOptions.value.length - 1 - index;
   return { "--fromTop": index, "--fromBottom": fromBottom };
 }
 
@@ -153,8 +179,10 @@ function roomForList(): number {
   return roomierSide - LIST_MARGIN_PX;
 }
 
+/** Closes the list; a searchable box goes back to showing the current option. */
 function close(): void {
   isOpen.value = false;
+  filterText.value = null;
 }
 
 function toggleOpen(): void {
@@ -164,20 +192,22 @@ function toggleOpen(): void {
 
 /** Move the highlight by `step`, stopping at either end (a select does not wrap). */
 function moveHighlight(step: -1 | 1): void {
-  const lastIndex = props.options.length - 1;
+  const lastIndex = shownOptions.value.length - 1;
   const movedIndex = activeIndex.value + step;
   activeIndex.value = Math.min(Math.max(movedIndex, 0), lastIndex);
 }
 
 /** Pick an option: close, and report it if it is a change. */
 function choose(index: number): void {
+  const option = shownOptions.value[index];
   close();
-  const option = props.options[index];
-  if (option === undefined || index === selectedIndex.value) return;
+  if (option === undefined || option.value === props.value) return;
   emit("change", option.value);
 }
 
+/** Picks the highlighted option. With nothing matching what was typed, there is none, and the list stays open. */
 function chooseHighlighted(): void {
+  if (shownOptions.value.length === 0) return;
   choose(activeIndex.value);
 }
 
@@ -218,10 +248,10 @@ function isOneCharacterRepeated(text: string): boolean {
  * does.
  */
 function firstOptionStartingWith(prefix: string, fromIndex: number): number | undefined {
-  const count = props.options.length;
+  const count = shownOptions.value.length;
   for (let step = 0; step < count; step++) {
     const index = (fromIndex + step) % count;
-    const label = props.options[index]!.label.toLowerCase();
+    const label = shownOptions.value[index]!.label.toLowerCase();
     if (label.startsWith(prefix)) return index;
   }
   return undefined;
@@ -265,7 +295,7 @@ const KEYS_WHILE_CLOSED: Record<string, () => void> = {
   Enter: () => open(),
   " ": () => open(),
   Home: () => open(0),
-  End: () => open(props.options.length - 1),
+  End: () => open(shownOptions.value.length - 1),
 };
 
 /** What each key does while the list is open. */
@@ -273,16 +303,41 @@ const KEYS_WHILE_OPEN: Record<string, () => void> = {
   ArrowDown: () => moveHighlight(1),
   ArrowUp: () => moveHighlight(-1),
   Home: () => (activeIndex.value = 0),
-  End: () => (activeIndex.value = props.options.length - 1),
+  End: () => (activeIndex.value = shownOptions.value.length - 1),
   Enter: chooseHighlighted,
   " ": chooseHighlighted,
   Tab: chooseHighlighted,
   Escape: close,
 };
 
-/** A key on the combobox: a named key from the table for its state, else a typed character. */
+/**
+ * The searchable box, closed. Enter opens the list rather than sending the form around it, as a select's Enter does; every
+ * other key types, as in any text box.
+ */
+const SEARCH_KEYS_WHILE_CLOSED: Record<string, () => void> = {
+  ArrowDown: () => open(),
+  ArrowUp: () => open(),
+  Enter: () => open(),
+};
+
+/** The searchable box, open. Space, Home and End are left to the text; Tab picks only after something was typed. */
+const SEARCH_KEYS_WHILE_OPEN: Record<string, () => void> = {
+  ArrowDown: () => moveHighlight(1),
+  ArrowUp: () => moveHighlight(-1),
+  Enter: chooseHighlighted,
+  Tab: chooseIfSearched,
+  Escape: close,
+};
+
+/** The key table for the box's kind and state. */
+function keyTableNow(): Record<string, () => void> {
+  if (props.searchable) return isOpen.value ? SEARCH_KEYS_WHILE_OPEN : SEARCH_KEYS_WHILE_CLOSED;
+  return isOpen.value ? KEYS_WHILE_OPEN : KEYS_WHILE_CLOSED;
+}
+
+/** A key on the combobox: a named key from the table for its state, else (not searchable) a typed character. */
 function onKeydown(event: KeyboardEvent): void {
-  const keyTable = isOpen.value ? KEYS_WHILE_OPEN : KEYS_WHILE_CLOSED;
+  const keyTable = keyTableNow();
   const keyAction = keyTable[event.key];
   if (keyAction !== undefined) {
     const wasOpen = isOpen.value;
@@ -293,10 +348,55 @@ function onKeydown(event: KeyboardEvent): void {
     if (event.key === "Escape" && wasOpen) event.stopPropagation();
     return;
   }
+  if (props.searchable) return;
   const character = typedCharacter(event);
   if (character === undefined) return;
   event.preventDefault();
   typeCharacter(character);
+}
+
+// ---- the searchable box -------------------------------------------------------------------
+
+/** Typing in the searchable box: the list opens on the options that match, the first highlighted. */
+function onSearchInput(event: Event): void {
+  filterText.value = (event.target as HTMLInputElement).value;
+  if (isOpen.value) activeIndex.value = 0;
+  else open(0);
+}
+
+/** Tab after typing picks the highlighted match and moves on; Tab without typing just moves on, changing nothing. */
+function chooseIfSearched(): void {
+  const hasSearched = filterText.value !== null && filterText.value.trim() !== "";
+  if (hasSearched) chooseHighlighted();
+  else close();
+}
+
+/**
+ * Text that is exactly an option's label picks it: what a browser's autofill puts in the box, or a label typed out in full
+ * before leaving it.
+ */
+function chooseOptionNamedInBox(): void {
+  if (filterText.value === null) return;
+  const named = optionNamed(props.options, filterText.value);
+  if (named === undefined) return;
+  close();
+  if (named.value !== props.value) emit("change", named.value);
+}
+
+/** Leaving the box without picking: a full label still counts, anything else is dropped and the current option comes back. */
+function onSearchBlur(): void {
+  chooseOptionNamedInBox();
+  close();
+}
+
+/** Focusing the box selects its text, so typing replaces the current option's label instead of adding to it. */
+function selectAllText(event: FocusEvent): void {
+  (event.target as HTMLInputElement).select();
+}
+
+/** A click opens the list; unlike the plain drop-down's, it does not close it, since a click in a text box moves the caret. */
+function openOnClick(): void {
+  if (!isOpen.value) open();
 }
 
 // A click on the combobox itself is its own to handle (it toggles the list).
@@ -304,7 +404,38 @@ onClickOutside(list, close, { ignore: [combobox] });
 </script>
 
 <template>
+  <span v-if="searchable" class="searchBox">
+    <!-- The attributes given to it come after autocomplete="off", so a field that wants the browser's autofill can ask for it. -->
+    <input
+      :id="comboId"
+      ref="combobox"
+      type="text"
+      class="dropdownSelect dropdownSearch input"
+      :class="{ compact: size !== 'regular', hasNote: selectedOption?.note !== undefined }"
+      role="combobox"
+      aria-autocomplete="list"
+      autocomplete="off"
+      v-bind="$attrs"
+      :aria-labelledby="labelledBy"
+      :aria-label="label"
+      :aria-controls="listId"
+      :aria-expanded="isOpen"
+      :aria-activedescendant="activeOptionId"
+      :placeholder="placeholder"
+      :value="searchBoxText"
+      @input="onSearchInput"
+      @change="chooseOptionNamedInBox"
+      @click="openOnClick"
+      @focus="selectAllText"
+      @blur="onSearchBlur"
+      @keydown="onKeydown"
+    />
+    <svg class="chevron searchChevron" viewBox="0 0 10 6" width="10" height="6" aria-hidden="true" focusable="false">
+      <path d="M1 1l4 4 4-4" />
+    </svg>
+  </span>
   <div
+    v-else
     v-bind="$attrs"
     :id="comboId"
     ref="combobox"
@@ -348,7 +479,7 @@ onClickOutside(list, close, { ignore: [combobox] });
         @mousedown.prevent
       >
         <li
-          v-for="(option, index) in options"
+          v-for="(option, index) in shownOptions"
           :id="optionId(index)"
           :key="index"
           role="option"
@@ -362,6 +493,7 @@ onClickOutside(list, close, { ignore: [combobox] });
           <slot name="option" :option="option">{{ option.label }}</slot>
           <span v-if="option.note" class="visuallyHidden">, {{ option.note }}</span>
         </li>
+        <li v-if="shownOptions.length === 0" class="noMatches" role="presentation">No matches</li>
       </ul>
     </FloatingPanel>
   </PopupTransition>
@@ -412,6 +544,44 @@ onClickOutside(list, close, { ignore: [combobox] });
 .dropdownSelect[aria-expanded="true"] .chevron {
   transform: rotate(180deg);
   transition-timing-function: var(--easeOut);
+}
+
+/* The searchable box: a text box with the drop-down's arrow drawn over its right end, which clicks pass through to the box. */
+.searchBox {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.dropdownSearch {
+  padding-right: var(--space3);
+  cursor: text;
+  user-select: text;
+}
+
+.searchChevron {
+  position: absolute;
+  top: 50%;
+  right: var(--space2);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.searchBox:has([aria-expanded="true"]) .searchChevron {
+  transform: rotate(180deg);
+  transition-timing-function: var(--easeOut);
+}
+
+/* Nothing matches what was typed: said in the list, in muted text, rather than an empty box. */
+.noMatches {
+  padding: var(--spaceHalf) var(--space1);
+  color: var(--textMuted);
+  font-size: var(--fontSizeSm);
+}
+
+.dropdownList.regular .noMatches {
+  padding: var(--space1) var(--space2);
+  font-size: var(--fontSizeMd);
 }
 
 /* Its max-height is set when it opens (roomForList). */

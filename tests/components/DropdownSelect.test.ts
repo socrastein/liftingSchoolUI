@@ -290,3 +290,123 @@ describe("DropdownSelect: the two sizes", () => {
     expect(compact.get('[role="listbox"]').classes()).not.toContain("regular");
   });
 });
+
+describe("DropdownSelect: searchable", () => {
+  const COUNTRIES = [
+    { value: "us", label: "United States" },
+    { value: "ca", label: "Canada" },
+    { value: "gb", label: "United Kingdom" },
+    { value: "in", label: "India" },
+  ];
+
+  function mountSearchable(value: string, extra: Record<string, unknown> = {}) {
+    return mount(DropdownSelect, {
+      props: { options: COUNTRIES, value, comboId: "country", label: "Country", searchable: true, ...extra },
+      attachTo: document.body,
+    });
+  }
+
+  /** Types text into the box as a person would: the input event carries the box's whole value. */
+  async function typeInBox(wrapper: VueWrapper, text: string): Promise<void> {
+    const box = wrapper.get<HTMLInputElement>('input[role="combobox"]');
+    box.element.value = text;
+    await box.trigger("input");
+  }
+
+  function shownLabels(wrapper: VueWrapper): string[] {
+    return wrapper.findAll('[role="option"]').map((option) => option.text());
+  }
+
+  it("is a text box combobox that shows the current option and lets the browser's own suggestions stay away", () => {
+    const wrapper = mountSearchable("ca");
+    const box = wrapper.get<HTMLInputElement>('input[role="combobox"]');
+
+    expect(box.element.value).toBe("Canada");
+    expect(box.attributes("aria-autocomplete")).toBe("list");
+    expect(box.attributes("autocomplete")).toBe("off");
+  });
+
+  it("takes an autocomplete token it is given, so a field can still be autofilled", () => {
+    const wrapper = mountSearchable("", { autocomplete: "country-name" });
+    expect(wrapper.get('input[role="combobox"]').attributes("autocomplete")).toBe("country-name");
+  });
+
+  it("typing opens the list on the matches, highlights the first, and Enter picks it", async () => {
+    const wrapper = mountSearchable("ca");
+
+    await typeInBox(wrapper, "united");
+    expect(shownLabels(wrapper)).toEqual(["United States", "United Kingdom"]);
+    expect(highlightedText(wrapper)).toBe("United States");
+    await press(wrapper, "ArrowDown");
+    await press(wrapper, "Enter");
+
+    expect(wrapper.emitted("change")).toEqual([["gb"]]);
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+  });
+
+  it("says when nothing matches, and Enter then picks nothing and keeps the list open", async () => {
+    const wrapper = mountSearchable("ca");
+
+    await typeInBox(wrapper, "xyz");
+    expect(wrapper.get(".noMatches").text()).toBe("No matches");
+    await press(wrapper, "Enter");
+
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(true);
+    expect(wrapper.emitted("change")).toBeUndefined();
+  });
+
+  it("Escape closes the list and puts the current option back in the box", async () => {
+    const wrapper = mountSearchable("ca");
+    await typeInBox(wrapper, "ind");
+
+    await press(wrapper, "Escape");
+
+    expect(wrapper.get<HTMLInputElement>('input[role="combobox"]').element.value).toBe("Canada");
+    expect(wrapper.emitted("change")).toBeUndefined();
+  });
+
+  it("leaving the box with part of a label changes nothing; with a whole label, picks it", async () => {
+    const wrapper = mountSearchable("ca");
+    const box = wrapper.get<HTMLInputElement>('input[role="combobox"]');
+
+    await typeInBox(wrapper, "Ind");
+    await box.trigger("blur");
+    expect(box.element.value).toBe("Canada");
+    expect(wrapper.emitted("change")).toBeUndefined();
+
+    await typeInBox(wrapper, "india");
+    await box.trigger("blur");
+    expect(wrapper.emitted("change")).toEqual([["in"]]);
+  });
+
+  it("autofill (the box's change event with a whole label) picks that option", async () => {
+    const wrapper = mountSearchable("");
+    await typeInBox(wrapper, "United States");
+
+    await wrapper.get('input[role="combobox"]').trigger("change");
+
+    expect(wrapper.emitted("change")).toEqual([["us"]]);
+  });
+
+  it("Tab after typing picks the highlighted match; Tab without typing changes nothing", async () => {
+    const typed = mountSearchable("ca");
+    await typeInBox(typed, "uni");
+    await press(typed, "Tab");
+    expect(typed.emitted("change")).toEqual([["us"]]);
+
+    const untouched = mountSearchable("ca");
+    await press(untouched, "ArrowDown");
+    await press(untouched, "Tab");
+    expect(untouched.emitted("change")).toBeUndefined();
+  });
+
+  it("leaves Space and typed letters to the text box rather than picking with them", async () => {
+    const wrapper = mountSearchable("ca");
+    await press(wrapper, "ArrowDown");
+    await press(wrapper, " ");
+    await press(wrapper, "u");
+
+    expect(wrapper.emitted("change")).toBeUndefined();
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(true);
+  });
+});
