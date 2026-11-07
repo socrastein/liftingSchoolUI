@@ -63,7 +63,7 @@ describe("DropdownSelect", () => {
     const combobox = wrapper.get('[role="combobox"]');
 
     expect(combobox.text()).toBe("Choose…");
-    await combobox.trigger("click");
+    await combobox.trigger("mousedown");
 
     const optionTexts = wrapper.findAll('[role="option"]').map((option) => option.text());
     expect(optionTexts).not.toContain("Choose…");
@@ -86,7 +86,7 @@ describe("DropdownSelect", () => {
   it("the open list is named like the combobox and as wide as it at least", async () => {
     const wrapper = mountSelect("3-4");
 
-    await wrapper.get('[role="combobox"]').trigger("click");
+    await wrapper.get('[role="combobox"]').trigger("mousedown");
 
     const list = wrapper.get('[role="listbox"]');
     expect(list.attributes("aria-label")).toBe("Sets, Back Squat");
@@ -169,7 +169,7 @@ describe("DropdownSelect", () => {
 
     expect(combobox.classes()).toContain("hasNote");
     expect(combobox.text()).toBe("Strength, row's target");
-    await combobox.trigger("click");
+    await combobox.trigger("mousedown");
 
     const marked = wrapper.findAll('[role="option"].hasNote').map((option) => option.text());
     expect(marked).toEqual(["Strength, row's target"]);
@@ -178,7 +178,7 @@ describe("DropdownSelect", () => {
   it("opening gives the list a height limit from the room beside the box", async () => {
     const wrapper = mountSelect("3-4");
 
-    await wrapper.get('[role="combobox"]').trigger("click");
+    await wrapper.get('[role="combobox"]').trigger("mousedown");
 
     // jsdom lays nothing out (the box is at 0), so the room is the window's height less the 12px margins.
     const expectedMaxHeight = `${window.innerHeight - 12}px`;
@@ -199,7 +199,7 @@ describe("DropdownSelect, inside a card or dialog that closes on Escape", () => 
   it("keeps the Escape that closes its open list: the card around it stays open", async () => {
     const wrapper = mountSelect("3-4");
     const escapesReachingCard = countEscapesReaching(wrapper);
-    await wrapper.get('[role="combobox"]').trigger("click");
+    await wrapper.get('[role="combobox"]').trigger("mousedown");
 
     await press(wrapper, "Escape");
 
@@ -218,11 +218,25 @@ describe("DropdownSelect, inside a card or dialog that closes on Escape", () => 
 });
 
 describe("DropdownSelect: opening, moving and choosing", () => {
-  it("opens on a click at the current option, which is marked selected", async () => {
+  it("opens on the mouse press, not the click, as a native select does, and only for the main button", async () => {
     const wrapper = mountSelect("3-4");
     const combobox = wrapper.get('[role="combobox"]');
 
-    await combobox.trigger("click");
+    // A right-button press leaves it shut; the main button opens it without waiting for a release on the same spot, which a
+    // layout shift (an error appearing above) can move elsewhere
+    await combobox.trigger("mousedown", { button: 2 });
+    expect(combobox.attributes("aria-expanded")).toBe("false");
+    await combobox.trigger("mousedown", { button: 0 });
+    expect(combobox.attributes("aria-expanded")).toBe("true");
+    await combobox.trigger("mousedown");
+    expect(combobox.attributes("aria-expanded")).toBe("false");
+  });
+
+  it("opens on a press at the current option, which is marked selected", async () => {
+    const wrapper = mountSelect("3-4");
+    const combobox = wrapper.get('[role="combobox"]');
+
+    await combobox.trigger("mousedown");
 
     expect(combobox.attributes("aria-expanded")).toBe("true");
     expect(highlightedText(wrapper)).toBe("3-4");
@@ -231,7 +245,7 @@ describe("DropdownSelect: opening, moving and choosing", () => {
 
   it("a click on an option picks it and closes the list", async () => {
     const wrapper = mountSelect("3-4");
-    await wrapper.get('[role="combobox"]').trigger("click");
+    await wrapper.get('[role="combobox"]').trigger("mousedown");
 
     await wrapper.findAll('[role="option"]')[0]!.trigger("click");
 
@@ -257,7 +271,7 @@ describe("DropdownSelect: opening, moving and choosing", () => {
 
   it("hovering an option moves the highlight to it, so there is only ever one", async () => {
     const wrapper = mountSelect("3-4");
-    await wrapper.get('[role="combobox"]').trigger("click");
+    await wrapper.get('[role="combobox"]').trigger("mousedown");
 
     await wrapper.findAll('[role="option"]')[3]!.trigger("mouseenter");
 
@@ -281,12 +295,12 @@ describe("DropdownSelect: opening, moving and choosing", () => {
 describe("DropdownSelect: the two sizes", () => {
   it("marks a regular drop-down's list, so its options are tap-sized, and leaves a compact one's alone", async () => {
     const regular = mountSelect("3-4", { size: "regular" });
-    await regular.get('[role="combobox"]').trigger("click");
+    await regular.get('[role="combobox"]').trigger("mousedown");
     expect(regular.get('[role="listbox"]').classes()).toContain("regular");
 
     regular.unmount();
     const compact = mountSelect("3-4");
-    await compact.get('[role="combobox"]').trigger("click");
+    await compact.get('[role="combobox"]').trigger("mousedown");
     expect(compact.get('[role="listbox"]').classes()).not.toContain("regular");
   });
 });

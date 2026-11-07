@@ -185,6 +185,17 @@ function close(): void {
   filterText.value = null;
 }
 
+/**
+ * The main mouse button pressed on the box opens or closes the list, as a native select does: on the press, not the click. A
+ * click needs the press and release on the same element, and leaving the field before (a date box showing its error) can
+ * push this box down in between, so a click would be lost. On a phone the browser sends the press when the tap ends, so
+ * starting to scroll on a drop-down does not open it.
+ */
+function onBoxMousedown(event: MouseEvent): void {
+  if (event.button !== 0) return;
+  toggleOpen();
+}
+
 function toggleOpen(): void {
   if (isOpen.value) close();
   else open();
@@ -394,12 +405,16 @@ function selectAllText(event: FocusEvent): void {
   (event.target as HTMLInputElement).select();
 }
 
-/** A click opens the list; unlike the plain drop-down's, it does not close it, since a click in a text box moves the caret. */
-function openOnClick(): void {
-  if (!isOpen.value) open();
+/**
+ * Pressing the main mouse button in the box opens the list (on the press, for the reason onBoxMousedown gives); unlike the
+ * plain drop-down's, it does not close it, since a click in a text box moves the caret.
+ */
+function openOnMousedown(event: MouseEvent): void {
+  if (event.button !== 0 || isOpen.value) return;
+  open();
 }
 
-// A click on the combobox itself is its own to handle (it toggles the list).
+// A press on the combobox itself is its own to handle (it toggles the list).
 onClickOutside(list, close, { ignore: [combobox] });
 </script>
 
@@ -425,7 +440,7 @@ onClickOutside(list, close, { ignore: [combobox] });
       :value="searchBoxText"
       @input="onSearchInput"
       @change="chooseOptionNamedInBox"
-      @click="openOnClick"
+      @mousedown="openOnMousedown"
       @focus="selectAllText"
       @blur="onSearchBlur"
       @keydown="onKeydown"
@@ -449,7 +464,7 @@ onClickOutside(list, close, { ignore: [combobox] });
     :aria-controls="listId"
     :aria-expanded="isOpen"
     :aria-activedescendant="activeOptionId"
-    @click="toggleOpen"
+    @mousedown="onBoxMousedown"
     @keydown="onKeydown"
   >
     <span v-if="selectedOption" class="current">
