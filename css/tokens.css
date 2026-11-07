@@ -56,12 +56,13 @@
   --radiusLg: 1rem;
   --radiusFull: 999px;
 
-  /* Typefaces: Ubuntu Sans for text, Montserrat for headings and other display text. Both are variable fonts. */
-  --fontBody: "Ubuntu Sans", system-ui, sans-serif;
+  /* Typefaces: Ubuntu Sans for text, Montserrat for headings and other display text. Both are variable fonts. Each is followed
+     by its fallback (base.css), the Arial shown until the font has downloaded, resized so the text does not move when it swaps. */
+  --fontBody: "Ubuntu Sans", "Ubuntu Sans Fallback", system-ui, sans-serif;
   /* The weight of body text: a little heavier than regular (400), which looked thin in Ubuntu Sans. A variable font takes any
      weight, so this can be tuned in steps of 10. */
   --weightBody: 450;
-  --fontHeading: "Montserrat", system-ui, sans-serif;
+  --fontHeading: "Montserrat", "Montserrat Fallback", system-ui, sans-serif;
 
   /* Text sizes: small print and labels, normal text, body paragraphs, and larger supporting text.
      Headings get their sizes from the .h1 to .h6 classes. --fontSizeXs is the exception to "no extra-small" (2026-11-02): only

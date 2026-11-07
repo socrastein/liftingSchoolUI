@@ -47,6 +47,93 @@
   src: url("../fonts/montserrat/montserrat-latin-wght-italic.woff2") format("woff2-variations");
 }
 
+/*
+ * The fallbacks: Arial, resized to take up the same room as each font, so text does not jump when the real font arrives
+ * (font-display: swap shows the fallback first). Without them the hero heading and page titles visibly shifted and wrapped
+ * differently, which Lighthouse counted as layout shift.
+ *
+ * Arial is on Windows, macOS and iOS; Liberation Sans and Arimo are its look-alikes on Linux, with the same letter widths.
+ * Android has none of them and falls through to system-ui, unadjusted, as before: its Roboto could get its own faces once
+ * they can be measured and checked on a real Android phone.
+ *
+ * Measured 2026-11-07 in Chromium, with a 200-character English sample:
+ *   - size-adjust is the real font's text width over Arial's (Arial Bold for the bold faces), at the weight each face covers.
+ *     The faces are split by weight because the fonts widen with weight at a different rate from Arial: one bold face sized
+ *     for the 800 headings made a 600 card title wrap onto a second line;
+ *   - ascent-override and descent-override are the real font's own ascent and descent (Ubuntu Sans 0.94 and 0.26 of its
+ *     size, Montserrat 0.968 and 0.251), divided by size-adjust, so the resized Arial sits on the same baseline.
+ * Change a font, or the weights the look uses, and these need measuring again.
+ */
+/* Body text, measured at its weight (450) */
+@font-face {
+  font-family: "Ubuntu Sans Fallback";
+  font-weight: 100 599;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans"), local("Arimo");
+  size-adjust: 102.55%;
+  ascent-override: 91.66%;
+  descent-override: 25.35%;
+  line-gap-override: 0%;
+}
+
+/* Bold body text, measured at 700 */
+@font-face {
+  font-family: "Ubuntu Sans Fallback";
+  font-weight: 600 800;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold");
+  size-adjust: 98.49%;
+  ascent-override: 95.44%;
+  descent-override: 26.4%;
+  line-gap-override: 0%;
+}
+
+/* Medium display text, measured at 500 */
+@font-face {
+  font-family: "Montserrat Fallback";
+  font-weight: 100 549;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans"), local("Arimo");
+  size-adjust: 115.36%;
+  ascent-override: 83.91%;
+  descent-override: 21.76%;
+  line-gap-override: 0%;
+}
+
+/* h4 and h5, measured at 600 */
+@font-face {
+  font-family: "Montserrat Fallback";
+  font-weight: 550 649;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold");
+  size-adjust: 108.77%;
+  ascent-override: 89%;
+  descent-override: 23.08%;
+  line-gap-override: 0%;
+}
+
+/* h3, measured at 700 */
+@font-face {
+  font-family: "Montserrat Fallback";
+  font-weight: 650 749;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold");
+  size-adjust: 110.51%;
+  ascent-override: 87.59%;
+  descent-override: 22.71%;
+  line-gap-override: 0%;
+}
+
+/* h1 and h2, measured at 800 */
+@font-face {
+  font-family: "Montserrat Fallback";
+  font-weight: 750 900;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold");
+  size-adjust: 112.87%;
+  ascent-override: 85.76%;
+  descent-override: 22.24%;
+  line-gap-override: 0%;
+}
+
 * {
   box-sizing: border-box;
   border-color: var(--borderFull);
