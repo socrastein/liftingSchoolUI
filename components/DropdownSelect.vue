@@ -502,6 +502,9 @@ onClickOutside(list, close, { ignore: [combobox] });
 <style scoped>
 /* The closed drop-down: the library's control look (.input), with its own arrow. */
 .dropdownSelect {
+  /* The line height a text box has, so the closed drop-down is exactly as tall as the text boxes beside it (the page's
+     body line height, which a div would otherwise take, made it 5px taller) */
+  line-height: normal;
   display: flex;
   align-items: center;
   gap: var(--spaceHalf);
