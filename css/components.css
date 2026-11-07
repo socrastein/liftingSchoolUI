@@ -273,21 +273,11 @@
   cursor: not-allowed;
 }
 
-/* The page you are on ("page"), or the group it belongs to ("true": Tools, on a tool's page) */
+/* The page you are on ("page"), or the group it belongs to ("true": Tools, on a tool's page): a quiet accent wash, the same as a
+   hovered row, so it marks where you are without shouting. The text and the icon keep their usual colours. */
 .menuItem[aria-current="page"],
 .menuItem[aria-current="true"] {
-  background-color: var(--accentFull);
-  color: var(--onAccent);
-}
-
-/* An icon in that row (the Tools arrow) follows the text onto the accent: the icons are black, inverted in dark mode, and
-   --onAccent is the opposite (near-white in light mode, dark grey in dark mode) */
-.menuItem[aria-current] .iconSmall {
-  filter: invert(1);
-}
-
-.dark .menuItem[aria-current] .iconSmall {
-  filter: none;
+  background-color: var(--accentSubtle);
 }
 
 /*

@@ -202,7 +202,7 @@ AA in both themes (axe, plus a contrast check measured from the drawn pixels). `
 
 - **Lucide icons as Vue components** (`@lucide/vue`, written `<Carrot />`) instead of SVG files shown with `<img>`. An inline icon is
   drawn in `currentColor`, so it takes the text colour around it, in both themes and on accent fills, with no inverting: the
-  `.dark .iconSmall` and `.menuItem[aria-current] .iconSmall` filter rules go, and so do the Lucide files in `icons/`. Brand marks and
+  `.dark .iconSmall` filter rule goes, and so do the Lucide files in `icons/`. Brand marks and
   the logo stay files. Planned with the shared Vue components, since it changes how every icon in every project is drawn.
 
 ## Licences
