@@ -424,6 +424,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <ConfirmDialog
           v-if="isDialogOpen"
           question="Delete the sample and all its history?"
+          detail="Its 12 entries go with it. This cannot be undone."
           confirm-label="Delete sample"
           @confirm="isDialogOpen = false"
           @cancel="isDialogOpen = false"

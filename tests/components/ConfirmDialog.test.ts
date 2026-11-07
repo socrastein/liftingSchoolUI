@@ -5,9 +5,9 @@ import { mount } from "@vue/test-utils";
 import ConfirmDialog from "../../components/ConfirmDialog.vue";
 
 /**
- * A question that has to be answered before anything else: a modal alertdialog named by its question, focus starting on the
- * safe answer (Cancel), the confirm button naming the action, Escape and a click on the dimmed page answering "cancel", and
- * focus handed back when it closes. With several choices it shows a button for each and reports which was pressed. What the
+ * A question that has to be answered before anything else: a modal alertdialog named by its question (and described by its
+ * detail, when it has one), focus starting on the safe answer (Cancel), the confirm button naming the action, Escape and a
+ * click on the dimmed page answering "cancel", and focus handed back when it closes. With several choices it shows a button for each and reports which was pressed. What the
  * browser itself does in a modal dialog (trapping Tab, making the page behind inert) is checked in each project's browser tests.
  */
 
@@ -56,6 +56,24 @@ describe("ConfirmDialog", () => {
     expect(dialog.attributes("role")).toBe("alertdialog");
     const labelId = dialog.attributes("aria-labelledby")!;
     expect(wrapper.get(`#${labelId}`).text()).toBe("Delete Sam and all their history?");
+  });
+
+  it("shows its detail under the question and is described by it", async () => {
+    const wrapper = mount(ConfirmDialog, {
+      props: { question: "Restore this backup?", detail: "It will replace the current log. This cannot be undone." },
+      attachTo: document.body,
+    });
+    await nextTick();
+
+    const descriptionId = wrapper.get("dialog").attributes("aria-describedby")!;
+    expect(wrapper.get(`#${descriptionId}`).text()).toBe("It will replace the current log. This cannot be undone.");
+  });
+
+  it("without a detail, has no description", () => {
+    const wrapper = mountDialog();
+
+    expect(wrapper.get("dialog").attributes("aria-describedby")).toBeUndefined();
+    expect(wrapper.find(".detail").exists()).toBe(false);
   });
 
   it("starts with focus on Cancel, the safe answer", async () => {

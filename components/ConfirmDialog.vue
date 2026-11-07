@@ -16,7 +16,8 @@ import { onBeforeUnmount, onMounted, ref, useId } from "vue";
  *
  * It is the browser's own modal <dialog> (opened with showModal), which does the focus work for free: the rest of the page
  * cannot be reached with Tab or a screen reader while it is open, and Escape fires the dialog's "cancel" event. On top of that:
- * - it is named by its question (aria-labelledby), as an alertdialog;
+ * - it is named by its question (aria-labelledby), as an alertdialog, and described by its `detail` when there is one
+ *   (aria-describedby), so a screen reader reads the question, then what answering yes will do;
  * - focus starts on Cancel, the safe answer, so Enter on a reflex does no harm (with several choices, Cancel is the last
  *   button, and focus still starts there);
  * - the confirm button names the action ("Delete client"), never "OK";
@@ -24,6 +25,10 @@ import { onBeforeUnmount, onMounted, ref, useId } from "vue";
  * - on closing, focus goes back to what had it before (the button that opened the question), if that still exists. After
  *   "confirm" the opener is often gone (a deleted row's button), so the parent moves focus on purpose.
  * It is also drawn in the top layer, so no z-index can put the header or a heading in front of it.
+ *
+ * When the question needs explaining (what exactly will be lost, or what will replace it), pass `detail`: a second paragraph
+ * under the question ("The backup holds 12 studies. It will replace the current 3. This cannot be undone."). The question
+ * stays short enough to read at a glance; the detail carries the facts.
  *
  * When the action can reach more or less far ("this week only", "every week"), pass `choices` instead of `confirmLabel`: each
  * becomes its own button, stacked, and `confirm` reports which one was chosen.
@@ -33,12 +38,14 @@ const props = withDefaults(
   defineProps<{
     /** The question, e.g. "Delete Sam and all their history?" */
     question: string;
+    /** What answering yes will do, shown under the question, e.g. "Their 40 workouts go too. This cannot be undone." */
+    detail?: string;
     /** The words on the single button that goes ahead, which should say what it does ("Replace"). Ignored with `choices`. */
     confirmLabel?: string;
     /** Several confirm buttons instead of one, in order. */
     choices?: DialogChoice[];
   }>(),
-  { confirmLabel: "Confirm", choices: undefined },
+  { detail: undefined, confirmLabel: "Confirm", choices: undefined },
 );
 
 const emit = defineEmits<{
@@ -52,6 +59,9 @@ const cancelButton = ref<HTMLButtonElement | null>(null);
 
 /** Names the dialog by its question, so a screen reader reads the question when focus arrives. */
 const questionId = useId();
+
+/** Describes the dialog by its detail, read after the question. */
+const detailId = useId();
 
 /** Where focus was before the dialog opened, to give it back afterwards. */
 let previouslyFocused: HTMLElement | null = null;
@@ -89,11 +99,13 @@ function onDialogClick(event: MouseEvent): void {
     class="confirmDialog"
     role="alertdialog"
     :aria-labelledby="questionId"
+    :aria-describedby="props.detail ? detailId : undefined"
     @cancel="onCancelEvent"
     @click="onDialogClick"
   >
     <div class="card confirmCard">
       <p :id="questionId" class="question">{{ props.question }}</p>
+      <p v-if="props.detail" :id="detailId" class="detail">{{ props.detail }}</p>
       <div v-if="props.choices" class="buttons stacked">
         <button
           v-for="choice in props.choices"
@@ -168,6 +180,14 @@ function onDialogClick(event: MouseEvent): void {
 .question {
   margin: 0;
   color: var(--textFull);
+  text-align: center;
+}
+
+/* The facts under the question: the ordinary text size, so the question above stays the first thing read */
+.detail {
+  margin: 0;
+  color: var(--textFull);
+  font-size: var(--fontSizeMd);
   text-align: center;
 }
 
