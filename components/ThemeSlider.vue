@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useMounted } from "@vueuse/core";
+import { computed } from "vue";
 import { useColorScheme } from "../js/colorScheme.js";
 
 /**
@@ -9,6 +11,10 @@ import { useColorScheme } from "../js/colorScheme.js";
  *
  * The page's transitions are left on while the theme changes (`disableTransition: false`), or the slide would not
  * play. Under reduced motion the library's global rule makes the slide near instant.
+ *
+ * A prerendered page is built without knowing the visitor's theme, so the knob is only added once the slider is running in
+ * the browser: the page as built and the browser's first render then agree (no hydration mismatch), and the knob appears
+ * at its end of the track instead of sliding there.
  */
 
 const props = defineProps<{
@@ -17,17 +23,21 @@ const props = defineProps<{
 }>();
 
 const { isDark, toggleDark } = useColorScheme({ storageKey: props.storageKey, disableTransition: false });
+const isInBrowser = useMounted();
+
+/** Dark mode, as far as the slider shows it: never before it runs in the browser, which is when the theme is known. */
+const showsDark = computed(() => isInBrowser.value && isDark.value);
 </script>
 
 <template>
   <button
     type="button"
     class="themeSlider"
-    :class="{ isDark }"
-    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+    :class="{ isDark: showsDark }"
+    :aria-label="showsDark ? 'Switch to light mode' : 'Switch to dark mode'"
     @click="toggleDark()"
   >
-    <span class="knob" aria-hidden="true">{{ isDark ? "🌙" : "☀️" }}</span>
+    <span v-if="isInBrowser" class="knob" aria-hidden="true">{{ showsDark ? "🌙" : "☀️" }}</span>
   </button>
 </template>
 
