@@ -53,6 +53,10 @@
     "./formFocus": {
       "types": "./js/formFocus.d.ts",
       "default": "./js/formFocus.js"
+    },
+    "./dropdownOption": {
+      "types": "./js/dropdownOption.d.ts",
+      "default": "./js/dropdownOption.js"
     }
   },
   "scripts": {

@@ -4,6 +4,7 @@ import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useColorScheme } from "../js/colorScheme.js";
 import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
+import DropdownSelect from "../components/DropdownSelect.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
@@ -98,6 +99,12 @@ const PERIODS = ["7D", "30D", "90D", "All"];
 const sampleName = ref("Test Person");
 const sampleEmail = ref("not-an-email");
 const sampleGoal = ref("");
+/** The sample drop-down's options. */
+const SAMPLE_GOALS = [
+  { value: "strength", label: "Strength" },
+  { value: "endurance", label: "Endurance" },
+  { value: "mobility", label: "Mobility" },
+];
 const sampleNote = ref("");
 const sampleChoice = ref("yes");
 const sampleTicks = ref<string[]>(["Barbell"]);
@@ -297,14 +304,17 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <FormField id="sampleOptional" label="Nickname (FormField, optional)" optional v-slot="field">
           <input v-bind="field" type="text" autocomplete="off" class="input" />
         </FormField>
-        <div class="field">
-          <label class="fieldLabel" for="sampleGoal">Goal</label>
-          <select id="sampleGoal" v-model="sampleGoal" class="input" aria-describedby="sampleGoalNote">
-            <option value="">Select…</option>
-            <option value="strength">Strength</option>
-          </select>
-          <span id="sampleGoalNote" class="fieldNote">Optional</span>
-        </div>
+        <FormField id="sampleGoal" label="Goal (DropdownSelect, in place of a select)" optional is-combobox v-slot="field">
+          <DropdownSelect
+            v-bind="field"
+            :combo-id="field.id"
+            :options="SAMPLE_GOALS"
+            :value="sampleGoal"
+            placeholder="Select…"
+            size="regular"
+            @change="sampleGoal = $event"
+          />
+        </FormField>
         <div class="field">
           <label class="fieldLabel" for="sampleNote">Note</label>
           <textarea id="sampleNote" v-model="sampleNote" class="input" placeholder="A text area"></textarea>
