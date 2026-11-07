@@ -277,3 +277,16 @@ describe("DropdownSelect: opening, moving and choosing", () => {
     expect(wrapper.emitted("change")).toBeUndefined();
   });
 });
+
+describe("DropdownSelect: the two sizes", () => {
+  it("marks a regular drop-down's list, so its options are tap-sized, and leaves a compact one's alone", async () => {
+    const regular = mountSelect("3-4", { size: "regular" });
+    await regular.get('[role="combobox"]').trigger("click");
+    expect(regular.get('[role="listbox"]').classes()).toContain("regular");
+
+    regular.unmount();
+    const compact = mountSelect("3-4");
+    await compact.get('[role="combobox"]').trigger("click");
+    expect(compact.get('[role="listbox"]').classes()).not.toContain("regular");
+  });
+});

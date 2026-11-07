@@ -76,7 +76,10 @@ const props = defineProps<{
   label?: string;
   /** Muted text in the closed box while `value` is none of the options ("Choose…"). */
   placeholder?: string;
-  /** 'compact' (the default) for the plan's cards; 'regular' to match a full-size form's fields. */
+  /**
+   * 'compact' (the default) for dense editors such as the Lifting App's plan cards, with 24px options; 'regular' to match a
+   * full-size form's fields, with options as tall as a comfortable tap on a phone.
+   */
   size?: "compact" | "regular";
 }>();
 
@@ -337,6 +340,7 @@ onClickOutside(list, close, { ignore: [combobox] });
         :id="listId"
         ref="list"
         class="dropdownList"
+        :class="{ regular: size === 'regular' }"
         role="listbox"
         :aria-labelledby="labelledBy"
         :aria-label="label"
@@ -448,6 +452,14 @@ onClickOutside(list, close, { ignore: [combobox] });
   font-size: var(--fontSizeSm);
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* A full-size form's list: options 44px tall at least (the usual comfortable tap on a phone, well past the 24px minimum) in the
+   body text size, since people pick these with a finger */
+.dropdownList.regular .dropdownOption {
+  min-height: 2.75rem;
+  padding: var(--spaceHalf) var(--space2);
+  font-size: var(--fontSizeMd);
 }
 
 /* A list above the box staggers from the bottom up, rising into place, so it still starts next to the box. */
