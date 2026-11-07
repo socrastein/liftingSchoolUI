@@ -11,6 +11,7 @@ import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
 import ThemeButton from "../components/ThemeButton.vue";
+import ThemeSlider from "../components/ThemeSlider.vue";
 
 /**
  * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
@@ -396,6 +397,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <button type="button" class="menuItem" disabled>A disabled row</button>
         <button type="button" class="menuItem menuItemDanger">A danger row</button>
       </nav>
+      <p><code>ThemeSlider</code> is the light/dark switch for a menu panel, on the same key as the header's button.</p>
+      <ThemeSlider :storage-key="THEME_KEY" />
     </section>
 
     <section class="showcaseSection" aria-labelledby="popups">

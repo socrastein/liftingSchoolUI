@@ -5,7 +5,8 @@ import { useColorScheme } from "../js/colorScheme.js";
  * The light/dark switch: an emoji showing the current theme, on a button whose label says what pressing it does. The theme
  * itself is useColorScheme's (the `dark` class on <html>, saved on the device under `storageKey`).
  *
- * A project with a different design for the control (the business site's sliding sun and moon) uses useColorScheme directly.
+ * ThemeSlider is the same switch as a sliding sun and moon, for a menu panel; a project with a design of its own for the
+ * control uses useColorScheme directly.
  * The button's padding is `--themeButtonPadding` (one step of space by default), for a header that wants it tighter.
  */
 
