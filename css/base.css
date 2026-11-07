@@ -231,8 +231,14 @@ button {
   padding: 0;
 }
 
+/*
+ * A picture never overflows its column. height: auto keeps its shape when that narrows it: a picture given width and height
+ * attributes (so its space is kept while it loads) otherwise keeps the full height and is squashed sideways. A class that sets
+ * its own height still wins.
+ */
 img {
   max-width: 100%;
+  height: auto;
   border-radius: var(--radius);
 }
 
