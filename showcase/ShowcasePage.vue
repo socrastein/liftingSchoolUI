@@ -11,6 +11,7 @@ import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
+import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
 import ThemeSlider from "../components/ThemeSlider.vue";
 
@@ -131,6 +132,9 @@ const cardOpener = ref<HTMLButtonElement | null>(null);
 const isCardOpen = ref(false);
 const cardNote = ref("");
 const isDialogOpen = ref(false);
+
+/** The toast sample, shown by its button. */
+const toast = ref<InstanceType<typeof StatusToast> | null>(null);
 
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
@@ -467,6 +471,15 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           @cancel="isDialogOpen = false"
         />
       </div>
+      <p>
+        <code>StatusToast</code> confirms that something happened, at the bottom of the window, and leaves after a few seconds.
+      </p>
+      <div class="row">
+        <button type="button" class="btn btnSecondary" @click="toast?.show('Sample copied to clipboard.')">
+          Copy the sample
+        </button>
+      </div>
+      <StatusToast ref="toast" />
       <div class="row">
         <button
           ref="cardOpener"
