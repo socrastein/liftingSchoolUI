@@ -105,4 +105,35 @@ describe("useColorScheme", () => {
 
     expect(scheme.isDark.value).toBe(false);
   });
+
+  describe("with two controls on one page (a header's button and a menu's slider)", () => {
+    /** How many times the page's transitions were switched off while `act` ran. */
+    async function transitionSwitchOffsDuring(/** @type {() => void} */ act) {
+      const appendChild = vi.spyOn(document.head, "appendChild");
+      act();
+      await nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const switchOffs = appendChild.mock.calls.filter(([node]) => node.textContent?.includes("transition:none"));
+      appendChild.mockRestore();
+      return switchOffs.length;
+    }
+
+    it("a change from the slider animates, though the button on the same page would switch transitions off", async () => {
+      mountWithColorScheme({ storageKey: STORAGE_KEY });
+      const slider = mountWithColorScheme({ storageKey: STORAGE_KEY, disableTransition: false });
+      await nextTick();
+
+      expect(await transitionSwitchOffsDuring(() => slider.toggleDark())).toBe(0);
+      expect(pageIsDark()).toBe(true);
+    });
+
+    it("a change from the button is instant, for every control applying it", async () => {
+      const button = mountWithColorScheme({ storageKey: STORAGE_KEY });
+      mountWithColorScheme({ storageKey: STORAGE_KEY, disableTransition: false });
+      await nextTick();
+
+      expect(await transitionSwitchOffsDuring(() => button.toggleDark())).toBeGreaterThan(0);
+      expect(pageIsDark()).toBe(true);
+    });
+  });
 });
