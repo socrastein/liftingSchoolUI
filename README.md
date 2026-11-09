@@ -184,7 +184,8 @@ All camelCase; a part or variant is the block's name plus a suffix, as `.card` â
 - **Forms:** `.field` (label, control and note as one unit), `.fieldLabel`, `.input` (input, select and textarea alike; invalid is
   drawn from `aria-invalid`), `.fieldNote`, `.fieldError`, `.choice` with `.radio` or `.checkbox`, `.switch` with `.switchInput`, `.switchTrack` and `.switchKnob` (an on/off setting; the ToggleSwitch component), and `.honeypot`.
 - **Data:** `.table` (caption, small uppercase column headings, light row rules), with `.tableNumber` on cells of figures so a
-  column of prices lines up. `.timeDisplay` for a timer's big figure, and `.listItemTitle` for the title line of a list item.
+  column of prices lines up. `.timeDisplay` for a timer's big figure, `.listItemTitle` for the title line of a list item, and
+  `.plainList` for a `ul` or `ol` used for layout (cards, rows, navigation): no bullets and none of the reading-list spacing.
 - **Messages and navigation:** `.badge` (plus `.badgeInfo`, and `.badgeBlue` â€¦ `.badgeGrey`: a plate colour as the border),
   `.alert` with `.alertDanger` (give it `role="alert"` when it appears after an action), `.menu` + `.menuItem` (the current page's
   row is `aria-current="page"`, which NuxtLink and RouterLink set), and `.pageTitle` (a page's visible title).

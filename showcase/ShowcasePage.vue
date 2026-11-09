@@ -270,6 +270,11 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         </div>
         <p class="listItemTitle">.listItemTitle</p>
         <p class="textMuted">The detail line under it.</p>
+        <ul class="plainList samplePlainList">
+          <li><span class="badge">.plainList</span></li>
+          <li><span class="badge">no bullets</span></li>
+          <li><span class="badge">no reading spacing</span></li>
+        </ul>
       </div>
       <a href="#surfaces" class="card cardLink sampleCard">
         <p>A <code>.card.cardLink</code> is a card that is a link: point at it.</p>
@@ -636,6 +641,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 
 .samplePanel {
   padding: var(--space2);
+}
+
+/* A row of items: the page that uses .plainList arranges them */
+.samplePlainList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space1);
 }
 
 .sampleMenu {

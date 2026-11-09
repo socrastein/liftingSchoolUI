@@ -672,6 +672,17 @@ textarea.input {
 }
 
 /*
+ * A list used for layout (navigation, cards, rows of results, links in a row) rather than for reading: no bullets, and none of
+ * the reading-list spacing that base.css gives every ul, ol and li. The page arranges the items (flex, grid, its own gaps).
+ */
+.plainList,
+.plainList > li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
  * The column a page of reading sits in (the About page, a blog post): centred on the page, at a line length that is comfortable
  * to read (about 70 characters of body text), with room at the sides on a phone. The page arranges what is inside it.
  */
