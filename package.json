@@ -1,6 +1,6 @@
 {
   "name": "lifting-school-ui",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "The Lifting School's shared look: design tokens, base styles, component classes, fonts, icons and helpers for every site and app of the business.",
   "type": "module",
   "bin": {
