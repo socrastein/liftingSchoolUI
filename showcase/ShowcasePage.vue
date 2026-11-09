@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useColorScheme } from "../js/colorScheme.js";
 import ActionsMenu from "../components/ActionsMenu.vue";
@@ -10,6 +10,7 @@ import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
+import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
 import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
@@ -30,15 +31,12 @@ const THEME_KEY = "theme";
 
 const { isDark } = useColorScheme({ storageKey: THEME_KEY });
 
-/** Whether the given theme is the one showing. */
-function isShowing(theme: Theme): boolean {
-  return (theme === "dark") === isDark.value;
-}
-
-/** Shows the given theme and saves the choice. */
-function show(theme: Theme): void {
-  isDark.value = theme === "dark";
-}
+/** The theme showing; setting it shows that theme and saves the choice. */
+const theme = computed<Theme>({
+  get: () => (isDark.value ? "dark" : "light"),
+  set: (chosen) => (isDark.value = chosen === "dark"),
+});
+const THEME_CHOICES = THEMES.map((option) => ({ value: option, label: option === "light" ? "Light" : "Dark" }));
 
 /** The colour tokens, grouped as tokens.css defines them. */
 const COLOUR_GROUPS: { name: string; tokens: string[] }[] = [
@@ -94,7 +92,7 @@ const ICONS = Object.entries(iconModules)
 
 /** Which option the segmented control sample has selected. */
 const period = ref("30D");
-const PERIODS = ["7D", "30D", "90D", "All"];
+const PERIODS = ["7D", "30D", "90D", "All"].map((option) => ({ value: option, label: option }));
 
 /** The field samples: one filled in, one showing an error. */
 const sampleName = ref("Test Person");
@@ -155,18 +153,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
   <header class="showcaseHeader">
     <p class="showcaseName">liftingSchoolUI</p>
     <div class="row">
-      <div class="segmented" role="group" aria-label="Theme">
-        <button
-          v-for="option in THEMES"
-          :key="option"
-          type="button"
-          class="segmentedItem"
-          :aria-pressed="isShowing(option)"
-          @click="show(option)"
-        >
-          {{ option === "light" ? "Light" : "Dark" }}
-        </button>
-      </div>
+      <ChoiceSwitch v-model="theme" label="Theme" :choices="THEME_CHOICES" />
       <!-- The shared ThemeButton on the same key: it and the control beside it always agree -->
       <ThemeButton :storage-key="THEME_KEY" />
     </div>
@@ -265,18 +252,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 
     <section class="showcaseSection" aria-labelledby="segmented">
       <h2 id="segmented" class="h3">Segmented control</h2>
-      <div class="segmented" role="group" aria-label="Time period">
-        <button
-          v-for="option in PERIODS"
-          :key="option"
-          type="button"
-          class="segmentedItem"
-          :aria-pressed="period === option"
-          @click="period = option"
-        >
-          {{ option }}
-        </button>
-      </div>
+      <!-- ChoiceSwitch: pressing the choice already on moves to the next one -->
+      <ChoiceSwitch v-model="period" label="Time period" :choices="PERIODS" />
     </section>
 
     <section class="showcaseSection" aria-labelledby="surfaces">

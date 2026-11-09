@@ -61,6 +61,10 @@
     "./optionSearch": {
       "types": "./js/optionSearch.d.ts",
       "default": "./js/optionSearch.js"
+    },
+    "./choiceAfterPress": {
+      "types": "./js/choiceAfterPress.d.ts",
+      "default": "./js/choiceAfterPress.js"
     }
   },
   "scripts": {
