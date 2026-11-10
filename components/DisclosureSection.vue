@@ -28,25 +28,31 @@ const KEEP_IN_VIEW_MS = 1000;
 /**
  * Scrolls the page just far enough ("nearest") to show the whole `section`, once for every frame while its `body` grows.
  * Tracking the growth frame by frame makes one smooth motion; scrolling once at the start would see a closed section and do
- * nothing, and once at the end would be a second, separate movement. Stops when the body's opening transition ends (or after
- * KEEP_IN_VIEW_MS), or when the returned function is called.
+ * nothing, and once at the end would be a second, separate movement. Stops, after one last scroll, when the body's opening
+ * transition ends (or after KEEP_IN_VIEW_MS), or at once when the returned function is called.
  */
 function followGrowth(section: HTMLElement, body: HTMLElement): () => void {
   const startedAt = performance.now();
   let isFollowing = true;
   let frame = 0;
+  const scrollToShowSection = (): void => section.scrollIntoView({ block: "nearest", behavior: "instant" });
   const stop = (): void => {
     isFollowing = false;
     cancelAnimationFrame(frame);
-    body.removeEventListener("transitionend", stop);
+    body.removeEventListener("transitionend", finish);
+  };
+  // One last scroll at the end: the final frame of growing can land after the last frame followed
+  const finish = (): void => {
+    scrollToShowSection();
+    stop();
   };
   const follow = (): void => {
     if (!isFollowing) return;
-    section.scrollIntoView({ block: "nearest", behavior: "instant" });
+    scrollToShowSection();
     if (performance.now() - startedAt > KEEP_IN_VIEW_MS) stop();
     else frame = requestAnimationFrame(follow);
   };
-  body.addEventListener("transitionend", stop);
+  body.addEventListener("transitionend", finish);
   follow();
   return stop;
 }

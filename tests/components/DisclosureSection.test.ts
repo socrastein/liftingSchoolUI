@@ -61,10 +61,19 @@ describe("DisclosureSection", () => {
     await wrapper.get("button").trigger("click");
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
 
-    scrollIntoView.mockClear();
     await wrapper.get(".disclosureBody").trigger("transitionend");
+    scrollIntoView.mockClear();
     await wrapper.get("button").trigger("click");
     expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("scrolls once more when the opening finishes, for the last of the growth", async () => {
+    const wrapper = mountSection();
+    await wrapper.get("button").trigger("click");
+    scrollIntoView.mockClear();
+
+    await wrapper.get(".disclosureBody").trigger("transitionend");
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
   it("stops following the growth once the opening has finished", async () => {
