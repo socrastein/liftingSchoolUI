@@ -32,29 +32,32 @@ const KEEP_IN_VIEW_MS = 1000;
  * transition ends (or after KEEP_IN_VIEW_MS), or at once when the returned function is called.
  */
 function followGrowth(section: HTMLElement, body: HTMLElement): () => void {
-  const startedAt = performance.now();
-  let isFollowing = true;
-  let frame = 0;
   const scrollToShowSection = (): void => section.scrollIntoView({ block: "nearest", behavior: "instant" });
-  const stop = (): void => {
-    isFollowing = false;
-    cancelAnimationFrame(frame);
-    body.removeEventListener("transitionend", finish);
-  };
+  const stopEveryFrame = repeatEveryFrame(scrollToShowSection, KEEP_IN_VIEW_MS);
   // One last scroll at the end: the final frame of growing can land after the last frame followed
   const finish = (): void => {
     scrollToShowSection();
     stop();
   };
-  const follow = (): void => {
-    if (!isFollowing) return;
-    scrollToShowSection();
-    if (performance.now() - startedAt > KEEP_IN_VIEW_MS) stop();
-    else frame = requestAnimationFrame(follow);
+  const stop = (): void => {
+    stopEveryFrame();
+    body.removeEventListener("transitionend", finish);
   };
   body.addEventListener("transitionend", finish);
-  follow();
   return stop;
+}
+
+/** Runs `action` now and again every animation frame for up to `maxMs`; returns the function that stops it sooner. */
+function repeatEveryFrame(action: () => void, maxMs: number): () => void {
+  const startedAt = performance.now();
+  let frame = 0;
+  const tick = (): void => {
+    action();
+    const hasRunLongEnough = performance.now() - startedAt > maxMs;
+    if (!hasRunLongEnough) frame = requestAnimationFrame(tick);
+  };
+  tick();
+  return () => cancelAnimationFrame(frame);
 }
 
 const props = defineProps<{
