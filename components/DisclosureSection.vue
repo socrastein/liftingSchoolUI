@@ -11,11 +11,15 @@
  *
  *   <DisclosureSection title="Past clients (3)"> ...the content... </DisclosureSection>
  *
+ * Whether it is open is `v-model:open`. Used without it, the section keeps its own state, starting shut; given `:open="x"` alone,
+ * it starts as x says and follows x whenever x changes (a card that opens itself when something is wrong), and a person's own
+ * presses still work in between. Given both (`v-model:open`), the parent owns the state, so it can remember it between visits.
+ *
  * Give it a `level` when the title is a heading of the page (the button then sits inside an h2 to h4, and `look` says which
  * heading class it takes its size and weight from); without one the title is only a button, for a part of a card that is not a
  * section of the page. A class given to it lands on its outer element.
  */
-import { onBeforeUnmount, ref, useId, useTemplateRef, watch } from "vue";
+import { onBeforeUnmount, useId, useTemplateRef } from "vue";
 
 /** How a heading-level title looks: the shared heading class each look uses (see base.css and components.css). */
 export type DisclosureLook = "area" | "section" | "part";
@@ -35,7 +39,10 @@ function followGrowth(section: HTMLElement, body: HTMLElement): () => void {
   const scrollToShowSection = (): void => section.scrollIntoView({ block: "nearest", behavior: "instant" });
   const stopEveryFrame = repeatEveryFrame(scrollToShowSection, KEEP_IN_VIEW_MS);
   // One last scroll at the end: the final frame of growing can land after the last frame followed
-  const finish = (): void => {
+  // The body's own opening, not a transition of something inside it, which also reaches here (transitionend bubbles)
+  const finish = (event: TransitionEvent): void => {
+    const isBodyOpening = event.target === body && event.propertyName === "grid-template-rows";
+    if (!isBodyOpening) return;
     scrollToShowSection();
     stop();
   };
@@ -63,28 +70,18 @@ function repeatEveryFrame(action: () => void, maxMs: number): () => void {
 const props = defineProps<{
   /** The text on the button: "Past clients (3)". */
   title: string;
-  /** Whether it is open to begin with, and again whenever this changes (a card that opens itself when something is wrong). */
-  defaultOpen?: boolean;
   /** The title's heading level in the page outline, 2 to 4. Leave out for a title that is only a button. */
   level?: 2 | 3 | 4;
   /** How a heading-level title looks. Defaults to a section title. */
   look?: DisclosureLook;
 }>();
 
-const isOpen = ref(props.defaultOpen === true);
+const isOpen = defineModel<boolean>("open", { default: false });
 const bodyId = useId();
 const section = useTemplateRef<HTMLElement>("section");
 const body = useTemplateRef<HTMLElement>("body");
 
 let stopKeepingInView: (() => void) | undefined;
-
-// Follow the parent's wish when it changes, but leave a person's own choice alone while it stays the same
-watch(
-  () => props.defaultOpen,
-  (wantsOpen) => {
-    isOpen.value = wantsOpen === true;
-  },
-);
 
 /** Opens or closes it; opening also scrolls it into view as it grows, and shutting it part way stops that. */
 function toggle(): void {
@@ -124,7 +121,8 @@ onBeforeUnmount(() => stopKeepingInView?.());
     </component>
     <!-- Always drawn, so it can ease open and shut; while shut it is hidden from sight, tabbing and screen readers -->
     <div :id="bodyId" ref="body" class="disclosureBody" :class="{ disclosureBodyOpen: isOpen }">
-      <div class="disclosureBodyInner">
+      <!-- Clips on purpose while it shuts or opens; the attribute tells a page-layout test that the cut-off content is meant -->
+      <div class="disclosureBodyInner" data-clips-on-purpose>
         <slot />
       </div>
     </div>

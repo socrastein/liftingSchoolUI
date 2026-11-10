@@ -913,23 +913,29 @@ textarea.input {
 }
 
 /*
- * The content a disclosure opens (the DisclosureSection component draws it): its height eases between nothing and its natural
- * size by animating the grid row, which needs no measuring in script. Visibility switches only after the closing animation
- * has finished, so the content does not vanish part way; while shut it is hidden from sight, tabbing and screen readers.
+ * The content a disclosure opens (the DisclosureSection component draws it). It opens by growing from no height to its own (a
+ * one-row grid going from 0fr to 1fr, which can animate where height: auto cannot) while fading in. Opening takes --duration and
+ * eases out, so it arrives gently; closing takes the shorter --durationFast and eases in, so it gets out of the way (the motion
+ * rules at --durationFast in tokens.css). Visibility switches off only once a close has finished, and on at the start of an
+ * open, so closed content is hidden from sight, tabbing and screen readers.
  */
 .disclosureBody {
   display: grid;
   grid-template-rows: 0fr;
+  opacity: 0;
   transition:
-    grid-template-rows var(--duration) var(--easeOut),
-    visibility 0s linear var(--duration);
+    grid-template-rows var(--durationFast) var(--easeIn),
+    opacity var(--durationFast) var(--easeIn),
+    visibility 0s linear var(--durationFast);
   visibility: hidden;
 }
 
 .disclosureBodyOpen {
   grid-template-rows: 1fr;
+  opacity: 1;
   transition:
     grid-template-rows var(--duration) var(--easeOut),
+    opacity var(--duration) var(--easeOut),
     visibility 0s;
   visibility: visible;
 }

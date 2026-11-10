@@ -11,6 +11,9 @@ import DisclosureSection from "../../components/DisclosureSection.vue";
 
 const scrollIntoView = vi.fn();
 
+/** The opening of the body itself, as the browser reports it. */
+const OPENING = { propertyName: "grid-template-rows" };
+
 afterEach(() => {
   scrollIntoView.mockReset();
   document.body.innerHTML = "";
@@ -49,10 +52,10 @@ describe("DisclosureSection", () => {
   });
 
   it("can start open, and follows the parent when its wish changes", async () => {
-    const wrapper = mountSection({ defaultOpen: true });
+    const wrapper = mountSection({ open: true });
     expect(wrapper.get("button").attributes("aria-expanded")).toBe("true");
 
-    await wrapper.setProps({ defaultOpen: false });
+    await wrapper.setProps({ open: false });
     expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
   });
 
@@ -61,7 +64,7 @@ describe("DisclosureSection", () => {
     await wrapper.get("button").trigger("click");
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
 
-    await wrapper.get(".disclosureBody").trigger("transitionend");
+    await wrapper.get(".disclosureBody").trigger("transitionend", OPENING);
     scrollIntoView.mockClear();
     await wrapper.get("button").trigger("click");
     expect(scrollIntoView).not.toHaveBeenCalled();
@@ -72,14 +75,32 @@ describe("DisclosureSection", () => {
     await wrapper.get("button").trigger("click");
     scrollIntoView.mockClear();
 
-    await wrapper.get(".disclosureBody").trigger("transitionend");
+    await wrapper.get(".disclosureBody").trigger("transitionend", OPENING);
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps following when something inside the content finishes a transition of its own", async () => {
+    const wrapper = mountSection();
+    await wrapper.get("button").trigger("click");
+    scrollIntoView.mockClear();
+
+    await wrapper.get("p").trigger("transitionend", { propertyName: "color" });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(scrollIntoView).toHaveBeenCalled();
+    await wrapper.get(".disclosureBody").trigger("transitionend", OPENING);
+  });
+
+  it("lets the parent own whether it is open, with v-model:open, for a state kept between visits", async () => {
+    const changes: boolean[] = [];
+    const wrapper = mountSection({ open: false, "onUpdate:open": (isOpen: boolean) => changes.push(isOpen) });
+    await wrapper.get("button").trigger("click");
+    expect(changes).toEqual([true]);
   });
 
   it("stops following the growth once the opening has finished", async () => {
     const wrapper = mountSection();
     await wrapper.get("button").trigger("click");
-    await wrapper.get(".disclosureBody").trigger("transitionend");
+    await wrapper.get(".disclosureBody").trigger("transitionend", OPENING);
     scrollIntoView.mockClear();
 
     await new Promise((resolve) => setTimeout(resolve, 60));
