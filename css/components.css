@@ -913,6 +913,34 @@ textarea.input {
 }
 
 /*
+ * The content a disclosure opens (the DisclosureSection component draws it): its height eases between nothing and its natural
+ * size by animating the grid row, which needs no measuring in script. Visibility switches only after the closing animation
+ * has finished, so the content does not vanish part way; while shut it is hidden from sight, tabbing and screen readers.
+ */
+.disclosureBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows var(--duration) var(--easeOut),
+    visibility 0s linear var(--duration);
+  visibility: hidden;
+}
+
+.disclosureBodyOpen {
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--duration) var(--easeOut),
+    visibility 0s;
+  visibility: visible;
+}
+
+/* The row can only shrink to nothing if its content may be clipped */
+.disclosureBodyInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/*
  * The title line of an item in a list, such as a saved preset's name: bold, with the faded detail line (.textMuted) under it.
  */
 .listItemTitle {

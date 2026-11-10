@@ -6,6 +6,7 @@ import ActionsMenu from "../components/ActionsMenu.vue";
 import AnchoredCard from "../components/AnchoredCard.vue";
 import DropdownSelect from "../components/DropdownSelect.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
+import DisclosureSection from "../components/DisclosureSection.vue";
 import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
@@ -501,6 +502,14 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           </button>
         </h3>
         <p v-show="isDisclosureOpen" id="disclosureBody">The section the disclosure opens.</p>
+      </div>
+      <div class="card sampleCard">
+        <DisclosureSection title="DisclosureSection (the component: easing, and scrolls into view)">
+          <p>
+            What it opens eases open, and the page scrolls just far enough to keep it on screen. Put it in a heading with
+            <code>level</code> when it is a section of the page.
+          </p>
+        </DisclosureSection>
       </div>
     </section>
 
