@@ -188,7 +188,8 @@ All camelCase; a part or variant is the block's name plus a suffix, as `.card` â
   `.plainList` for a `ul` or `ol` used for layout (cards, rows, navigation): no bullets and none of the reading-list spacing.
 - **Messages and navigation:** `.badge` (plus `.badgeInfo`, and `.badgeBlue` â€¦ `.badgeGrey`: a plate colour as the border),
   `.alert` with `.alertDanger` (give it `role="alert"` when it appears after an action), `.menu` + `.menuItem` (the current page's
-  row is `aria-current="page"`, which NuxtLink and RouterLink set), and `.pageTitle` (a page's visible title).
+  row is `aria-current="page"`, which NuxtLink and RouterLink set), `.pageTitle` (a page's visible title), and `.linkSteady` (a link
+  that keeps its colour and weight once visited, for links used again and again, such as the names in a table).
 - **Highlights:** `.cue` + `.cueActive` (a brief outline on the part of a page that just changed), `.target` and `.targetDanger`
   (what a control is about to act on).
 

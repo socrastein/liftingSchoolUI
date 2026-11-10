@@ -208,6 +208,10 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <p class="textMuted"><code>.textMuted</code> for supporting text.</p>
       <p class="textAccent"><code>.textAccent</code> for a word that needs the accent.</p>
       <p>A <a href="#type">link in text</a>.</p>
+      <p>
+        <a class="linkSteady" href="#type"><code>.linkSteady</code></a> keeps its colour once visited, for links used again and
+        again.
+      </p>
       <p class="textHero">.textHero</p>
       <p class="timeDisplay">01:23.4</p>
       <ul>

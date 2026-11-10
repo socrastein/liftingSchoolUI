@@ -262,6 +262,17 @@ a:active {
 }
 
 /*
+ * A link that looks the same whether or not it has been visited, for a list of links that are used again and again (a
+ * table of client names), where a mix of two colours would say "seen" when it means nothing. Both states are written
+ * out: a:link is bold and a:visited is not, so the plain accent colour alone would still change the weight.
+ */
+.linkSteady:link,
+.linkSteady:visited {
+  font-weight: bold;
+  color: var(--accentFull);
+}
+
+/*
  * Headings: the tag says where a heading sits in the page outline (h1 is the page title, h2 a section, h3 a
  * subsection, and so on, with no levels skipped), and the matching class (.h1 to .h6) gives any element the
  * same look. That lets the outline be correct without changing the appearance: for example, a subsection
