@@ -103,6 +103,17 @@ describe("AnchoredCard", () => {
     expect(isOpen.value).toBe(true);
   });
 
+  it("takes focus itself, without being a Tab stop, so a click on its blank space keeps it open", async () => {
+    const { wrapper, isOpen } = await mountOpenCard();
+    const card = wrapper.get('[role="dialog"]');
+
+    // A browser moves focus to the nearest focusable ancestor of a click; the card being one keeps that focus inside.
+    expect(card.attributes("tabindex")).toBe("-1");
+    await card.trigger("focusout", { relatedTarget: card.element });
+
+    expect(isOpen.value).toBe(true);
+  });
+
   it("a click elsewhere closes it; a click on its own button is left to the button", async () => {
     const { anchor, outside, isOpen } = await mountOpenCard();
 

@@ -12,7 +12,9 @@ import FloatingPanel from "./FloatingPanel.vue";
  *
  * On opening, focus goes to the first field inside (or, with none, to the close button). It closes (emitting `close`) on
  * Escape or the close button, which put focus back on the button; and on a click elsewhere or Tab past its end, which leave
- * focus where the person put it. What closing means (saving, or throwing the changes away) is the parent's: the parent that
+ * focus where the person put it. The card itself takes focus (tabindex -1, never a Tab stop), so a click on its blank space
+ * stays inside: otherwise focus would go to the nearest focusable thing around it (a scrolling box it opened in, say), and
+ * the card would close as if Tabbed out of. What closing means (saving, or throwing the changes away) is the parent's: the parent that
  * saves on `close` gives the close button the label "Done", one that has a Save button of its own labels it "Cancel".
  */
 
@@ -76,6 +78,7 @@ onClickOutside(card, closeFromOutside, { ignore: [anchorElement] });
       ref="card"
       class="card anchoredCard"
       role="dialog"
+      tabindex="-1"
       :aria-labelledby="headingId"
       @keydown.esc.stop="closeToAnchor"
       @focusout="closeIfFocusLeft"
