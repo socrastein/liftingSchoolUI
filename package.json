@@ -62,6 +62,10 @@
       "types": "./js/optionSearch.d.ts",
       "default": "./js/optionSearch.js"
     },
+    "./panelPlacement": {
+      "types": "./js/panelPlacement.d.ts",
+      "default": "./js/panelPlacement.js"
+    },
     "./choiceAfterPress": {
       "types": "./js/choiceAfterPress.d.ts",
       "default": "./js/choiceAfterPress.js"
