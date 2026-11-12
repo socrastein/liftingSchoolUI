@@ -69,7 +69,8 @@ import { optionNamed, optionsMatching } from "../js/optionSearch.js";
  *
  * With `hidesArrow`, a plain drop-down drops its arrow, for a short
  * value in a tight line that reads like a written plan ("[3-4] sets of
- * [8-10]"). Its box still says it can be changed, like a sheet's cell,
+ * [8-10]"); its value is centred in the box (the open list's options
+ * are not). The box still says it can be changed, like a sheet's cell,
  * and a hovered box takes the accent's faint wash, as a hovered option
  * does; typing still picks an option. A searchable box keeps its arrow.
  *
@@ -569,6 +570,12 @@ onClickOutside(list, close, { ignore: [combobox] });
 /* With no arrow, hovering is what says it opens: the faint accent wash a hovered option has. */
 .arrowless:hover {
   background-color: var(--accentSubtle);
+}
+
+/* With no arrow the value has the box to itself, so it sits in the middle, like a number in a sheet's cell. The open list
+   keeps its options to the left. */
+.arrowless {
+  justify-content: center;
 }
 
 /* Open: the arrow turns over, easing out. */
