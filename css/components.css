@@ -968,13 +968,26 @@ textarea.input {
 }
 
 /*
- * The loading screen (LoadingScreen): the page's own background over the whole window, the logo turning once every 6 seconds and
- * the dots after "Loading" counting 0, 1, 2, 3 and starting over, one step every --durationSlow. It appears at once, so nothing half-drawn
- * shows through, and fades out in --durationFast, like anything leaving. The dots are turned off by opacity rather than removed,
- * so the word keeps its place while they count. Under reduced motion the global rule stops both, leaving the logo still and all
- * three dots showing.
+ * The loading screen (LoadingScreen): the page's own background over the whole window, the logo turning once every 6 seconds
+ * and the dots after "Loading" counting 0, 1, 2, 3 and starting over, one step every --durationSlow. It appears at once, so
+ * nothing half-drawn shows through, and fades out in --durationFast, like anything leaving. A dot is turned off by its opacity
+ * rather than removed, so the word keeps its place while they count. Its layout is here with its look, so a page can also
+ * draw the screen as plain HTML, with no component to hold it. Under reduced motion the global rule stops the turning and the
+ * dots, leaving the logo still and all three dots showing.
  */
 .loadingScreen {
+  position: fixed;
+  inset: 0;
+  /* Above everything, a fixed header (100) included */
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space2);
+  /* Centred in the top two thirds of the window, which puts the logo and label a third of the way down: where the eye rests,
+     rather than the exact middle, which reads as low */
+  padding-bottom: calc(100dvh / 3);
   background-color: var(--bgBase);
   color: var(--textFull);
 }
@@ -987,16 +1000,23 @@ textarea.input {
   opacity: 0;
 }
 
-/* Heading-sized but in the body font, like other display text */
+/* Heading-sized but in the body font, like other display text. As wide as its words, so it is centred under the logo: the
+   base style stretches a paragraph across its container. */
 .loadingText {
+  width: auto;
   font-size: var(--fontSizeH3);
   font-style: italic;
 }
 
 /* The glow behind the logo, as on the home page's hero: the other mode's accent, fading out to the page. In dark mode it is what
-   shows the logo's near-black side against the near-black page. It is painted on the logo's own box, around the logo, and a
-   circle looks the same at every angle, so it turns with the logo without seeming to. */
+   shows the logo's near-black side against the near-black page. It is painted on the logo's own box, in the padding around the
+   logo, and a circle looks the same at every angle, so it turns with the logo without seeming to. */
 .loadingLogo {
+  /* The logo itself is 6rem, big enough to read as the logo and small enough to sit calmly on a phone screen */
+  box-sizing: content-box;
+  width: calc(var(--space4) * 1.5);
+  height: auto;
+  padding: var(--space3);
   background-image: radial-gradient(closest-side, var(--heroGlow), transparent);
   /* Ten slow steps: one turn every 6 seconds, slow enough to read as calm rather than busy */
   animation: loadingLogoTurn calc(var(--durationSlow) * 10) linear infinite;
