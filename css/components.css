@@ -226,7 +226,12 @@
   padding: var(--space1);
 }
 
-.dark .menu {
+/*
+ * In dark mode a raised surface is a lighter tone with no edge (see .card), which is lost when it floats over another raised
+ * surface of the same tone. Menus and anchored cards (AnchoredCard) open over cards, so they take a light edge.
+ */
+.dark .menu,
+.dark .anchoredCard {
   border-color: color-mix(in srgb, var(--textFull) 20%, transparent);
 }
 
