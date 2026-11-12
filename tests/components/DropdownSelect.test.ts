@@ -83,6 +83,15 @@ describe("DropdownSelect", () => {
     expect(combobox.attributes("aria-describedby")).toBe("hint-1");
   });
 
+  it("draws its arrow, unless told to hide it (a short value in a tight line)", () => {
+    const withArrow = mountSelect("3-4");
+    const withoutArrow = mountSelect("3-4", { hidesArrow: true });
+
+    expect(withArrow.find(".chevron").exists()).toBe(true);
+    expect(withoutArrow.find(".chevron").exists()).toBe(false);
+    expect(withoutArrow.get('[role="combobox"]').classes()).toContain("arrowless");
+  });
+
   it("the open list is named like the combobox and as wide as it at least", async () => {
     const wrapper = mountSelect("3-4");
 

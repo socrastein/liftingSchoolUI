@@ -67,6 +67,12 @@ import { optionNamed, optionsMatching } from "../js/optionSearch.js";
  * browser's autofill (give it `autocomplete`) still works. Typing to
  * jump, Space and Home/End are the text box's own then.
  *
+ * With `hidesArrow`, a plain drop-down drops its arrow, for a short
+ * value in a tight line that reads like a written plan ("[3-4] sets of
+ * [8-10]"). Its box still says it can be changed, like a sheet's cell,
+ * and a hovered box takes the accent's faint wash, as a hovered option
+ * does; typing still picks an option. A searchable box keeps its arrow.
+ *
  * It only reports: `change` carries the chosen option's value, and only
  * when it differs from `value`.
  */
@@ -93,6 +99,8 @@ const props = defineProps<{
   size?: "compact" | "regular";
   /** A text box that narrows the list as you type, for a long list (see above). */
   searchable?: boolean;
+  /** No arrow on a plain drop-down, for a short value in a tight line (see above). */
+  hidesArrow?: boolean;
 }>();
 
 const emit = defineEmits<{ (event: "change", value: T): void }>();
@@ -455,7 +463,7 @@ onClickOutside(list, close, { ignore: [combobox] });
     :id="comboId"
     ref="combobox"
     class="dropdownSelect input"
-    :class="{ compact: size !== 'regular', hasNote: selectedOption?.note !== undefined }"
+    :class="{ compact: size !== 'regular', hasNote: selectedOption?.note !== undefined, arrowless: hidesArrow }"
     role="combobox"
     tabindex="0"
     aria-haspopup="listbox"
@@ -475,7 +483,7 @@ onClickOutside(list, close, { ignore: [combobox] });
     </span>
     <span v-else-if="placeholder" class="placeholder label">{{ placeholder }}</span>
     <!-- The arrow a native select draws for itself, so it looks like a drop-down at a glance. -->
-    <svg class="chevron" viewBox="0 0 10 6" width="10" height="6" aria-hidden="true" focusable="false">
+    <svg v-if="!hidesArrow" class="chevron" viewBox="0 0 10 6" width="10" height="6" aria-hidden="true" focusable="false">
       <path d="M1 1l4 4 4-4" />
     </svg>
   </div>
@@ -556,6 +564,11 @@ onClickOutside(list, close, { ignore: [combobox] });
   stroke-width: 1.5;
   /* Turning back as the list closes: eases in, like everything leaving. */
   transition: transform var(--durationFast) var(--easeIn);
+}
+
+/* With no arrow, hovering is what says it opens: the faint accent wash a hovered option has. */
+.arrowless:hover {
+  background-color: var(--accentSubtle);
 }
 
 /* Open: the arrow turns over, easing out. */
