@@ -23,7 +23,7 @@ function addPageButton(text: string): HTMLButtonElement {
 }
 
 /** A button and the card it opened (with a field inside), mounted on the page; `closeLabel` as the parent would pass it. */
-async function mountOpenCard(closeLabel?: string, hidesHeader?: boolean) {
+async function mountOpenCard(closeLabel?: string, hidesHeader?: boolean, focusOnOpen?: "firstField" | "card") {
   const anchor = addPageButton("Opener");
   const outside = addPageButton("Somewhere else");
 
@@ -34,7 +34,7 @@ async function mountOpenCard(closeLabel?: string, hidesHeader?: boolean) {
         isOpen.value
           ? h(
               AnchoredCard,
-              { anchor, heading: "Set 2 note", closeLabel, hidesHeader, onClose: () => (isOpen.value = false) },
+              { anchor, heading: "Set 2 note", closeLabel, hidesHeader, focusOnOpen, onClose: () => (isOpen.value = false) },
               { default: () => h("textarea", { class: "field" }) },
             )
           : null;
@@ -60,6 +60,12 @@ describe("AnchoredCard", () => {
     expect(document.getElementById(headingId)?.textContent).toBe("Set 2 note");
     await closeButton(wrapper).trigger("click");
     expect(isOpen.value).toBe(false);
+  });
+
+  it("with focusOnOpen card, focuses the card itself, not its field (no phone keyboard comes up)", async () => {
+    const { wrapper } = await mountOpenCard(undefined, undefined, "card");
+
+    expect(document.activeElement).toBe(wrapper.get('[role="dialog"]').element);
   });
 
   it("shows its heading row by default", async () => {

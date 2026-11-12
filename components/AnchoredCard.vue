@@ -10,7 +10,8 @@ import FloatingPanel from "./FloatingPanel.vue";
  * It is a non-modal dialog (role="dialog", named by its heading), drawn beside the button by FloatingPanel: right after the
  * button in Tab order, never cut off by a scrolling box, above the button when there is no room below.
  *
- * On opening, focus goes to the first field inside (or, with none, to the close button). It closes (emitting `close`) on
+ * On opening, focus goes to the first field inside (or, with none, to the close button), or with `focusOnOpen: "card"` to the
+ * card itself. It closes (emitting `close`) on
  * Escape or the close button, which put focus back on the button; and on a click elsewhere or Tab past its end, which leave
  * focus where the person put it. The card itself takes focus (tabindex -1, never a Tab stop), so a click on its blank space
  * stays inside: otherwise focus would go to the nearest focusable thing around it (a scrolling box it opened in, say), and
@@ -33,8 +34,13 @@ const props = withDefaults(
     closeLabel?: string;
     /** Keep the heading row (heading and close button) out of sight until the close button has focus. */
     hidesHeader?: boolean;
+    /**
+     * Where focus goes on opening: the first field (the default), or the card itself, for a card whose first job is
+     * tapping, not typing (a phone would otherwise raise its keyboard over it).
+     */
+    focusOnOpen?: "firstField" | "card";
   }>(),
-  { closeLabel: "Done", hidesHeader: false },
+  { closeLabel: "Done", hidesHeader: false, focusOnOpen: "firstField" },
 );
 
 const emit = defineEmits<{ (event: "close"): void }>();
@@ -44,9 +50,16 @@ const card = ref<HTMLElement | null>(null);
 
 // ---- focus and closing ------------------------------------------------------------------
 
-/** On opening, focus the first field in the card; a card with no field focuses its first button (the close button). */
+/**
+ * On opening, focus the first field in the card; a card with no field focuses its first button (the close button). With
+ * `focusOnOpen: "card"`, the card itself: a screen reader still reads its name, and no phone keyboard comes up.
+ */
 onMounted(async () => {
   await nextTick();
+  if (props.focusOnOpen === "card") {
+    card.value?.focus();
+    return;
+  }
   const firstField = card.value?.querySelector<HTMLElement>("textarea, input, select");
   const firstButton = card.value?.querySelector<HTMLElement>("button");
   const focusTarget = firstField ?? firstButton;
