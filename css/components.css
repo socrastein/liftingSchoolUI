@@ -968,12 +968,13 @@ textarea.input {
 }
 
 /*
- * The loading screen (LoadingScreen): the page's own background over the whole window, the logo turning once every 6 seconds
- * and the dots after "Loading" counting 0, 1, 2, 3 and starting over, one step every --durationSlow. It appears at once, so
- * nothing half-drawn shows through, and fades out in --durationFast, like anything leaving. A dot is turned off by its opacity
- * rather than removed, so the word keeps its place while they count. Its layout is here with its look, so a page can also
- * draw the screen as plain HTML, with no component to hold it. Under reduced motion the global rule stops the turning and the
- * dots, leaving the logo still and all three dots showing.
+ * The loading screen (LoadingScreen): the page's own background covers the whole window at once, so nothing half-drawn shows
+ * through; the logo and "Loading" join it a moment later. The logo turns once every 6 seconds and the dots after "Loading"
+ * count 0, 1, 2, 3 and start over, one step every --durationSlow; a dot is turned off by its opacity rather than removed, so
+ * the word keeps its place while they count. The screen fades out in --durationFast, like anything leaving. Its layout is here
+ * with its look, so a page can also draw the screen as plain HTML, with no component to hold it. Under reduced motion the
+ * global rule stops the turning and the dots, leaving the logo still and all three dots showing, and shows the logo and label
+ * at once.
  */
 .loadingScreen {
   position: fixed;
@@ -1006,6 +1007,7 @@ textarea.input {
   width: auto;
   font-size: var(--fontSizeH3);
   font-style: italic;
+  animation: loadingScreenArrive var(--durationFast) var(--easeOut) var(--duration) backwards;
 }
 
 /* The glow behind the logo, as on the home page's hero: the other mode's accent, fading out to the page. In dark mode it is what
@@ -1018,8 +1020,18 @@ textarea.input {
   height: auto;
   padding: var(--space3);
   background-image: radial-gradient(closest-side, var(--heroGlow), transparent);
-  /* Ten slow steps: one turn every 6 seconds, slow enough to read as calm rather than busy */
-  animation: loadingLogoTurn calc(var(--durationSlow) * 10) linear infinite;
+  /* Arrives with the label; then ten slow steps make one turn every 6 seconds, slow enough to read as calm rather than busy */
+  animation:
+    loadingScreenArrive var(--durationFast) var(--easeOut) var(--duration) backwards,
+    loadingLogoTurn calc(var(--durationSlow) * 10) linear infinite;
+}
+
+/* The logo and label wait --duration (0.3s), held unseen by "backwards", before easing in: a load that is over by then shows
+   only the page's background, rather than a flash of the logo. */
+@keyframes loadingScreenArrive {
+  from {
+    opacity: 0;
+  }
 }
 
 /* step-end holds each keyframe's value until the next one, so a dot switches on at once instead of fading in */

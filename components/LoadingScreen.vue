@@ -2,9 +2,9 @@
 import logoUrl from "../icons/logo.svg";
 
 /**
- * A screen that covers the whole window while something loads (the app starting, the next page's data): the logo turning
- * slowly, with "Loading" under it and its dots counting. It appears at once, so nothing half-drawn shows through, and fades
- * out quickly once `isLoading` turns false. Its look and layout are the shared library's `.loadingScreen` (components.css).
+ * A screen that covers the whole window while something loads (the app starting, the next page's data): the page's
+ * background at once, so nothing half-drawn shows through, then, if the wait goes on, the logo turning slowly with "Loading"
+ * under it and its dots counting. It fades out quickly once `isLoading` turns false. Its look and layout are the shared library's `.loadingScreen` (components.css).
  *
  *   <LoadingScreen :is-loading="!isReady" />
  *
