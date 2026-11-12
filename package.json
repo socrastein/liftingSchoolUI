@@ -69,6 +69,14 @@
     "./choiceAfterPress": {
       "types": "./js/choiceAfterPress.d.ts",
       "default": "./js/choiceAfterPress.js"
+    },
+    "./loadingScreen": {
+      "types": "./js/loadingScreen.d.ts",
+      "default": "./js/loadingScreen.js"
+    },
+    "./loadingScreenPlugin": {
+      "types": "./js/loadingScreenPlugin.d.ts",
+      "default": "./js/loadingScreenPlugin.js"
     }
   },
   "scripts": {

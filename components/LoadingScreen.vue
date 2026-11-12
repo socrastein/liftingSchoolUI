@@ -2,11 +2,14 @@
 import logoUrl from "../icons/logo.svg";
 
 /**
- * A screen that covers the whole window while something loads (the app starting, the next page's data): the page's
- * background at once, so nothing half-drawn shows through, then, if the wait goes on, the logo turning slowly with "Loading"
- * under it and its dots counting. It fades out quickly once `isLoading` turns false. Its look and layout are the shared library's `.loadingScreen` (components.css).
+ * A screen that covers the whole window while something loads (the next page's data): the page's background at once, then,
+ * if the wait goes on, the logo turning slowly with "Loading" under it and its dots counting. It fades out quickly once
+ * `isLoading` turns false. Its look and layout are the shared library's `.loadingScreen` (components.css).
  *
- *   <LoadingScreen :is-loading="!isReady" />
+ *   <LoadingScreen :is-loading="isLoading" />
+ *
+ * For a Vite app's start, before any component exists, the same screen is written into the page by loadingScreenPlugin.js
+ * and taken away by hideStartupLoadingScreen (loadingScreen.js); keep its markup the same as this template (a test checks).
  *
  * The status region is always on the page, so a screen reader hears "Loading" when the screen appears after the page has
  * started. The three dots are hidden from it, since read aloud they are only noise.
