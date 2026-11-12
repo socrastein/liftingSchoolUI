@@ -16,8 +16,10 @@ repo.
   the library's own `css/` (its few exceptions are listed in `tests/styleRules.test.js`) and over the showcase (none).
 - `npm run typecheck`: type-checks the JavaScript modules and tests from their JSDoc (`tsconfig.json`, `checkJs`) and the
   shared components, their tests and the showcase with vue-tsc (`tsconfig.vue.json`). Must pass.
-- `npm run types`: writes the type declarations `js/*.d.ts` from the JSDoc (`tsconfig.types.json`). Run it after changing a
-  module's exports or JSDoc types, and commit the result; `npm run types:check` fails when the committed ones are out of date.
+- `npm run types`: writes the type declarations `js/*.d.ts` from the JSDoc (`tsconfig.types.json`), deleting the old ones
+  first (tsc would otherwise read a module's declarations back in when another module imports it, and refuse to overwrite
+  them). Run it after changing a module's exports or JSDoc types, and commit the result; `npm run types:check` fails when the
+  committed ones are out of date.
 - `npm run format`: formats every file with Prettier (`.prettierrc.json`); `npm run format:check` only reports. Format before
   proposing a commit. The generated `js/*.d.ts` are left unformatted, so `types:check` compares exactly what tsc writes.
 
