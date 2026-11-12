@@ -16,6 +16,11 @@ import FloatingPanel from "./FloatingPanel.vue";
  * stays inside: otherwise focus would go to the nearest focusable thing around it (a scrolling box it opened in, say), and
  * the card would close as if Tabbed out of. What closing means (saving, or throwing the changes away) is the parent's: the parent that
  * saves on `close` gives the close button the label "Done", one that has a Save button of its own labels it "Cancel".
+ *
+ * `hidesHeader` leaves the heading row out of sight, for a card whose content says what it is (a comment thread) and where the
+ * row would only take room: the heading still names the dialog, and the close button is still there for keyboards and screen
+ * readers, shown (with the heading) only while it has focus, as a skip link is. A click elsewhere, Escape and Tab close it as
+ * before.
  */
 
 const props = withDefaults(
@@ -26,8 +31,10 @@ const props = withDefaults(
     heading: string;
     /** The words on the button that closes the card. */
     closeLabel?: string;
+    /** Keep the heading row (heading and close button) out of sight until the close button has focus. */
+    hidesHeader?: boolean;
   }>(),
-  { closeLabel: "Done" },
+  { closeLabel: "Done", hidesHeader: false },
 );
 
 const emit = defineEmits<{ (event: "close"): void }>();
@@ -83,7 +90,7 @@ onClickOutside(card, closeFromOutside, { ignore: [anchorElement] });
       @keydown.esc.stop="closeToAnchor"
       @focusout="closeIfFocusLeft"
     >
-      <div class="anchoredHeader">
+      <div class="anchoredHeader" :class="{ hiddenUntilFocused: hidesHeader }">
         <!-- Not an <h2>…<h6>: the card opens anywhere, so it must not break the page's heading outline. -->
         <p :id="headingId" class="anchoredHeading">{{ heading }}</p>
         <button type="button" class="btn btnSecondary btnSm" @click="closeToAnchor">{{ closeLabel }}</button>
@@ -109,6 +116,19 @@ onClickOutside(card, closeFromOutside, { ignore: [anchorElement] });
   align-items: center;
   justify-content: space-between;
   gap: var(--space1);
+}
+
+/* Out of sight but kept for screen readers (as .visuallyHidden), until the close button in it has focus. */
+.anchoredHeader.hiddenUntilFocused:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .anchoredHeading {

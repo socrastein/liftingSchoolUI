@@ -130,6 +130,9 @@ const isDisclosureOpen = ref(false);
 const cardOpener = ref<HTMLButtonElement | null>(null);
 const isCardOpen = ref(false);
 const cardNote = ref("");
+const bareCardOpener = ref<HTMLButtonElement | null>(null);
+const isBareCardOpen = ref(false);
+const bareCardText = ref("");
 const isDialogOpen = ref(false);
 
 /** The toast sample, shown by its button. */
@@ -430,7 +433,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <h2 id="popups" class="h3">Popups</h2>
       <p>
         <code>AnchoredCard</code> opens beside the button that opened it, positioned by <code>FloatingPanel</code> and eased in
-        and out by <code>PopupTransition</code>.
+        and out by <code>PopupTransition</code>. With <code>hides-header</code> its heading row stays out of sight until its close
+        button has focus (Shift+Tab from the field), for a card whose content says what it is.
       </p>
       <p>
         <code>ActionsMenu</code> is the ⋮ button: a short list of actions for a row, drawn by the same <code>FloatingPanel</code>.
@@ -481,6 +485,27 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           <AnchoredCard v-if="isCardOpen && cardOpener" :anchor="cardOpener" heading="A note" @close="isCardOpen = false">
             <label class="fieldLabel" for="sampleCardNote">Note</label>
             <textarea id="sampleCardNote" v-model="cardNote" class="input" rows="2"></textarea>
+          </AnchoredCard>
+        </PopupTransition>
+        <button
+          ref="bareCardOpener"
+          type="button"
+          class="btn btnSecondary"
+          :aria-expanded="isBareCardOpen"
+          @click="isBareCardOpen = !isBareCardOpen"
+        >
+          Add a comment
+        </button>
+        <PopupTransition>
+          <AnchoredCard
+            v-if="isBareCardOpen && bareCardOpener"
+            :anchor="bareCardOpener"
+            heading="A comment"
+            hides-header
+            @close="isBareCardOpen = false"
+          >
+            <label class="visuallyHidden" for="sampleCardComment">Comment</label>
+            <textarea id="sampleCardComment" v-model="bareCardText" class="input" rows="2" placeholder="Comment"></textarea>
           </AnchoredCard>
         </PopupTransition>
       </div>

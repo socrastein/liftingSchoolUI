@@ -23,7 +23,7 @@ function addPageButton(text: string): HTMLButtonElement {
 }
 
 /** A button and the card it opened (with a field inside), mounted on the page; `closeLabel` as the parent would pass it. */
-async function mountOpenCard(closeLabel?: string) {
+async function mountOpenCard(closeLabel?: string, hidesHeader?: boolean) {
   const anchor = addPageButton("Opener");
   const outside = addPageButton("Somewhere else");
 
@@ -34,7 +34,7 @@ async function mountOpenCard(closeLabel?: string) {
         isOpen.value
           ? h(
               AnchoredCard,
-              { anchor, heading: "Set 2 note", closeLabel, onClose: () => (isOpen.value = false) },
+              { anchor, heading: "Set 2 note", closeLabel, hidesHeader, onClose: () => (isOpen.value = false) },
               { default: () => h("textarea", { class: "field" }) },
             )
           : null;
@@ -51,6 +51,23 @@ function closeButton(wrapper: VueWrapper, label = "Done") {
 }
 
 describe("AnchoredCard", () => {
+  it("with hidesHeader, keeps the heading row out of sight, still naming the dialog and still closing on its button", async () => {
+    const { wrapper, isOpen } = await mountOpenCard(undefined, true);
+
+    const header = wrapper.get(".anchoredHeader");
+    expect(header.classes()).toContain("hiddenUntilFocused");
+    const headingId = wrapper.get('[role="dialog"]').attributes("aria-labelledby")!;
+    expect(document.getElementById(headingId)?.textContent).toBe("Set 2 note");
+    await closeButton(wrapper).trigger("click");
+    expect(isOpen.value).toBe(false);
+  });
+
+  it("shows its heading row by default", async () => {
+    const { wrapper } = await mountOpenCard();
+
+    expect(wrapper.get(".anchoredHeader").classes()).not.toContain("hiddenUntilFocused");
+  });
+
   it("is a dialog named by its heading, and focus goes to its first field", async () => {
     const { wrapper } = await mountOpenCard();
 
