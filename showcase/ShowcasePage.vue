@@ -12,6 +12,7 @@ import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
 import ChoiceSwitch from "../components/ChoiceSwitch.vue";
+import LoadingScreen from "../components/LoadingScreen.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
 import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
@@ -137,6 +138,17 @@ const isDialogOpen = ref(false);
 
 /** The toast sample, shown by its button. */
 const toast = ref<InstanceType<typeof StatusToast> | null>(null);
+
+/** Whether the loading screen sample is up. */
+const isSampleLoading = ref(false);
+
+/** Shows the loading screen for a few seconds, as if the next page were loading, then lets it fade out. */
+function showLoadingScreen(): void {
+  isSampleLoading.value = true;
+  window.setTimeout(() => {
+    isSampleLoading.value = false;
+  }, 4000);
+}
 
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
@@ -478,6 +490,11 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         </button>
       </div>
       <StatusToast ref="toast" />
+      <p><code>LoadingScreen</code> covers the window while something loads, and fades out when it is ready.</p>
+      <div class="row">
+        <button type="button" class="btn btnSecondary" @click="showLoadingScreen">Load for 4 seconds</button>
+      </div>
+      <LoadingScreen :is-loading="isSampleLoading" />
       <div class="row">
         <button
           ref="cardOpener"

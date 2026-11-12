@@ -966,3 +966,95 @@ textarea.input {
 .listItemTitle {
   font-weight: 700;
 }
+
+/*
+ * The loading screen (LoadingScreen): the page's own background over the whole window, the logo turning once every 6 seconds and
+ * the dots after "Loading" counting 0, 1, 2, 3 and starting over, one step every --durationSlow. It appears at once, so nothing half-drawn
+ * shows through, and fades out in --durationFast, like anything leaving. The dots are turned off by opacity rather than removed,
+ * so the word keeps its place while they count. Under reduced motion the global rule stops both, leaving the logo still and all
+ * three dots showing.
+ */
+.loadingScreen {
+  background-color: var(--bgBase);
+  color: var(--textFull);
+}
+
+.loadingScreen-leave-active {
+  transition: opacity var(--durationFast) var(--easeIn);
+}
+
+.loadingScreen-leave-to {
+  opacity: 0;
+}
+
+/* Heading-sized but in the body font, like other display text */
+.loadingText {
+  font-size: var(--fontSizeH3);
+  font-style: italic;
+}
+
+/* The glow behind the logo, as on the home page's hero: the other mode's accent, fading out to the page. In dark mode it is what
+   shows the logo's near-black side against the near-black page. It is painted on the logo's own box, around the logo, and a
+   circle looks the same at every angle, so it turns with the logo without seeming to. */
+.loadingLogo {
+  background-image: radial-gradient(closest-side, var(--heroGlow), transparent);
+  /* Ten slow steps: one turn every 6 seconds, slow enough to read as calm rather than busy */
+  animation: loadingLogoTurn calc(var(--durationSlow) * 10) linear infinite;
+}
+
+/* step-end holds each keyframe's value until the next one, so a dot switches on at once instead of fading in */
+.loadingDots > span {
+  animation: calc(var(--durationSlow) * 4) step-end infinite;
+}
+
+.loadingDots > span:nth-child(1) {
+  animation-name: loadingDot1;
+}
+
+.loadingDots > span:nth-child(2) {
+  animation-name: loadingDot2;
+}
+
+.loadingDots > span:nth-child(3) {
+  animation-name: loadingDot3;
+}
+
+@keyframes loadingLogoTurn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* The four steps are quarters of the cycle, showing 0, 1, 2 and 3 dots before starting over. Each dot is off until its own
+   step and stays on to the end of the cycle: the first from the second step, */
+@keyframes loadingDot1 {
+  0% {
+    opacity: 0;
+  }
+  25%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* the second from the third, */
+@keyframes loadingDot2 {
+  0% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* and the third from the last. */
+@keyframes loadingDot3 {
+  0% {
+    opacity: 0;
+  }
+  75%,
+  100% {
+    opacity: 1;
+  }
+}
