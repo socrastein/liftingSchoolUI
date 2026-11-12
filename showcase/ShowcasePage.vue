@@ -291,6 +291,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <h3 class="h5">.card.toolCard</h3>
         <p>A tool's card: a padded column of its parts, one step apart.</p>
       </div>
+      <div class="raisedPanel samplePanel sampleRaisedPanel">
+        <p>A <code>.raisedPanel</code> is lifted off the page and holds cards of its own.</p>
+        <div class="card samplePanel">
+          <p>A <code>.card</code> on it</p>
+        </div>
+        <div class="card samplePanel"><p>Another</p></div>
+      </div>
     </section>
 
     <section class="showcaseSection" aria-labelledby="fields">
@@ -679,6 +686,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 
 .samplePanel {
   padding: var(--space2);
+}
+
+/* The raised panel's sample: its cards one step apart */
+.sampleRaisedPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space2);
 }
 
 /* A row of items: the page that uses .plainList arranges them */

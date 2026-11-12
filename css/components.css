@@ -709,9 +709,11 @@ textarea.input {
 }
 
 /*
- * The two surfaces. A card is a face that holds content and is lifted off the page: in light mode by a thin edge and a soft
+ * The surfaces. A card is a face that holds content and is lifted off the page: in light mode by a thin edge and a soft
  * shadow, in dark mode by being a lighter tone (see --raisedBorder and --shadowRaised). A panel groups things and has the
- * edge only. A component adds just its own size, layout and padding, never its own outline or shadow.
+ * edge only. A raised panel is lifted off the page like a card, but on the mid surface, to hold cards of its own (the
+ * layering rule: in dark mode its cards stand out by their lighter tone). A component adds just its own size, layout and
+ * padding, never its own outline or shadow.
  */
 .card {
   background-color: var(--bgTop);
@@ -737,6 +739,13 @@ textarea.input {
   background-color: var(--bgMid);
   border: 1px solid var(--raisedBorder);
   border-radius: var(--radiusLg);
+}
+
+.raisedPanel {
+  background-color: var(--bgMid);
+  border: 1px solid var(--raisedBorder);
+  border-radius: var(--radiusLg);
+  box-shadow: var(--shadowRaised);
 }
 
 /*
