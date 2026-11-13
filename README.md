@@ -176,7 +176,7 @@ All camelCase; a part or variant is the block's name plus a suffix, as `.card` â
 
 - **Surfaces:** `.card` (a lifted face that holds content), `.panel` (a group inside a card), `.raisedPanel` (lifted off the page like a card, on the
   mid surface, to hold cards of its own: a column of exercise cards), `.cardLink` (a card that is a link:
-  hover deepens it), `.cardHeader` with `.cardTitle` (a card's title row), `.sectionTitle` (the small uppercase heading of a
+  hover deepens it), `.cardHeader` with `.cardTitle` (a card's title row), `.sectionTitle` (the small heading of a
   section), `.toolCard` (a tool's card: a padded column of its parts), and `.readingColumn` (the centred column of a page you read).
 - **Controls:** `.btn` with `.btnPrimary`, `.btnSecondary`, `.btnSubtle`, `.btnDanger` or `.btnDangerSubtle` (for a button that only asks before something destructive), plus `.btnSm`, `.btnIcon` (square, needs
   an `aria-label`), `.btnGhost` (no face, for a small icon in a row, such as the â‹® of `ActionsMenu`), `.btnBlock` and `.btnEdged` (a coloured edge from `--edgeColor`, set to a theme token). A bare `<button>` has no

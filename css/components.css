@@ -769,28 +769,25 @@ textarea.input {
 }
 
 /*
- * The small uppercase heading that starts a section inside a card (a group of form fields, a part of the review), with a
- * rule under it. Works on a heading or on a fieldset's legend.
+ * The small heading that starts a section inside a card (a group of form fields, a part of the review), with a rule under it.
+ * Works on a heading or on a fieldset's legend. Written in Title Case and drawn as written, in the text colour like every other
+ * heading: capitals and the accent once set it apart, but the accent marks what can be tapped, and a heading is not.
  */
 .sectionTitle {
   border-bottom: 1px solid var(--borderMuted);
-  color: var(--accentFull);
+  color: var(--textFull);
   font-size: var(--fontSizeMd);
   font-weight: 700;
-  letter-spacing: 0.05em;
   margin: 0 0 var(--space2) 0;
   padding-bottom: var(--space1);
-  text-transform: uppercase;
   width: 100%;
 }
 
-/* Uppercase heading at the top of a card */
+/* The heading at the top of a card, in Title Case and drawn as written, like the page's other headings */
 .cardTitle {
   font-size: var(--fontSizeXl);
   font-weight: 700;
   color: var(--textFull);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 /*

@@ -50,9 +50,9 @@ const COLOUR_GROUPS: { name: string; tokens: string[] }[] = [
     name: "Status",
     tokens: ["--danger", "--dangerSubtle", "--success", "--successSubtle", "--infoSubtle"],
   },
-  { name: "Plate edges", tokens: ["--plateRed", "--plateBlue", "--plateYellow", "--plateGreen", "--plateGrey"] },
+  { name: "Plate Edges", tokens: ["--plateRed", "--plateBlue", "--plateYellow", "--plateGreen", "--plateGrey"] },
   {
-    name: "Plate faces",
+    name: "Plate Faces",
     tokens: ["--plateFaceRed", "--plateFaceBlue", "--plateFaceYellow", "--plateFaceGreen", "--plateFaceGrey"],
   },
   { name: "Other", tokens: ["--scrim", "--heroGlow"] },
