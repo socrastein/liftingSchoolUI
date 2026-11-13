@@ -1156,9 +1156,12 @@ textarea.input {
   transform: translateY(calc(var(--spaceHalf) * -1));
 }
 
-/* A row that starts something ("Add Client") is set apart below the places, with its plus sign */
-.siteHeaderAction {
+/* A row that starts something ("Add Client") is set apart below the places, with its plus sign. Written with .menuItem as
+   well, since .menuItem:link (which every link row matches) would otherwise outrank it and take the border away. */
+.menuItem.siteHeaderAction {
+  border-radius: 0 0 var(--radius) var(--radius);
   border-top: 1px solid var(--borderSubtle);
+  margin-top: var(--spaceHalf);
 }
 
 .siteHeaderPlus {
