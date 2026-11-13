@@ -4,13 +4,15 @@ import { ref, watch, type Component } from "vue";
 import chevronDownIcon from "../icons/chevron-down.svg";
 import menuIcon from "../icons/menu.svg";
 import xIcon from "../icons/x.svg";
-import type { HeaderItem, HeaderSwitchLink } from "./SiteHeader.vue";
+import type { Product } from "../js/businessTools.js";
+import type { HeaderItem } from "./SiteHeader.vue";
 import SiteHeaderEntry from "./SiteHeaderEntry.vue";
+import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
 import ThemeSlider from "./ThemeSlider.vue";
 
 /**
- * The header's menu on a phone-width screen: a button that opens a panel holding the switch to the other product, the pages,
- * each drop-down as a section that folds open, and the light/dark switch.
+ * The header's menu on a phone-width screen: a button that opens a panel holding the switch between the products, the pages,
+ * each drop-down (Tools among them) as a section that folds open, and the light/dark switch.
  *
  * The button shows a word beside its icon ("Menu", then "Close"), since three lines alone are not recognised by everyone
  * (Nielsen Norman Group's finding on hamburger menus). It works from the keyboard and with a screen reader: the button reports
@@ -18,10 +20,10 @@ import ThemeSlider from "./ThemeSlider.vue";
  * order, and Escape closes it and puts focus back on the button.
  */
 defineProps<{
-  /** The pages and drop-downs, in order. */
+  /** The pages and drop-downs, in order (the Tools menu is the last of them). */
   items: HeaderItem[];
-  /** The way across to the other product, drawn as the panel's first row. */
-  switchLink: HeaderSwitchLink;
+  /** The product the header is in, for the switch drawn as the panel's first row. */
+  product: Product;
   /** The project's router link component. */
   linkComponent: Component;
   /** Where the light/dark choice is saved on the device; see useColorScheme. */
@@ -72,7 +74,7 @@ onClickOutside(panel, () => (isOpen.value = false), { ignore: [toggle] });
     </button>
     <Transition name="siteHeaderPanel">
       <div v-if="isOpen" id="phoneMenuPanel" ref="panel" class="menu siteHeaderPanel">
-        <a :href="switchLink.href" class="menuItem siteHeaderSwitchRow" @click="isOpen = false">{{ switchLink.name }}</a>
+        <SiteHeaderSwitch :product="product" />
         <template v-for="item in items" :key="item.kind === 'menu' ? item.id : item.to">
           <component :is="linkComponent" v-if="item.kind === 'link'" :to="item.to" class="menuItem" @click="isOpen = false">
             {{ item.name }}

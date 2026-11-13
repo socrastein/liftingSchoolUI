@@ -14,52 +14,57 @@ export interface HeaderPageLink {
 
 /** One thing in the header's row: a page, or a drop-down of pages. */
 export type HeaderItem = HeaderPageLink | HeaderMenu;
-
-/** The way across to the business's other product (the site's "Lifting App", the app's "School Website"). */
-export interface HeaderSwitchLink {
-  name: string;
-  /** Its full address: it is another site, so a plain link in the same tab. */
-  href: string;
-}
 </script>
 
 <script setup lang="ts">
-import type { Component } from "vue";
+import { computed, type Component } from "vue";
 import logoIcon from "../icons/logo.svg";
+import { toolMenuEntries, type Product } from "../js/businessTools.js";
 import SiteHeaderDropdown from "./SiteHeaderDropdown.vue";
 import SiteHeaderPhoneMenu from "./SiteHeaderPhoneMenu.vue";
+import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
 import ThemeButton from "./ThemeButton.vue";
 
 /**
- * The header of every site and app of the business: the logo and name on the left, then the pages, the drop-downs, the switch
- * to the other product and the light/dark button; on a screen under 900px wide, a Menu button whose panel holds the same
- * things. One component, so the two products' headers cannot drift apart and a fix reaches both.
+ * The header of every site and app of the business: the logo and name on the left, then, always in this order, the product's
+ * own pages and drop-downs, the Tools menu, the switch to the other product and the light/dark button; on a screen under 900px
+ * wide, a Menu button whose panel holds the same things, with the switch first. One component, so the two products' headers
+ * cannot drift apart and a fix reaches both. The Tools menu is the business's one list (js/businessTools.js): a project says
+ * which product it is, and can neither add to the list nor put anything after it.
  *
  * Both layouts are always in the page and CSS shows the one that fits (see .siteHeaderLinks in components.css), never a
  * script: a prerendered page then shows a phone its menu from the first paint. The one hidden is display: none, so it is also
  * out of reach of the keyboard and screen readers.
  *
- * The switch sits in the same spot in every product: the last thing before the theme button in the wide row, drawn as the
- * header's one outlined button, and the first row of the phone menu.
+ * The switch sits in the same spot in every product: the last thing before the theme button in the wide row, and the first row
+ * of the phone menu. It is one segmented control, "Website | App", with the product you are in marked.
  *
  * It is fixed to the top of the window, `--headerHeight` tall, and marked `data-fixed-header` so popups open below it
  * (js/fixedHeader.js). The `status` slot is for something the project shows beside the navigation, before the links and
  * before the Menu button (the app's "Saved"); whatever goes there should keep its room while hidden, so nothing shifts.
  */
-defineProps<{
+const props = defineProps<{
   /** The product's name, beside the logo ("The Lifting School"). */
   name: string;
   /** Where the name leads: the product's first page. */
   homeTo: string;
-  /** The pages and drop-downs, in order. A drop-down left out of the list is not drawn. */
-  items: HeaderItem[];
-  /** The way across to the other product. */
-  switchLink: HeaderSwitchLink;
+  /** Which product this header is in: it decides which tools are links inside the project and which lead across, and which side of the switch is current. */
+  product: Product;
+  /** The product's own pages and drop-downs, in order; the Tools menu is drawn after them by the header itself. */
+  pages: HeaderItem[];
+  /** True on one of the tools' pages: the Tools menu is then marked like the current page's link. */
+  isOnToolPage: boolean;
   /** The project's router link component (NuxtLink or RouterLink): it takes `to` and marks the current page itself. */
   linkComponent: Component;
   /** Where the light/dark choice is saved on the device; see useColorScheme. */
   themeStorageKey: string;
 }>();
+
+/** The product's pages, then the business's Tools menu: everything the header lists, in the order it is drawn. */
+const items = computed<HeaderItem[]>(() => [
+  ...props.pages,
+  { kind: "menu", id: "tools", label: "Tools", isCurrent: props.isOnToolPage, entries: toolMenuEntries(props.product) },
+]);
 </script>
 
 <template>
@@ -75,7 +80,7 @@ defineProps<{
         <div class="siteHeaderPhone">
           <SiteHeaderPhoneMenu
             :items="items"
-            :switch-link="switchLink"
+            :product="product"
             :link-component="linkComponent"
             :theme-storage-key="themeStorageKey"
           />
@@ -87,7 +92,7 @@ defineProps<{
             </component>
             <SiteHeaderDropdown v-else :menu="item" :link-component="linkComponent" />
           </template>
-          <a :href="switchLink.href" class="btn btnSecondary btnSm siteHeaderSwitch">{{ switchLink.name }}</a>
+          <SiteHeaderSwitch :product="product" />
           <ThemeButton :storage-key="themeStorageKey" />
         </div>
       </div>

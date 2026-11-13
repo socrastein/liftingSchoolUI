@@ -179,7 +179,9 @@
  * Segmented control: a track holding two or more buttons of which exactly one is selected, such as a time period or a mode.
  * Mark the selected button with aria-pressed="true" (which also tells a screen reader which it is); that is all the styling
  * looks at. When the items are links to pages instead (the stopwatch and the interval timer), the one for the page you are on
- * carries aria-current="page", which NuxtLink and RouterLink add, and is marked the same way. The track is a little recessed and the selected button is filled with the accent.
+ * carries aria-current="page", which NuxtLink and RouterLink add, and is marked the same way; so is a side that says only which
+ * one you are in (the header's Website | App switch), with aria-current="true". The track is a little recessed and the selected
+ * button is filled with the accent.
  */
 .segmented {
   background-color: var(--bgBase);
@@ -208,13 +210,14 @@
   white-space: nowrap;
 }
 
-.segmentedItem:hover:not([aria-pressed="true"], [aria-current="page"]) {
+.segmentedItem:hover:not([aria-pressed="true"], [aria-current="page"], [aria-current="true"]) {
   background-color: var(--accentSubtle);
   color: var(--textFull);
 }
 
 .segmentedItem[aria-pressed="true"],
-.segmentedItem[aria-current="page"] {
+.segmentedItem[aria-current="page"],
+.segmentedItem[aria-current="true"] {
   background-color: var(--accentFull);
   color: var(--onAccent);
   font-weight: 700;
@@ -1096,7 +1099,7 @@ textarea.input {
   width: auto;
 }
 
-/* The switch to the other product keeps its words on one line, with a little room from the links before it */
+/* The switch between the products (a .segmented control) keeps its words on one line, with a little room from the links before it */
 .siteHeaderSwitch {
   margin-left: var(--space1);
   white-space: nowrap;
@@ -1158,6 +1161,14 @@ textarea.input {
   border-top: 1px solid var(--borderSubtle);
 }
 
+/* The first row of a new group of rows (the standalone tools in Tools) has a rule above it. Written with .menuItem as well,
+   since .menuItem:link (which every link row matches) would otherwise outrank it and take the border away. */
+.menuItem.siteHeaderGroupStart {
+  border-radius: 0 0 var(--radius) var(--radius);
+  border-top: 1px solid var(--borderMuted);
+  margin-top: var(--spaceHalf);
+}
+
 .siteHeaderPlus {
   margin-right: var(--spaceHalf);
 }
@@ -1213,6 +1224,16 @@ textarea.input {
 .siteHeaderPanel .menuItem {
   justify-content: flex-end;
   text-align: right;
+}
+
+/* The switch is the panel's first row: the width of the panel, each side a thumb tall */
+.siteHeaderPanel .siteHeaderSwitch {
+  margin-left: 0;
+  width: 100%;
+}
+
+.siteHeaderPanel .siteHeaderSwitch .segmentedItem {
+  min-height: 2.75rem;
 }
 
 /* A section's rows, folded open under its button: set in a step, with a rule down their left */

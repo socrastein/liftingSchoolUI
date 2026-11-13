@@ -15,6 +15,7 @@ import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import LoadingScreen from "../components/LoadingScreen.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
 import SiteHeader, { type HeaderItem } from "../components/SiteHeader.vue";
+import type { Product } from "../js/businessTools.js";
 import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
 import ThemeSlider from "../components/ThemeSlider.vue";
@@ -26,20 +27,27 @@ const SampleLink = defineComponent({
   },
 });
 
-/** The sample header's pages and drop-downs. */
-const SAMPLE_HEADER_ITEMS: HeaderItem[] = [
+/** The sample header's own pages and drop-down; the header adds the Tools menu itself. */
+const SAMPLE_HEADER_PAGES: HeaderItem[] = [
   { kind: "link", name: "Home", to: "#header" },
   { kind: "link", name: "Services", to: "#header" },
   {
     kind: "menu",
-    id: "sampleTools",
-    label: "Tools",
-    isCurrent: true,
+    id: "sampleClients",
+    label: "Clients",
+    isCurrent: false,
     entries: [
-      { kind: "link", name: "Weight Log", to: "#header" },
-      { kind: "link", name: "Add a Tool", to: "#header", isAction: true },
+      { kind: "link", name: "Sam Sample", to: "#header" },
+      { kind: "link", name: "Add Client", to: "#header", isAction: true },
     ],
   },
+];
+
+/** The product the sample header is in; the control above it flips it, to see both products' headers (ids in a header are unique, so one is drawn at a time). */
+const headerProduct = ref<Product>("site");
+const HEADER_PRODUCT_CHOICES: { value: Product; label: string }[] = [
+  { value: "site", label: "Website" },
+  { value: "app", label: "App" },
 ];
 
 /**
@@ -470,16 +478,19 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
     <section class="showcaseSection" aria-labelledby="header">
       <h2 id="header" class="h3">Header</h2>
       <p>
-        <code>SiteHeader</code> is the header of every site and app: the name, the pages and drop-downs, the switch to the other
-        product and the theme button, or a Menu button under 900px wide. It is fixed to the top of the window; this sample is held
-        in a frame.
+        <code>SiteHeader</code> is the header of every site and app: the name, the product's own pages and drop-downs, the Tools
+        menu (the business's one list, <code>lifting-school-ui/businessTools</code>), the Website | App switch and the theme
+        button, or a Menu button under 900px wide. It is fixed to the top of the window; this sample is held in a frame. Flip the
+        product to see that both draw the same Tools menu and switch, with only the link kinds differing.
       </p>
+      <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
       <div class="sampleHeaderFrame">
         <SiteHeader
           name="The Sample Site"
           home-to="#header"
-          :items="SAMPLE_HEADER_ITEMS"
-          :switch-link="{ name: 'Sample App', href: '#header' }"
+          :product="headerProduct"
+          :pages="SAMPLE_HEADER_PAGES"
+          :is-on-tool-page="false"
           :link-component="SampleLink"
           :theme-storage-key="THEME_KEY"
         >
@@ -774,10 +785,15 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 
 /* Holds the sample header in place: a transformed box is what a fixed element inside it is fixed to. Tall enough for its
    drop-down and its phone panel to open inside the frame. */
+/* Wider than the page's column (centred on it), since the wide header needs about 900px: a column-wide frame would clip it */
 .sampleHeaderFrame {
   border: 1px solid var(--raisedBorder);
+  margin-left: 50%;
+  max-width: none;
+  translate: -50% 0;
+  width: min(64rem, calc(100vw - 2rem));
   border-radius: var(--radius);
-  height: 22rem;
+  height: 30rem;
   overflow: hidden;
   position: relative;
   transform: translate(0);
