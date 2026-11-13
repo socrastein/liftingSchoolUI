@@ -65,7 +65,7 @@ function closeFromKeyboard(): void {
       <div v-if="isOpen" :id="`${menu.id}List`" class="menu siteHeaderList">
         <SiteHeaderEntry
           v-for="entry in menu.entries"
-          :key="entry.name"
+          :key="entry.key ?? entry.name"
           :entry="entry"
           :link-component="linkComponent"
           @chosen="isOpen = false"

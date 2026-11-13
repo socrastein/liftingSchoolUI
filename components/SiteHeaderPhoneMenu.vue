@@ -93,7 +93,7 @@ onClickOutside(panel, () => (isOpen.value = false), { ignore: [toggle] });
             <div v-if="openSectionId === item.id" :id="`${item.id}Section`" class="siteHeaderSection">
               <SiteHeaderEntry
                 v-for="entry in item.entries"
-                :key="entry.name"
+                :key="entry.key ?? entry.name"
                 :entry="entry"
                 :link-component="linkComponent"
                 @chosen="isOpen = false"

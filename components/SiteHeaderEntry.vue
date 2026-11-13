@@ -4,10 +4,12 @@ import type { Component } from "vue";
 /**
  * One row of a header menu: a page of this project (drawn with the project's router link), or a link to somewhere else.
  * A page marked `isAction` starts something ("Add Client") instead of naming a place: it is set apart below the others, with
- * a plus sign.
+ * a plus sign. Rows of one menu are told apart by `key` where it is given, by name otherwise: give a key wherever two rows
+ * can share a name (two clients called Sam).
  */
 export type HeaderMenuEntry =
-  { kind: "link"; name: string; to: string; isAction?: boolean } | { kind: "external"; name: string; href: string };
+  | { kind: "link"; name: string; to: string; isAction?: boolean; key?: string }
+  | { kind: "external"; name: string; href: string; key?: string };
 </script>
 
 <script setup lang="ts">

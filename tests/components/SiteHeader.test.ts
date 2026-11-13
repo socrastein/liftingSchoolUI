@@ -27,7 +27,8 @@ const ITEMS: HeaderItem[] = [
     label: "Clients",
     isCurrent: false,
     entries: [
-      { kind: "link", name: "Sam Sample", to: "/clients/1" },
+      { kind: "link", name: "Sam Sample", to: "/clients/1", key: "client-1" },
+      { kind: "link", name: "Sam Sample", to: "/clients/2", key: "client-2" },
       { kind: "link", name: "Add Client", to: "/clients", isAction: true },
     ],
   },
@@ -144,6 +145,13 @@ describe("SiteHeader: the wide row", () => {
     expect(document.activeElement).toBe(tools.get("button").element);
   });
 
+  it("keeps two rows with the same name apart by their keys, each leading to its own page", async () => {
+    await header.get('.siteHeaderLinks [data-menu="clients"] button').trigger("click");
+
+    const sams = header.findAll("#clientsList a").filter((row) => row.text() === "Sam Sample");
+    expect(sams.map((row) => row.attributes("href"))).toEqual(["/clients/1", "/clients/2"]);
+  });
+
   it("sets a row that starts something apart, with a plus sign a screen reader skips", async () => {
     await header.get('.siteHeaderLinks [data-menu="clients"] button').trigger("click");
 
@@ -196,7 +204,7 @@ describe("SiteHeader: the phone menu", () => {
     await clientsButton.trigger("click");
     expect(toolsButton.attributes("aria-expanded")).toBe("false");
     expect(header.find("#toolsSection").exists()).toBe(false);
-    expect(textsOf(header, "#clientsSection .menuItem")).toEqual(["Sam Sample", "+Add Client"]);
+    expect(textsOf(header, "#clientsSection .menuItem")).toEqual(["Sam Sample", "Sam Sample", "+Add Client"]);
   });
 
   it("closes when a row is chosen, and has every section folded when it opens again", async () => {
