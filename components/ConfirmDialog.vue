@@ -4,6 +4,28 @@ export interface DialogChoice {
   value: string;
   label: string;
 }
+
+/** What every question has: its words, and what answering yes will do. */
+interface QuestionProps {
+  /** The question, e.g. "Delete Sam and all their history?" */
+  question: string;
+  /** What answering yes will do, shown under the question, e.g. "Their 40 workouts go too. This cannot be undone." */
+  detail?: string;
+}
+
+/** A question with one button that goes ahead: its words are required, so no dialog can fall back to a vague "Confirm". */
+interface OneConfirmProps extends QuestionProps {
+  /** The words on the button that goes ahead, saying what it does ("Delete Client", "Replace Weigh-Ins"). */
+  confirmLabel: string;
+  choices?: undefined;
+}
+
+/** A question with several confirm buttons instead of one, each named by its own label. */
+interface SeveralChoicesProps extends QuestionProps {
+  /** The confirm buttons, in order. */
+  choices: DialogChoice[];
+  confirmLabel?: undefined;
+}
 </script>
 
 <script setup lang="ts">
@@ -20,7 +42,8 @@ import { onBeforeUnmount, onMounted, ref, useId } from "vue";
  *   (aria-describedby), so a screen reader reads the question, then what answering yes will do;
  * - focus starts on Cancel, the safe answer, so Enter on a reflex does no harm (with several choices, Cancel is the last
  *   button, and focus still starts there);
- * - the confirm button names the action ("Delete client"), never "OK";
+ * - the confirm button names the action ("Delete client"), never "OK" or "Confirm": a caller must pass `confirmLabel` or
+ *   `choices`, and the type checker refuses a dialog with neither;
  * - Escape or a click on the dimmed page around the card answers "cancel";
  * - on closing, focus goes back to what had it before (the button that opened the question), if that still exists. After
  *   "confirm" the opener is often gone (a deleted row's button), so the parent moves focus on purpose.
@@ -34,19 +57,7 @@ import { onBeforeUnmount, onMounted, ref, useId } from "vue";
  * becomes its own button, stacked, and `confirm` reports which one was chosen.
  */
 
-const props = withDefaults(
-  defineProps<{
-    /** The question, e.g. "Delete Sam and all their history?" */
-    question: string;
-    /** What answering yes will do, shown under the question, e.g. "Their 40 workouts go too. This cannot be undone." */
-    detail?: string;
-    /** The words on the single button that goes ahead, which should say what it does ("Replace"). Ignored with `choices`. */
-    confirmLabel?: string;
-    /** Several confirm buttons instead of one, in order. */
-    choices?: DialogChoice[];
-  }>(),
-  { detail: undefined, confirmLabel: "Confirm", choices: undefined },
-);
+const props = defineProps<OneConfirmProps | SeveralChoicesProps>();
 
 const emit = defineEmits<{
   /** `value` is the chosen choice's value; undefined for the single confirm button. */

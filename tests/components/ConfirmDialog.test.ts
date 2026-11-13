@@ -60,7 +60,11 @@ describe("ConfirmDialog", () => {
 
   it("shows its detail under the question and is described by it", async () => {
     const wrapper = mount(ConfirmDialog, {
-      props: { question: "Restore this backup?", detail: "It will replace the current log. This cannot be undone." },
+      props: {
+        question: "Restore this backup?",
+        confirmLabel: "Restore Backup",
+        detail: "It will replace the current log. This cannot be undone.",
+      },
       attachTo: document.body,
     });
     await nextTick();
@@ -90,12 +94,6 @@ describe("ConfirmDialog", () => {
     expect(confirm.text()).toBe("Delete client");
     await confirm.trigger("click");
     expect(wrapper.emitted("confirm")).toEqual([[]]);
-  });
-
-  it("says 'Confirm' when no better words are given", () => {
-    const wrapper = mount(ConfirmDialog, { props: { question: "Replace the whole log?" } });
-
-    expect(wrapper.get("button.confirmButton").text()).toBe("Confirm");
   });
 
   it("Cancel emits cancel", async () => {
