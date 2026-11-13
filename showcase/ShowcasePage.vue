@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useColorScheme } from "../js/colorScheme.js";
 import ActionsMenu from "../components/ActionsMenu.vue";
@@ -14,9 +14,33 @@ import ToggleSwitch from "../components/ToggleSwitch.vue";
 import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import LoadingScreen from "../components/LoadingScreen.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
+import SiteHeader, { type HeaderItem } from "../components/SiteHeader.vue";
 import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
 import ThemeSlider from "../components/ThemeSlider.vue";
+
+/** The sample header's link component: the showcase has no router, so a link is a plain anchor to this section. */
+const SampleLink = defineComponent({
+  setup(_props, { slots }) {
+    return () => h("a", { href: "#header" }, slots.default?.());
+  },
+});
+
+/** The sample header's pages and drop-downs. */
+const SAMPLE_HEADER_ITEMS: HeaderItem[] = [
+  { kind: "link", name: "Home", to: "#header" },
+  { kind: "link", name: "Services", to: "#header" },
+  {
+    kind: "menu",
+    id: "sampleTools",
+    label: "Tools",
+    isCurrent: true,
+    entries: [
+      { kind: "link", name: "Weight Log", to: "#header" },
+      { kind: "link", name: "Add a Tool", to: "#header", isAction: true },
+    ],
+  },
+];
 
 /**
  * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
@@ -189,6 +213,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <a href="#tables">Table</a>
       <a href="#messages">Badges and alerts</a>
       <a href="#plates">Plates</a>
+      <a href="#header">Header</a>
       <a href="#menus">Menu</a>
       <a href="#disclosure">Disclosure</a>
       <a href="#highlights">Highlights</a>
@@ -439,6 +464,27 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <span v-for="weight in KILO_PLATES" :key="weight" class="badge" :class="plateBadgeClass(plateColor(weight, false))">
           {{ plateLabel(weight, false) }}
         </span>
+      </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="header">
+      <h2 id="header" class="h3">Header</h2>
+      <p>
+        <code>SiteHeader</code> is the header of every site and app: the name, the pages and drop-downs, the switch to the other
+        product and the theme button, or a Menu button under 900px wide. It is fixed to the top of the window; this sample is held
+        in a frame.
+      </p>
+      <div class="sampleHeaderFrame">
+        <SiteHeader
+          name="The Sample Site"
+          home-to="#header"
+          :items="SAMPLE_HEADER_ITEMS"
+          :switch-link="{ name: 'Sample App', href: '#header' }"
+          :link-component="SampleLink"
+          :theme-storage-key="THEME_KEY"
+        >
+          <template #status><span class="badge">Saved</span></template>
+        </SiteHeader>
       </div>
     </section>
 
@@ -724,6 +770,17 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
   display: flex;
   flex-wrap: wrap;
   gap: var(--space1);
+}
+
+/* Holds the sample header in place: a transformed box is what a fixed element inside it is fixed to. Tall enough for its
+   drop-down and its phone panel to open inside the frame. */
+.sampleHeaderFrame {
+  border: 1px solid var(--raisedBorder);
+  border-radius: var(--radius);
+  height: 22rem;
+  overflow: hidden;
+  position: relative;
+  transform: translate(0);
 }
 
 .sampleMenu {

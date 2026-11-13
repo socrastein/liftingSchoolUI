@@ -21,6 +21,13 @@ const LIBRARY_EXCEPTIONS = [
     reason: "the hero headline (.textHero)",
   },
   {
+    file: "css/components.css",
+    rule: "timing",
+    property: "transition",
+    value: "transform 5s",
+    reason: "the header logo's slow, playful turn under the pointer (.siteHeaderLogo)",
+  },
+  {
     file: "css/base.css",
     rule: "timing",
     property: "animation-duration",

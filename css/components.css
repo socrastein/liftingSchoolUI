@@ -1006,6 +1006,256 @@ textarea.input {
 }
 
 /*
+ * The header of every site and app (the SiteHeader component and its parts): a bar fixed to the top of the window,
+ * --headerHeight tall, with the logo and name on the left and, on the right, either the row of links or, under 900px wide, the
+ * Menu button and its panel. Both are always in the page and the media query at the end shows one, so a page drawn before its
+ * scripts run already has the right one. The links and drop-down buttons are .menuItem, like the rows of the menus they open,
+ * at the header's larger size and only as wide as their words. Its layout is here rather than in the components, since four
+ * components share it.
+ */
+.siteHeader {
+  background-color: var(--bgTop);
+  height: var(--headerHeight);
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+.siteHeaderNav {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space1);
+  height: 100%;
+  justify-content: space-between;
+  padding: 0 var(--space2);
+}
+
+.siteHeaderTitle {
+  align-items: center;
+  display: flex;
+  gap: var(--space1);
+}
+
+/* A slow, playful full turn of the logo under the pointer: a one-off effect, not an interface transition */
+.siteHeaderLogo {
+  height: 2rem;
+  transition: transform 5s;
+  width: 2rem;
+}
+
+.siteHeaderLogo:hover {
+  transform: rotate(360deg);
+}
+
+/* The name is plain text colour, not the accent that links take, and never wraps */
+.siteHeaderName,
+.siteHeaderName:link,
+.siteHeaderName:visited {
+  color: var(--textFull);
+  font-size: var(--fontSizeXl);
+  white-space: nowrap;
+}
+
+.siteHeaderEnd {
+  align-items: center;
+  display: flex;
+  flex-grow: 1;
+  gap: var(--space1);
+  justify-content: flex-end;
+}
+
+.siteHeaderPhone {
+  display: none;
+}
+
+.siteHeaderLinks {
+  align-items: center;
+  display: flex;
+  font-size: var(--fontSizeXl);
+  font-weight: 700;
+  gap: var(--space1);
+  justify-content: flex-end;
+}
+
+.siteHeaderLink,
+.siteHeaderLink:link,
+.siteHeaderLink:visited {
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 0 var(--space1);
+  white-space: nowrap;
+  width: auto;
+}
+
+/* The switch to the other product keeps its words on one line, with a little room from the links before it */
+.siteHeaderSwitch {
+  margin-left: var(--space1);
+  white-space: nowrap;
+}
+
+/* A drop-down's button and, on a phone, a section's: the words with a chevron that turns over while it is open */
+.siteHeaderDropdown {
+  position: relative;
+}
+
+.siteHeaderToggle {
+  gap: var(--spaceHalf);
+}
+
+.siteHeaderArrow {
+  height: 1rem;
+  transition: transform var(--durationFast) ease;
+  width: 1rem;
+}
+
+.siteHeaderToggle[aria-expanded="true"] .siteHeaderArrow {
+  transform: rotate(180deg);
+}
+
+/* Where a drop-down's list sits (its look is .menu); each row stays on one line, so the list grows to its longest name */
+.siteHeaderList {
+  min-width: 10rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space1));
+  z-index: 10;
+}
+
+.siteHeaderList .menuItem {
+  white-space: nowrap;
+}
+
+/* A drop-down's list eases in from a little above (arriving gently) and out quicker (getting out of the way) */
+.siteHeaderList-enter-active {
+  transition:
+    opacity var(--duration) var(--easeOut),
+    transform var(--duration) var(--easeOut);
+}
+
+.siteHeaderList-leave-active {
+  transition:
+    opacity var(--durationFast) var(--easeIn),
+    transform var(--durationFast) var(--easeIn);
+}
+
+.siteHeaderList-enter-from,
+.siteHeaderList-leave-to {
+  opacity: 0;
+  transform: translateY(calc(var(--spaceHalf) * -1));
+}
+
+/* A row that starts something ("Add Client") is set apart below the places, with its plus sign */
+.siteHeaderAction {
+  border-top: 1px solid var(--borderSubtle);
+}
+
+.siteHeaderPlus {
+  margin-right: var(--spaceHalf);
+}
+
+/* The phone menu: the button with its word, and the panel under it, against the right edge */
+.siteHeaderPhoneMenu {
+  position: relative;
+}
+
+.siteHeaderMenuButton {
+  align-items: center;
+  display: flex;
+  gap: var(--space1);
+  min-height: 2.75rem;
+}
+
+.siteHeaderMenuWord {
+  font-weight: 600;
+}
+
+/* The panel has a width of its own, never one that exists only as the end of an animation: under reduced motion a panel sized
+   by its opening animation stayed as narrow as the button (seen in both products, 2026-11-12). It fades and drops in instead. */
+.siteHeaderPanel {
+  align-items: stretch;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: min(18.75rem, 90dvw);
+  z-index: 10;
+}
+
+.siteHeaderPanel-enter-active {
+  transition:
+    opacity var(--duration) var(--easeOut),
+    transform var(--duration) var(--easeOut);
+}
+
+.siteHeaderPanel-leave-active {
+  transition:
+    opacity var(--durationFast) var(--easeIn),
+    transform var(--durationFast) var(--easeIn);
+}
+
+.siteHeaderPanel-enter-from,
+.siteHeaderPanel-leave-to {
+  opacity: 0;
+  transform: translateY(calc(var(--spaceHalf) * -1));
+}
+
+/* The panel's rows line up on the right, under the button */
+.siteHeaderPanel .menuItem {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* A section's rows, folded open under its button: set in a step, with a rule down their left */
+.siteHeaderSection {
+  border-left: 2px solid var(--accentMuted);
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--space2);
+  padding-left: var(--space1);
+}
+
+.siteHeaderTheme {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space1);
+}
+
+/* Between 900 and 1023px the row still fits, with smaller words and less room around them */
+@media (max-width: 1023px) {
+  .siteHeaderLinks {
+    font-size: var(--fontSizeMd);
+  }
+}
+
+/* Under 900px the name, the links, the switch and the theme button no longer fit on one line, so the phone menu takes over */
+@media (max-width: 899px) {
+  .siteHeaderPhone {
+    display: block;
+  }
+
+  .siteHeaderLinks {
+    display: none;
+  }
+}
+
+/* Where the name leaves little room: a smaller name under 400px, and under 350px the icon alone, without its word */
+@media (max-width: 399px) {
+  .siteHeaderName,
+  .siteHeaderName:link,
+  .siteHeaderName:visited {
+    font-size: var(--fontSizeLg);
+  }
+}
+
+@media (max-width: 349px) {
+  .siteHeaderMenuWord {
+    display: none;
+  }
+}
+
+/*
  * The loading screen: the LoadingScreen component, and the startup screen a Vite app writes into its page before its scripts
  * arrive (loadingScreenPlugin.js), which hideStartupLoadingScreen (loadingScreen.js) fades out. The page's own background
  * covers the whole window at once, so nothing half-drawn shows through; the logo and "Loading" join it a moment later. The
