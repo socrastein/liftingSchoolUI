@@ -1176,6 +1176,8 @@ textarea.input {
    by its opening animation stayed as narrow as the button (seen in both products, 2026-11-12). It fades and drops in instead. */
 .siteHeaderPanel {
   align-items: stretch;
+  /* Its own limit: the global max-width: 100% would measure it against the Menu button, the box it hangs from */
+  max-width: none;
   position: absolute;
   right: 0;
   top: 100%;
