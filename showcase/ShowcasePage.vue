@@ -299,6 +299,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <a href="#surfaces" class="card cardLink sampleCard">
         <p>A <code>.card.cardLink</code> is a card that is a link: point at it.</p>
       </a>
+      <div class="card cardLink stretchedLinkCard sampleCard">
+        <p><a href="#surfaces" class="stretchedLink">A stretched link</a></p>
+        <p>
+          A <code>.cardLink.stretchedLinkCard</code> holds more than its link; the link is <code>.stretchedLink</code>, so a tap
+          anywhere on the card follows it.
+        </p>
+      </div>
       <div class="card toolCard">
         <h3 class="h5">.card.toolCard</h3>
         <p>A tool's card: a padded column of its parts, one step apart.</p>

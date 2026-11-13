@@ -746,6 +746,23 @@ textarea.input {
   box-shadow: var(--shadowRaisedHover);
 }
 
+/*
+ * A card that is a link but holds more than the link (a list item with a name and a line of facts): the card is .cardLink
+ * with .stretchedLinkCard, and the one link inside it is .stretchedLink, which stretches over the whole card. A tap anywhere
+ * opens it, as the hover look promises, while a screen reader still hears only the name. A card with other controls inside it
+ * (a menu, a button) is not one of these: the stretched link would cover them.
+ */
+.stretchedLinkCard {
+  position: relative;
+}
+
+.stretchedLink::after {
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
 .panel {
   background-color: var(--bgMid);
   border: 1px solid var(--raisedBorder);
