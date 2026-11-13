@@ -22,6 +22,10 @@
     "./css/*": "./css/*",
     "./fonts/*": "./fonts/*",
     "./icons/*": "./icons/*",
+    "./businessTools": {
+      "types": "./js/businessTools.d.ts",
+      "default": "./js/businessTools.js"
+    },
     "./plateColors": {
       "types": "./js/plateColors.d.ts",
       "default": "./js/plateColors.js"
