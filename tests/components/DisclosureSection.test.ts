@@ -112,7 +112,7 @@ describe("DisclosureSection", () => {
 
     const wrapper = mountSection({ level: 3, look: "part" });
     const heading = wrapper.get("h3");
-    expect(heading.classes()).toEqual(["h6"]);
+    expect(heading.classes()).toEqual(["partTitle"]);
     expect(heading.find("button.disclosure").exists()).toBe(true);
   });
 });

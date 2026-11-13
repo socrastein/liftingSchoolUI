@@ -787,10 +787,21 @@ textarea.input {
 .sectionTitle {
   border-bottom: 1px solid var(--borderMuted);
   color: var(--textFull);
-  font-size: var(--fontSizeMd);
+  font-size: var(--fontSizeLg);
   font-weight: 700;
   margin: 0 0 var(--space2) 0;
   padding-bottom: var(--space1);
+  width: 100%;
+}
+
+/*
+ * The small heading of a part inside a section (a fold-out under "Times": its "Slider Range"): a step below .sectionTitle, so a
+ * part never looks bigger than the section holding it. No rule under it; the section's rule already sets the group apart.
+ */
+.partTitle {
+  color: var(--textFull);
+  font-size: var(--fontSizeMd);
+  font-weight: 600;
   width: 100%;
 }
 

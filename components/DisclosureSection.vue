@@ -24,7 +24,8 @@ import { onBeforeUnmount, useId, useTemplateRef } from "vue";
 /** How a heading-level title looks: the shared heading class each look uses (see base.css and components.css). */
 export type DisclosureLook = "area" | "section" | "part";
 
-const LOOK_CLASSES: Record<DisclosureLook, string> = { area: "h5", section: "sectionTitle", part: "h6" };
+/** Three steps down, each smaller than the one it sits in: an area (h5), a section in it, a part of that section. */
+const LOOK_CLASSES: Record<DisclosureLook, string> = { area: "h5", section: "sectionTitle", part: "partTitle" };
 
 /** The longest the section keeps itself in view while opening: the opening takes `--duration` (0.3s), so this is a safety net. */
 const KEEP_IN_VIEW_MS = 1000;
