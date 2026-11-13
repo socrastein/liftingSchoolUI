@@ -935,7 +935,7 @@ textarea.input {
 /*
  * Disclosure: a full-width button that opens and closes the section below it, with a chevron that turns when it is open.
  * Whether it is open is aria-expanded, which is what the chevron reads (and what a screen reader announces). Put an
- * <img class="iconSmall disclosureChevron" alt=""> inside the button after its label. The button sits inside the section's
+ * <svg class="disclosureChevron" aria-hidden="true"> inside the button after its label. The button sits inside the section's
  * heading and takes its whole look (size, weight, colour, capitals) from it, so the heading class (.h5, .sectionTitle, ...)
  * decides how important the title looks. However small that heading is, the button is at least a thumb's 44px tall: these
  * are pressed on a phone in a gym, where a 20px line of text is easy to miss.
@@ -954,10 +954,16 @@ textarea.input {
   width: 100%;
 }
 
+/*
+ * The chevron is never smaller than 1.5rem, and grows with a large title (1.2 of the title's own text size, which passes 1.5rem
+ * once the title is larger than 1.25rem). It keeps that size when a long title wraps: without flex-shrink it was squeezed to
+ * a speck beside a two-line question on a phone.
+ */
 .disclosureChevron {
-  height: 1rem;
+  flex-shrink: 0;
+  height: max(1.5rem, 1.2em);
   transition: transform var(--durationFast) ease;
-  width: 1rem;
+  width: max(1.5rem, 1.2em);
 }
 
 .disclosure[aria-expanded="true"] .disclosureChevron {
