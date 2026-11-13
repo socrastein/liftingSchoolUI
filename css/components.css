@@ -67,7 +67,9 @@
 
 /* A button with no face at all, for a small icon that sits in a row of content (the ⋮ of a menu): muted until it is hovered or
    expanded. It has no size of its own; the component that uses it sets the target. */
-.btnGhost {
+.btnGhost,
+.btnGhost:link,
+.btnGhost:visited {
   color: var(--textMuted);
 }
 
@@ -84,7 +86,8 @@
 }
 
 /* The accent fill, with a rim a shade darker than itself. Written for links too: the global a:link and a:visited colours
-   would otherwise paint the label the same purple as the button. */
+   would otherwise paint the label the same purple as the button. Every button colour below is written for links the same
+   way (tests/buttonLinks.test.js checks), or a link drawn as a button takes the link colour instead of its own. */
 .btnPrimary,
 .btnPrimary:link,
 .btnPrimary:visited {
@@ -98,7 +101,9 @@
   background-color: var(--accentMuted);
 }
 
-.btnSecondary {
+.btnSecondary,
+.btnSecondary:link,
+.btnSecondary:visited {
   background-color: var(--bgTop);
   border-color: var(--raisedBorder);
   box-shadow: var(--shadowRaised);
@@ -111,7 +116,9 @@
 
 /* A quiet button for something the page offers but a person should not hit by accident, such as Clear: the accent wash, no raised
    face. Its text is on the 10% wash, which the accent text colour clears at 4.5:1. */
-.btnSubtle {
+.btnSubtle,
+.btnSubtle:link,
+.btnSubtle:visited {
   background-color: var(--accentSubtle);
   border-color: transparent;
   color: var(--accentFull);
@@ -121,7 +128,9 @@
   background-color: color-mix(in srgb, var(--accentFull) 20%, transparent);
 }
 
-.btnDanger {
+.btnDanger,
+.btnDanger:link,
+.btnDanger:visited {
   background-color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 88%, black);
   box-shadow: var(--shadowRaised);
@@ -136,7 +145,9 @@
    so the page's main action stays the loudest thing on it. The confirmation's own button is the solid .btnDanger. The danger text
    clears 4.5:1 on the 10% wash over every surface in both themes (4.75:1 at worst, light mode on --bgBase); a stronger wash on
    hover would not (4.0:1 at 20%), so hovering brings in the danger edge instead. */
-.btnDangerSubtle {
+.btnDangerSubtle,
+.btnDangerSubtle:link,
+.btnDangerSubtle:visited {
   background-color: var(--dangerSubtle);
   border-color: transparent;
   color: var(--danger);
