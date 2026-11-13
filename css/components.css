@@ -920,7 +920,8 @@ textarea.input {
  * Whether it is open is aria-expanded, which is what the chevron reads (and what a screen reader announces). Put an
  * <img class="iconSmall disclosureChevron" alt=""> inside the button after its label. The button sits inside the section's
  * heading and takes its whole look (size, weight, colour, capitals) from it, so the heading class (.h5, .sectionTitle, ...)
- * decides how important the title looks.
+ * decides how important the title looks. However small that heading is, the button is at least a thumb's 44px tall: these
+ * are pressed on a phone in a gym, where a 20px line of text is easy to miss.
  */
 .disclosure {
   align-items: center;
@@ -930,6 +931,7 @@ textarea.input {
   gap: var(--space1);
   justify-content: space-between;
   letter-spacing: inherit;
+  min-height: 2.75rem;
   text-align: left;
   text-transform: inherit;
   width: 100%;
