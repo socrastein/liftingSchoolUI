@@ -1161,14 +1161,6 @@ textarea.input {
   border-top: 1px solid var(--borderSubtle);
 }
 
-/* The first row of a new group of rows (the standalone tools in Tools) has a rule above it. Written with .menuItem as well,
-   since .menuItem:link (which every link row matches) would otherwise outrank it and take the border away. */
-.menuItem.siteHeaderGroupStart {
-  border-radius: 0 0 var(--radius) var(--radius);
-  border-top: 1px solid var(--borderMuted);
-  margin-top: var(--spaceHalf);
-}
-
 .siteHeaderPlus {
   margin-right: var(--spaceHalf);
 }

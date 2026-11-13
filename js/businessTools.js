@@ -18,26 +18,24 @@
  */
 
 /**
- * @typedef {{ kind: "link"; name: string; to: string; startsGroup?: boolean }} ToolPageEntry A tool the product hosts: a row that
+ * @typedef {{ kind: "link"; name: string; to: string }} ToolPageEntry A tool the product hosts: a row that
  * leads to `to`, drawn with the project's router link.
  */
 
 /**
- * @typedef {{ kind: "external"; name: string; href: string; startsGroup?: boolean }} ToolExternalEntry A tool of the other
+ * @typedef {{ kind: "external"; name: string; href: string }} ToolExternalEntry A tool of the other
  * product: a plain link to its full address `href`, in the same tab.
  */
 
 /**
  * @typedef {ToolPageEntry | ToolExternalEntry} ToolMenuEntry One row of a Tools menu, in the shape SiteHeader's drop-downs take.
- * A row with `startsGroup` is the first of a group: the menu draws a divider above it.
  */
 
 export const SITE_ADDRESS = "https://theliftingschool.com";
 export const APP_ADDRESS = "https://app.theliftingschool.com";
 
 /**
- * The tools in menu order. The app's tools come first and the standalone ones after, so the two groups stay apart in the menu
- * (the app incorporates its tools; the site's stands alone).
+ * The tools in menu order: the app's tools first, then the site's.
  * @type {readonly BusinessTool[]}
  */
 export const BUSINESS_TOOLS = [
@@ -81,27 +79,11 @@ function entryForTool(tool, product) {
 }
 
 /**
- * Whether a tool begins a new group: it is hosted by a different product than the tool before it (the standalone tools
- * follow the app's).
- * @param {number} index The tool's place in BUSINESS_TOOLS.
- * @returns {boolean} False for the first tool, which has nothing above it to be divided from.
- */
-function beginsNewGroup(index) {
-  const previousTool = BUSINESS_TOOLS[index - 1];
-  const tool = BUSINESS_TOOLS[index];
-  return previousTool !== undefined && tool !== undefined && previousTool.product !== tool.product;
-}
-
-/**
  * The rows of the Tools menu as one product shows it: always the same tools in the same order, a router link for a tool the
- * product hosts and an external link for the other's. The first row of the standalone tools starts a group (the menu draws a
- * divider there).
+ * product hosts and an external link for the other's.
  * @param {Product} product The product drawing the menu.
  * @returns {ToolMenuEntry[]} One row per tool, in BUSINESS_TOOLS order.
  */
 export function toolMenuEntries(product) {
-  return BUSINESS_TOOLS.map((tool, index) => {
-    const entry = entryForTool(tool, product);
-    return beginsNewGroup(index) ? { ...entry, startsGroup: true } : entry;
-  });
+  return BUSINESS_TOOLS.map((tool) => entryForTool(tool, product));
 }

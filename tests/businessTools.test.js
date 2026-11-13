@@ -47,13 +47,4 @@ describe("toolMenuEntries", () => {
       href: "https://app.theliftingschool.com/#/weight-log",
     });
   });
-
-  it("starts a new group at Protein & Fiber, the first tool of a different product, and nowhere else", () => {
-    for (const product of /** @type {const} */ (["app", "site"])) {
-      const startsOfGroups = toolMenuEntries(product)
-        .filter((entry) => entry.startsGroup)
-        .map((entry) => entry.name);
-      expect(startsOfGroups).toEqual(["Protein & Fiber"]);
-    }
-  });
 });

@@ -5,12 +5,11 @@ import type { Component } from "vue";
  * One row of a header menu: a page of this project (drawn with the project's router link), or a link to somewhere else.
  * A page marked `isAction` starts something ("Add Client") instead of naming a place: it is set apart below the others, with
  * a plus sign. Rows of one menu are told apart by `key` where it is given, by name otherwise: give a key wherever two rows
- * can share a name (two clients called Sam). A row marked `startsGroup` begins a new group of the menu's rows, with a divider
- * above it (the Tools menu keeps the app's tools and the standalone ones apart).
+ * can share a name (two clients called Sam).
  */
 export type HeaderMenuEntry =
-  | { kind: "link"; name: string; to: string; isAction?: boolean; key?: string; startsGroup?: boolean }
-  | { kind: "external"; name: string; href: string; key?: string; startsGroup?: boolean };
+  | { kind: "link"; name: string; to: string; isAction?: boolean; key?: string }
+  | { kind: "external"; name: string; href: string; key?: string };
 </script>
 
 <script setup lang="ts">
@@ -32,21 +31,13 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <a
-    v-if="entry.kind === 'external'"
-    :href="entry.href"
-    class="menuItem"
-    :class="{ siteHeaderGroupStart: entry.startsGroup }"
-    @click="emit('chosen')"
-  >
-    {{ entry.name }}
-  </a>
+  <a v-if="entry.kind === 'external'" :href="entry.href" class="menuItem" @click="emit('chosen')">{{ entry.name }}</a>
   <component
     :is="linkComponent"
     v-else
     :to="entry.to"
     class="menuItem"
-    :class="{ siteHeaderAction: entry.isAction, siteHeaderGroupStart: entry.startsGroup }"
+    :class="{ siteHeaderAction: entry.isAction }"
     @click="emit('chosen')"
   >
     <span v-if="entry.isAction" class="siteHeaderPlus" aria-hidden="true">+</span>{{ entry.name }}

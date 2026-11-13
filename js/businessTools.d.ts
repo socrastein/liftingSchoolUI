@@ -14,8 +14,7 @@ export function addressOfPage(product: Product, path: string): string;
 export function homeAddressOf(product: Product): string;
 /**
  * The rows of the Tools menu as one product shows it: always the same tools in the same order, a router link for a tool the
- * product hosts and an external link for the other's. The first row of the standalone tools starts a group (the menu draws a
- * divider there).
+ * product hosts and an external link for the other's.
  * @param {Product} product The product drawing the menu.
  * @returns {ToolMenuEntry[]} One row per tool, in BUSINESS_TOOLS order.
  */
@@ -37,22 +36,20 @@ export function toolMenuEntries(product: Product): ToolMenuEntry[];
  * @property {string} path Where the tool is inside its product, as that product's router writes it ("/weight-log").
  */
 /**
- * @typedef {{ kind: "link"; name: string; to: string; startsGroup?: boolean }} ToolPageEntry A tool the product hosts: a row that
+ * @typedef {{ kind: "link"; name: string; to: string }} ToolPageEntry A tool the product hosts: a row that
  * leads to `to`, drawn with the project's router link.
  */
 /**
- * @typedef {{ kind: "external"; name: string; href: string; startsGroup?: boolean }} ToolExternalEntry A tool of the other
+ * @typedef {{ kind: "external"; name: string; href: string }} ToolExternalEntry A tool of the other
  * product: a plain link to its full address `href`, in the same tab.
  */
 /**
  * @typedef {ToolPageEntry | ToolExternalEntry} ToolMenuEntry One row of a Tools menu, in the shape SiteHeader's drop-downs take.
- * A row with `startsGroup` is the first of a group: the menu draws a divider above it.
  */
 export const SITE_ADDRESS: "https://theliftingschool.com";
 export const APP_ADDRESS: "https://app.theliftingschool.com";
 /**
- * The tools in menu order. The app's tools come first and the standalone ones after, so the two groups stay apart in the menu
- * (the app incorporates its tools; the site's stands alone).
+ * The tools in menu order: the app's tools first, then the site's.
  * @type {readonly BusinessTool[]}
  */
 export const BUSINESS_TOOLS: readonly BusinessTool[];
@@ -82,7 +79,6 @@ export type ToolPageEntry = {
     kind: "link";
     name: string;
     to: string;
-    startsGroup?: boolean;
 };
 /**
  * A tool of the other
@@ -92,10 +88,8 @@ export type ToolExternalEntry = {
     kind: "external";
     name: string;
     href: string;
-    startsGroup?: boolean;
 };
 /**
  * One row of a Tools menu, in the shape SiteHeader's drop-downs take.
- * A row with `startsGroup` is the first of a group: the menu draws a divider above it.
  */
 export type ToolMenuEntry = ToolPageEntry | ToolExternalEntry;

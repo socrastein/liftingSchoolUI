@@ -267,12 +267,6 @@ describe("SiteHeader: the Tools menu", () => {
     ]);
   });
 
-  it("draws a divider above Protein & Fiber only, keeping the two groups apart", async () => {
-    await header.get('.siteHeaderLinks [data-menu="tools"] button').trigger("click");
-    const startsOfGroups = header.findAll("#toolsList .siteHeaderGroupStart").map((row) => row.text());
-    expect(startsOfGroups).toEqual(["Protein & Fiber"]);
-  });
-
   it("is marked as the current menu only when the person is on a tool's page", () => {
     expect(header.get('.siteHeaderLinks [data-menu="tools"] button').attributes("aria-current")).toBe("true");
 
