@@ -97,6 +97,18 @@
     "./celebrationParticles": {
       "types": "./js/celebrationParticles.d.ts",
       "default": "./js/celebrationParticles.js"
+    },
+    "./celebrationDrawing": {
+      "types": "./js/celebrationDrawing.d.ts",
+      "default": "./js/celebrationDrawing.js"
+    },
+    "./celebrationCanvas": {
+      "types": "./js/celebrationCanvas.d.ts",
+      "default": "./js/celebrationCanvas.js"
+    },
+    "./celebrationSounds": {
+      "types": "./js/celebrationSounds.d.ts",
+      "default": "./js/celebrationSounds.js"
     }
   },
   "scripts": {
