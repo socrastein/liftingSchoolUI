@@ -186,6 +186,9 @@ function collectTextRuns() {
     const isLabelOfDisabled = label?.querySelector(":disabled") != null;
     if (isInsideDisabled || isLabelOfDisabled) continue;
 
+    // Text kept only for screen readers (.visuallyHidden) is clipped to a pixel: nobody sees it, so it has no contrast to measure
+    if (element.closest(".visuallyHidden") !== null) continue;
+
     const style = getComputedStyle(element);
     if (style.visibility === "hidden") continue;
     const isGradientText = style.webkitTextFillColor === "rgba(0, 0, 0, 0)";
