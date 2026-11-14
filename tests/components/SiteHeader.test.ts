@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick } from "vue";
 import SiteHeader, { type HeaderItem } from "../../components/SiteHeader.vue";
-import type { Product } from "../../js/businessTools.js";
+import type { Product, ProductAddresses } from "../../js/businessTools.js";
 
 /**
  * The shared header: the same pages, Tools menu and switch in the wide row and in the phone menu, in the same places in every
@@ -39,12 +39,13 @@ const PAGES: HeaderItem[] = [
 const TOOL_NAMES = ["Weight Log", "Plate Counter", "Stopwatch", "Intervals", "Protein & Fiber"];
 
 /** Mounts the header in the page (focus and outside clicks need a real document), with a "Saved" status in its slot. */
-function mountHeader(product: Product = "app"): VueWrapper {
+function mountHeader(product: Product = "app", addresses?: ProductAddresses): VueWrapper {
   return mount(SiteHeader, {
     props: {
       name: "The Sample App",
       homeTo: "/",
       product,
+      addresses,
       pages: PAGES,
       isOnToolPage: true,
       linkComponent: FakeRouterLink,
@@ -329,5 +330,49 @@ describe("SiteHeader: the switch between the products", () => {
     await header.get("#phoneMenuButton").trigger("click");
     expect(header.get("#phoneMenuPanel").element.firstElementChild?.className).toContain("siteHeaderSwitch");
     expect(header.findAll("#phoneMenuPanel .siteHeaderSwitch .segmentedItem")).toHaveLength(2);
+  });
+});
+
+describe("SiteHeader: products at other addresses (development)", () => {
+  const LOCAL: ProductAddresses = { site: "http://localhost:4000", app: "http://localhost:5173/" };
+
+  it("leads both sides of the switch to the other product's local address", () => {
+    const appHeader = mountHeader("app", LOCAL);
+    const siteHeader = mountHeader("site", LOCAL);
+    const hrefsOf = (productHeader: VueWrapper) =>
+      productHeader.findAll(".siteHeaderLinks .siteHeaderSwitch .segmentedItem").map((side) => side.attributes("href"));
+    expect(hrefsOf(appHeader)).toEqual(["http://localhost:4000/", "http://localhost:4000/"]);
+    expect(hrefsOf(siteHeader)).toEqual(["http://localhost:5173/", "http://localhost:5173/"]);
+    appHeader.unmount();
+    siteHeader.unmount();
+  });
+
+  it("leads the Tools menu's links to the other product to its local address", async () => {
+    const siteHeader = mountHeader("site", LOCAL);
+    await siteHeader.get('.siteHeaderLinks [data-menu="tools"] button').trigger("click");
+    const hrefs = siteHeader.findAll("#toolsList a").map((row) => row.attributes("href"));
+    expect(hrefs).toEqual([
+      "http://localhost:5173/#/weight-log",
+      "http://localhost:5173/#/weight-plate-counter",
+      "http://localhost:5173/#/stopwatch",
+      "http://localhost:5173/#/interval",
+      "/protein-fiber",
+    ]);
+    siteHeader.unmount();
+  });
+
+  it("leads the phone menu's switch there too", async () => {
+    const appHeader = mountHeader("app", LOCAL);
+    await appHeader.get("#phoneMenuButton").trigger("click");
+    const hrefs = appHeader.findAll("#phoneMenuPanel .siteHeaderSwitch .segmentedItem").map((side) => side.attributes("href"));
+    expect(hrefs).toEqual(["http://localhost:4000/", "http://localhost:4000/"]);
+    appHeader.unmount();
+  });
+
+  it("leaves a product whose address is not given at its live address", () => {
+    const appHeader = mountHeader("app", { app: "http://localhost:5173" });
+    const hrefs = appHeader.findAll(".siteHeaderLinks .siteHeaderSwitch .segmentedItem").map((side) => side.attributes("href"));
+    expect(hrefs).toEqual(["https://theliftingschool.com/", "https://theliftingschool.com/"]);
+    appHeader.unmount();
   });
 });

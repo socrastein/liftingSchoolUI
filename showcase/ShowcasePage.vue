@@ -482,7 +482,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         menu (the business's one list, <code>lifting-school-ui/businessTools</code>), the Website | App switch (pressing the side
         you are on moves to the other) and the theme button, or a Menu button under 900px wide. It is fixed to the top of the
         window; this sample is held in a frame. Flip the product to see that both draw the same Tools menu and switch, with only
-        the link kinds differing.
+        the link kinds differing. In development a project passes <code>addresses</code> ({ site, app }, each optional) so the
+        switch and the Tools menu's links lead to the other product's local dev server; left out, they lead to the live sites.
       </p>
       <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
       <div class="sampleHeaderFrame">

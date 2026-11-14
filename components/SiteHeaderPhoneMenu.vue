@@ -4,7 +4,7 @@ import { ref, watch, type Component } from "vue";
 import chevronDownIcon from "../icons/chevron-down.svg";
 import menuIcon from "../icons/menu.svg";
 import xIcon from "../icons/x.svg";
-import type { Product } from "../js/businessTools.js";
+import type { Product, ProductAddresses } from "../js/businessTools.js";
 import type { HeaderItem } from "./SiteHeader.vue";
 import SiteHeaderEntry from "./SiteHeaderEntry.vue";
 import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
@@ -24,6 +24,8 @@ defineProps<{
   items: HeaderItem[];
   /** The product the header is in, for the switch drawn as the panel's first row. */
   product: Product;
+  /** Where the products are, when not at their live addresses; the switch leads there. */
+  addresses?: ProductAddresses;
   /** The project's router link component. */
   linkComponent: Component;
   /** Where the light/dark choice is saved on the device; see useColorScheme. */
@@ -74,7 +76,7 @@ onClickOutside(panel, () => (isOpen.value = false), { ignore: [toggle] });
     </button>
     <Transition name="siteHeaderPanel">
       <div v-if="isOpen" id="phoneMenuPanel" ref="panel" class="menu siteHeaderPanel">
-        <SiteHeaderSwitch :product="product" />
+        <SiteHeaderSwitch :product="product" :addresses="addresses" />
         <template v-for="item in items" :key="item.kind === 'menu' ? item.id : item.to">
           <component :is="linkComponent" v-if="item.kind === 'link'" :to="item.to" class="menuItem" @click="isOpen = false">
             {{ item.name }}

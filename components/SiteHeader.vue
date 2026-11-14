@@ -19,7 +19,7 @@ export type HeaderItem = HeaderPageLink | HeaderMenu;
 <script setup lang="ts">
 import { computed, type Component } from "vue";
 import logoIcon from "../icons/logo.svg";
-import { toolMenuEntries, type Product } from "../js/businessTools.js";
+import { toolMenuEntries, type Product, type ProductAddresses } from "../js/businessTools.js";
 import SiteHeaderDropdown from "./SiteHeaderDropdown.vue";
 import SiteHeaderPhoneMenu from "./SiteHeaderPhoneMenu.vue";
 import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
@@ -50,6 +50,12 @@ const props = defineProps<{
   homeTo: string;
   /** Which product this header is in: it decides which tools are links inside the project and which lead across, and which side of the switch is current. */
   product: Product;
+  /**
+   * Where the two products are, for the switch and for the Tools menu's links to the other product. Each is optional and
+   * defaults to the live address, so a project passes none in production; in development it passes its local servers, so the
+   * links lead to the other dev server and not the live site.
+   */
+  addresses?: ProductAddresses;
   /** The product's own pages and drop-downs, in order; the Tools menu is drawn after them by the header itself. */
   pages: HeaderItem[];
   /** True on one of the tools' pages: the Tools menu is then marked like the current page's link. */
@@ -63,7 +69,13 @@ const props = defineProps<{
 /** The product's pages, then the business's Tools menu: everything the header lists, in the order it is drawn. */
 const items = computed<HeaderItem[]>(() => [
   ...props.pages,
-  { kind: "menu", id: "tools", label: "Tools", isCurrent: props.isOnToolPage, entries: toolMenuEntries(props.product) },
+  {
+    kind: "menu",
+    id: "tools",
+    label: "Tools",
+    isCurrent: props.isOnToolPage,
+    entries: toolMenuEntries(props.product, props.addresses),
+  },
 ]);
 </script>
 
@@ -81,6 +93,7 @@ const items = computed<HeaderItem[]>(() => [
           <SiteHeaderPhoneMenu
             :items="items"
             :product="product"
+            :addresses="addresses"
             :link-component="linkComponent"
             :theme-storage-key="themeStorageKey"
           />
@@ -92,7 +105,7 @@ const items = computed<HeaderItem[]>(() => [
             </component>
             <SiteHeaderDropdown v-else :menu="item" :link-component="linkComponent" />
           </template>
-          <SiteHeaderSwitch :product="product" />
+          <SiteHeaderSwitch :product="product" :addresses="addresses" />
           <ThemeButton :storage-key="themeStorageKey" />
         </div>
       </div>

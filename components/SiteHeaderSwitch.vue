@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { homeAddressOf, type Product } from "../js/businessTools.js";
+import { homeAddressOf, type Product, type ProductAddresses } from "../js/businessTools.js";
 
 /**
  * The header's switch between the business's two products, "Website | App", drawn as a segmented control. It is the same in
@@ -16,6 +16,8 @@ import { homeAddressOf, type Product } from "../js/businessTools.js";
 const props = defineProps<{
   /** The product the header is in: its side is marked as current. */
   product: Product;
+  /** Where the products are, when not at their live addresses (a project in development passes its local servers). */
+  addresses?: ProductAddresses;
 }>();
 
 /** What each product is called on the switch. */
@@ -34,7 +36,7 @@ const otherProduct = computed<Product>(() => (props.product === "site" ? "app" :
     <a
       v-for="side in SIDES"
       :key="side"
-      :href="homeAddressOf(otherProduct)"
+      :href="homeAddressOf(otherProduct, addresses)"
       class="segmentedItem"
       :aria-current="side === product ? 'true' : undefined"
     >
