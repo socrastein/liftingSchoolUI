@@ -74,6 +74,10 @@
       "types": "./js/choiceAfterPress.d.ts",
       "default": "./js/choiceAfterPress.js"
     },
+    "./toastQueue": {
+      "types": "./js/toastQueue.d.ts",
+      "default": "./js/toastQueue.js"
+    },
     "./loadingScreen": {
       "types": "./js/loadingScreen.d.ts",
       "default": "./js/loadingScreen.js"
