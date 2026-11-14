@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from "vue";
+import { toastQueue, type ToastScreen } from "../js/toastQueue.js";
 
 /**
  * A short confirmation pinned to the bottom of the window ("APA copied to clipboard.", "Added 180.0 lbs for Oct 25, 2026."), so
  * a press visibly did something even when what it changed is out of view, and the message goes away on its own instead of
  * going stale beside later changes. The owner calls `show(message)` through a template ref.
+ *
+ * Every instance on the page shares one queue (`js/toastQueue.js`): toasts never overlap, a message asked for while another
+ * is up waits its turn, and each stays for its full time.
  *
  * The region is always on the page, so a screen reader announces each message as it appears. It is for news the person can
  * also see elsewhere; an error, or anything they must act on, belongs in an alert beside its cause, since this one leaves.
@@ -23,25 +27,53 @@ const props = withDefaults(
 /** What the toast says, or "" while it is hidden. */
 const message = ref("");
 let hideTimer: ReturnType<typeof setTimeout> | undefined;
+/** Whether the component has been taken off the page, after which nothing more may be drawn. */
+let isUnmounted = false;
+
+/** This instance as the queue sees it: the one thing it can ask of it is to draw a message. */
+const screen: ToastScreen = { display };
 
 /**
- * Shows a message, replacing any earlier one, and hides it after `seconds`. The old text is cleared for one render first, so
- * the same message twice in a row is announced twice and its time starts over.
+ * Asks for a turn to show a message. It appears at once when no toast is on screen anywhere on the page, otherwise it waits for
+ * the ones before it (see `js/toastQueue.js`). Resolves when the message is on the page, or when it was merged into an
+ * identical waiting one or dropped.
  */
-async function show(newMessage: string): Promise<void> {
-  clearTimeout(hideTimer);
+function show(newMessage: string): Promise<void> {
+  return toastQueue.request(screen, newMessage);
+}
+
+/**
+ * Draws a message when the queue's turn comes, reports when it is on the page, and resolves once it has been taken down again,
+ * which is the queue's cue for the next toast. The old text is cleared for one render first, so the same message twice in a
+ * row is announced twice.
+ */
+async function display(newMessage: string, onDrawn: () => void): Promise<void> {
   message.value = "";
   await nextTick();
+  if (isUnmounted) return;
   message.value = newMessage;
-  hideTimer = setTimeout(hide, props.seconds * 1000);
+  onDrawn();
+  await stayUp();
 }
 
-/** Takes the message down. */
-function hide(): void {
-  message.value = "";
+/**
+ * Resolves after `seconds`, the time one message stays up, and the message has been taken down. The text is cleared in the
+ * timer itself, then a render is waited for, so the next toast never starts while this one is still on the page.
+ */
+function stayUp(): Promise<void> {
+  return new Promise((resolve) => {
+    hideTimer = setTimeout(() => {
+      message.value = "";
+      nextTick().then(resolve);
+    }, props.seconds * 1000);
+  });
 }
 
-onBeforeUnmount(() => clearTimeout(hideTimer));
+onBeforeUnmount(() => {
+  isUnmounted = true;
+  clearTimeout(hideTimer);
+  toastQueue.leave(screen);
+});
 
 defineExpose({ show });
 </script>

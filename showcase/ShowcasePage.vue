@@ -170,6 +170,16 @@ const isDialogOpen = ref(false);
 
 /** The toast sample, shown by its button. */
 const toast = ref<InstanceType<typeof StatusToast> | null>(null);
+/** A second toast instance, as another page of an app would have, to show that the two queue instead of overlapping. */
+const otherToast = ref<InstanceType<typeof StatusToast> | null>(null);
+
+/** Fires four toasts at once, alternating between the two instances: they appear one after the other, never on top of each other. */
+function fireSeveralToasts(): void {
+  toast.value?.show("First, from the first instance.");
+  otherToast.value?.show("Second, from the other instance.");
+  toast.value?.show("Third, from the first instance.");
+  otherToast.value?.show("Fourth, from the other instance.");
+}
 
 /** Whether the loading screen sample is up. */
 const isSampleLoading = ref(false);
@@ -555,7 +565,12 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           Copy the sample
         </button>
       </div>
+      <p>Toasts queue: several fired together, even from separate instances, appear one after the other and never overlap.</p>
+      <div class="row">
+        <button type="button" class="btn btnSecondary" @click="fireSeveralToasts">Fire Four Toasts</button>
+      </div>
       <StatusToast ref="toast" />
+      <StatusToast ref="otherToast" />
       <p><code>LoadingScreen</code> covers the window while something loads, and fades out when it is ready.</p>
       <div class="row">
         <button type="button" class="btn btnSecondary" @click="showLoadingScreen">Load for 4 seconds</button>
