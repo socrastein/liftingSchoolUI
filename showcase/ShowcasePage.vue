@@ -11,6 +11,7 @@ import FormField from "../components/FormField.vue";
 import FormFieldGroup from "../components/FormFieldGroup.vue";
 import PopupTransition from "../components/PopupTransition.vue";
 import ToggleSwitch from "../components/ToggleSwitch.vue";
+import CelebrationOverlay, { type CelebrationName } from "../components/CelebrationOverlay.vue";
 import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import LoadingScreen from "../components/LoadingScreen.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
@@ -192,6 +193,21 @@ function showLoadingScreen(): void {
   }, 4000);
 }
 
+/** The celebration sample, played by its buttons. */
+const celebration = ref<InstanceType<typeof CelebrationOverlay> | null>(null);
+/** Whether the celebration samples play their sound: the caller's choice, here a switch standing for a user's setting. */
+const isCelebrationSoundOn = ref(false);
+/** Whether the celebration samples carry a message. */
+const isCelebrationMessageOn = ref(true);
+
+/** Plays a celebration from a button press, with the sound and message the switches say. */
+function playCelebration(name: CelebrationName): void {
+  celebration.value?.play(name, {
+    sound: isCelebrationSoundOn.value,
+    message: isCelebrationMessageOn.value ? "New Record: 225 lbs" : undefined,
+  });
+}
+
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
 
@@ -233,6 +249,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <a href="#plates">Plates</a>
       <a href="#header">Header</a>
       <a href="#menus">Menu</a>
+      <a href="#celebrations">Celebrations</a>
       <a href="#disclosure">Disclosure</a>
       <a href="#highlights">Highlights</a>
       <a href="#icons">Icons</a>
@@ -614,6 +631,23 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           </AnchoredCard>
         </PopupTransition>
       </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="celebrations">
+      <h2 id="celebrations" class="h3">Celebrations</h2>
+      <p>
+        <code>CelebrationOverlay</code> plays confetti or fireworks over the whole window for an achievement. It takes the screen
+        for its length: a tap shows a close button, and only that button or Escape ends it early.
+      </p>
+      <div class="row">
+        <ToggleSwitch v-model="isCelebrationSoundOn" label="Sound" />
+        <ToggleSwitch v-model="isCelebrationMessageOn" label="Message" />
+      </div>
+      <div class="row">
+        <button type="button" class="btn btnSecondary" @click="playCelebration('confetti')">Play Confetti</button>
+        <button type="button" class="btn btnSecondary" @click="playCelebration('fireworks')">Play Fireworks</button>
+      </div>
+      <CelebrationOverlay ref="celebration" />
     </section>
 
     <section class="showcaseSection" aria-labelledby="disclosure">
