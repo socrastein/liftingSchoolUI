@@ -479,9 +479,10 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <h2 id="header" class="h3">Header</h2>
       <p>
         <code>SiteHeader</code> is the header of every site and app: the name, the product's own pages and drop-downs, the Tools
-        menu (the business's one list, <code>lifting-school-ui/businessTools</code>), the Website | App switch and the theme
-        button, or a Menu button under 900px wide. It is fixed to the top of the window; this sample is held in a frame. Flip the
-        product to see that both draw the same Tools menu and switch, with only the link kinds differing.
+        menu (the business's one list, <code>lifting-school-ui/businessTools</code>), the Website | App switch (pressing the side
+        you are on moves to the other) and the theme button, or a Menu button under 900px wide. It is fixed to the top of the
+        window; this sample is held in a frame. Flip the product to see that both draw the same Tools menu and switch, with only
+        the link kinds differing.
       </p>
       <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
       <div class="sampleHeaderFrame">

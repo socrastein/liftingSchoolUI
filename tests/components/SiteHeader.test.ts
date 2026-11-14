@@ -287,7 +287,7 @@ describe("SiteHeader: the Tools menu", () => {
 });
 
 describe("SiteHeader: the switch between the products", () => {
-  /** What the wide row's switch shows: each side's word, whether it is the current one, and where it leads. */
+  /** What the wide row's switch shows: each side's name (its visible word, then any text for screen readers), whether it is the current one, and where it leads. */
   function switchSides(productHeader: VueWrapper): { word: string; isCurrent: boolean; href: string | undefined }[] {
     return productHeader.findAll(".siteHeaderLinks .siteHeaderSwitch .segmentedItem").map((side) => ({
       word: side.text(),
@@ -300,23 +300,29 @@ describe("SiteHeader: the switch between the products", () => {
     const group = header.get(".siteHeaderLinks .siteHeaderSwitch");
     expect(group.attributes("role")).toBe("group");
     expect(group.attributes("aria-label")).toBe("Product");
-    expect(switchSides(header).map((side) => side.word)).toEqual(["Website", "App"]);
+    expect(switchSides(header).map((side) => side.word.split(",")[0])).toEqual(["Website", "App"]);
   });
 
-  it("marks the App side as current in the app, and leads the Website side to the site's home", () => {
+  it("in the app, marks the App side as current, and both sides lead to the site's home", () => {
     expect(switchSides(header)).toEqual([
       { word: "Website", isCurrent: false, href: "https://theliftingschool.com/" },
-      { word: "App", isCurrent: true, href: undefined },
+      { word: "App, current. Switch to the Website", isCurrent: true, href: "https://theliftingschool.com/" },
     ]);
   });
 
-  it("marks the Website side as current in the site, and leads the App side to the app's home", () => {
+  it("in the site, marks the Website side as current, and both sides lead to the app's home", () => {
     const siteHeader = mountHeader("site");
     expect(switchSides(siteHeader)).toEqual([
-      { word: "Website", isCurrent: true, href: undefined },
+      { word: "Website, current. Switch to the App", isCurrent: true, href: "https://app.theliftingschool.com/" },
       { word: "App", isCurrent: false, href: "https://app.theliftingschool.com/" },
     ]);
     siteHeader.unmount();
+  });
+
+  it("keeps the visible word first in the current side's name, with the extra words hidden from the eye", () => {
+    const current = header.get('.siteHeaderLinks .siteHeaderSwitch [aria-current="true"]');
+    expect(current.element.firstChild?.textContent).toBe("App");
+    expect(current.get(".visuallyHidden").text()).toBe(", current. Switch to the Website");
   });
 
   it("is also the first row of the phone menu, the same control", async () => {
