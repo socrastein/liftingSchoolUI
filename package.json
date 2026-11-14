@@ -85,6 +85,18 @@
     "./loadingScreenPlugin": {
       "types": "./js/loadingScreenPlugin.d.ts",
       "default": "./js/loadingScreenPlugin.js"
+    },
+    "./celebrationNames": {
+      "types": "./js/celebrationNames.d.ts",
+      "default": "./js/celebrationNames.js"
+    },
+    "./celebrationTimings": {
+      "types": "./js/celebrationTimings.d.ts",
+      "default": "./js/celebrationTimings.js"
+    },
+    "./celebrationParticles": {
+      "types": "./js/celebrationParticles.d.ts",
+      "default": "./js/celebrationParticles.js"
     }
   },
   "scripts": {
