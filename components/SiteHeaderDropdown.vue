@@ -14,10 +14,10 @@ export interface HeaderMenu {
 </script>
 
 <script setup lang="ts">
-import { onClickOutside } from "@vueuse/core";
-import { ref, type Component } from "vue";
+import type { Component } from "vue";
 import chevronDownIcon from "../icons/chevron-down.svg";
 import SiteHeaderEntry from "./SiteHeaderEntry.vue";
+import { useHeaderPopup } from "./useHeaderPopup";
 
 /**
  * A drop-down in the wide header: a button that reads as one of the header's links, with its list under it. It is a
@@ -32,19 +32,7 @@ defineProps<{
   linkComponent: Component;
 }>();
 
-const isOpen = ref(false);
-const dropdown = ref<HTMLElement | null>(null);
-const toggle = ref<HTMLButtonElement | null>(null);
-
-onClickOutside(dropdown, () => {
-  isOpen.value = false;
-});
-
-/** Escape: close the list and hand focus back to the button, so the keyboard is not lost. */
-function closeFromKeyboard(): void {
-  isOpen.value = false;
-  toggle.value?.focus();
-}
+const { isOpen, root: dropdown, toggle, close, closeFromKeyboard } = useHeaderPopup();
 </script>
 
 <template>
@@ -68,7 +56,7 @@ function closeFromKeyboard(): void {
           :key="entry.key ?? entry.name"
           :entry="entry"
           :link-component="linkComponent"
-          @chosen="isOpen = false"
+          @chosen="close"
         />
       </div>
     </Transition>
