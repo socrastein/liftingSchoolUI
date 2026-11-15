@@ -156,6 +156,7 @@ const sampleChoice = ref("yes");
 const sampleTicks = ref<string[]>(["Barbell"]);
 const sampleVolume = ref(60);
 const sampleSwitch = ref(true);
+const sampleHintSwitch = ref(false);
 
 /** Whether the disclosure sample is open. */
 const isDisclosureOpen = ref(false);
@@ -432,6 +433,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         </div>
         <div class="field">
           <ToggleSwitch v-model="sampleSwitch" label="A switch (ToggleSwitch)" />
+        </div>
+        <div class="field">
+          <ToggleSwitch
+            v-model="sampleHintSwitch"
+            label="A switch with a hint"
+            hint="Hover for this tooltip; screen readers read it as the description."
+          />
         </div>
         <FormFieldGroup legend="A radio group (FormFieldGroup)" optional>
           <div class="row">
