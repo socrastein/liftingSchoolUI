@@ -1246,6 +1246,58 @@ textarea.input {
   padding-top: var(--space1);
 }
 
+/*
+ * The notifications bell (SiteHeaderNotifications): a button the size of the Menu button, with its count as a small round badge
+ * on its top right corner. The panel is a drop-down list (.siteHeaderList, with its position and easing) whose rows wrap
+ * instead of keeping to one line, since a notification is a sentence.
+ */
+.siteHeaderNotifications {
+  position: relative;
+}
+
+.siteHeaderBell {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  position: relative;
+}
+
+/* Accent fill with the on-accent text, the pair the segmented control's chosen side uses (measured in tokens.css); the figure is text, so the count never relies on colour */
+.siteHeaderBellBadge {
+  background-color: var(--accentFull);
+  border-radius: var(--radiusFull);
+  color: var(--onAccent);
+  font-size: var(--fontSizeXs);
+  font-weight: 700;
+  line-height: 1;
+  min-width: 1.25rem;
+  padding: var(--spaceHalf);
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 0;
+}
+
+/* Wider than a menu's list, for sentences; rows wrap and grow with their text, never a fixed height */
+.siteHeaderNoticeList {
+  max-width: none;
+  width: 22rem;
+}
+
+.siteHeaderNoticeList .menuItem {
+  justify-content: flex-start;
+  padding-block: var(--space1);
+  text-align: left;
+  white-space: normal;
+}
+
+.siteHeaderNoticeEmpty {
+  margin: 0;
+  padding: var(--space1);
+}
+
 /* Between 900 and 1023px the row still fits, with smaller words and less room around them */
 @media (max-width: 1023px) {
   .siteHeaderLinks {
@@ -1262,6 +1314,26 @@ textarea.input {
   .siteHeaderLinks {
     display: none;
   }
+
+  /* With a bell, the Menu button and the bell sit side by side in the bar */
+  .siteHeaderPhone.siteHeaderPhoneWithBell {
+    align-items: center;
+    display: flex;
+    gap: var(--space1);
+  }
+
+  /* The bell's panel hangs from the whole header, not from the bell, so on a narrow screen it can span nearly the full width
+     (the bell is not at the screen's edge: the Menu button is). The header is fixed, which makes it the panel's containing block. */
+  .siteHeaderNotifications {
+    position: static;
+  }
+
+  .siteHeaderNoticeList {
+    min-width: 0;
+    right: var(--space2);
+    top: 100%;
+    width: min(22rem, calc(100% - var(--space2) * 2));
+  }
 }
 
 /* Where the name leaves little room: a smaller name under 400px, and under 350px the icon alone, without its word */
@@ -1273,9 +1345,26 @@ textarea.input {
   }
 }
 
+/* With a bell there is no room for the name on one line on a phone (name, bell and Menu button measured to collide up to about
+   417px wide), so the name may wrap onto two short lines, which the header's height holds at this size */
+@media (max-width: 439px) {
+  .siteHeaderWithBell .siteHeaderName,
+  .siteHeaderWithBell .siteHeaderName:link,
+  .siteHeaderWithBell .siteHeaderName:visited {
+    font-size: var(--fontSizeMd);
+    line-height: 1.1;
+    white-space: normal;
+  }
+}
+
 @media (max-width: 349px) {
   .siteHeaderMenuWord {
     display: none;
+  }
+
+  /* The icon alone is 23px wide; beside the bell it needs the 24px a touch target must have (WCAG 2.2 target size) */
+  .siteHeaderPhoneWithBell .siteHeaderMenuButton {
+    min-width: 1.5rem;
   }
 }
 

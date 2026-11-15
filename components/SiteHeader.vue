@@ -3,6 +3,7 @@ import type { HeaderMenu } from "./SiteHeaderDropdown.vue";
 
 export type { HeaderMenu } from "./SiteHeaderDropdown.vue";
 export type { HeaderMenuEntry } from "./SiteHeaderEntry.vue";
+export type { HeaderNotification } from "./SiteHeaderNotifications.vue";
 
 /** A page of this project, as a link in the header. */
 export interface HeaderPageLink {
@@ -17,10 +18,11 @@ export type HeaderItem = HeaderPageLink | HeaderMenu;
 </script>
 
 <script setup lang="ts">
-import { computed, type Component } from "vue";
+import { computed, ref, watch, type Component } from "vue";
 import logoIcon from "../icons/logo.svg";
 import { toolMenuEntries, type Product, type ProductAddresses } from "../js/businessTools.js";
 import SiteHeaderDropdown from "./SiteHeaderDropdown.vue";
+import SiteHeaderNotifications, { notificationsAnnouncement, type HeaderNotification } from "./SiteHeaderNotifications.vue";
 import SiteHeaderPhoneMenu from "./SiteHeaderPhoneMenu.vue";
 import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
 import ThemeButton from "./ThemeButton.vue";
@@ -35,6 +37,12 @@ import ThemeButton from "./ThemeButton.vue";
  * Both layouts are always in the page and CSS shows the one that fits (see .siteHeaderLinks in components.css), never a
  * script: a prerendered page then shows a phone its menu from the first paint. The one hidden is display: none, so it is also
  * out of reach of the keyboard and screen readers.
+ *
+ * The bell is optional (`notifications`): a product's way to say "these things need you". Absent, nothing is drawn; an empty list
+ * draws the bell without a count. It sits just before the theme button in the wide row and, under 900px, in the bar beside the
+ * Menu button (never inside the menu), so the count is seen without opening anything. A notification is something that needs
+ * doing and goes away when it is done: the product owns the list, the header stores nothing. When the count changes, a polite
+ * live region says the new state once; nothing is said when the header first appears.
  *
  * The switch sits in the same spot in every product: the last thing before the theme button in the wide row, and the first row
  * of the phone menu. It is one segmented control, "Website | App", with the product you are in marked.
@@ -64,6 +72,8 @@ const props = defineProps<{
   linkComponent: Component;
   /** Where the light/dark choice is saved on the device; see useColorScheme. */
   themeStorageKey: string;
+  /** The things that need the person, in order, for the bell. Left out: no bell. An empty list: the bell, with no count. */
+  notifications?: HeaderNotification[];
 }>();
 
 /** The product's pages, then the business's Tools menu: everything the header lists, in the order it is drawn. */
@@ -77,10 +87,20 @@ const items = computed<HeaderItem[]>(() => [
     entries: toolMenuEntries(props.product, props.addresses),
   },
 ]);
+
+/** How many things need the person, or undefined when the product draws no bell. */
+const notificationCount = computed(() => props.notifications?.length);
+
+/** What the live region says: empty on first render, then the new state each time the count changes. */
+const announcement = ref("");
+
+watch(notificationCount, (count) => {
+  announcement.value = count === undefined ? "" : notificationsAnnouncement(count);
+});
 </script>
 
 <template>
-  <header class="siteHeader" data-fixed-header>
+  <header class="siteHeader" :class="{ siteHeaderWithBell: notifications !== undefined }" data-fixed-header>
     <!-- Named, because a page can have navigation of its own: a screen reader lists this one as "Main navigation" -->
     <nav class="siteHeaderNav" aria-label="Main">
       <div class="siteHeaderTitle">
@@ -89,7 +109,13 @@ const items = computed<HeaderItem[]>(() => [
       </div>
       <div class="siteHeaderEnd">
         <slot name="status" />
-        <div class="siteHeaderPhone">
+        <div class="siteHeaderPhone" :class="{ siteHeaderPhoneWithBell: notifications !== undefined }">
+          <SiteHeaderNotifications
+            v-if="notifications"
+            layout="phone"
+            :notifications="notifications"
+            :link-component="linkComponent"
+          />
           <SiteHeaderPhoneMenu
             :items="items"
             :product="product"
@@ -106,9 +132,16 @@ const items = computed<HeaderItem[]>(() => [
             <SiteHeaderDropdown v-else :menu="item" :link-component="linkComponent" />
           </template>
           <SiteHeaderSwitch :product="product" :addresses="addresses" />
+          <SiteHeaderNotifications
+            v-if="notifications"
+            layout="wide"
+            :notifications="notifications"
+            :link-component="linkComponent"
+          />
           <ThemeButton :storage-key="themeStorageKey" />
         </div>
       </div>
     </nav>
+    <p v-if="notifications" class="visuallyHidden" role="status" aria-live="polite">{{ announcement }}</p>
   </header>
 </template>

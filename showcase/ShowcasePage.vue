@@ -15,7 +15,7 @@ import CelebrationOverlay, { type CelebrationName } from "../components/Celebrat
 import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import LoadingScreen from "../components/LoadingScreen.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
-import SiteHeader, { type HeaderItem } from "../components/SiteHeader.vue";
+import SiteHeader, { type HeaderItem, type HeaderNotification } from "../components/SiteHeader.vue";
 import type { Product } from "../js/businessTools.js";
 import StatusToast from "../components/StatusToast.vue";
 import ThemeButton from "../components/ThemeButton.vue";
@@ -50,6 +50,32 @@ const HEADER_PRODUCT_CHOICES: { value: Product; label: string }[] = [
   { value: "site", label: "Website" },
   { value: "app", label: "App" },
 ];
+
+/** The states of the sample header's bell: left out (no bell), an empty list, two things and twelve (the badge reads 9+). */
+type BellState = "absent" | "empty" | "two" | "twelve";
+const headerBellState = ref<BellState>("absent");
+const HEADER_BELL_CHOICES: { value: BellState; label: string }[] = [
+  { value: "absent", label: "None" },
+  { value: "empty", label: "Empty" },
+  { value: "two", label: "Two" },
+  { value: "twelve", label: "Twelve" },
+];
+const SAMPLE_NOTIFICATIONS: HeaderNotification[] = [
+  { id: "foodLog", text: "Your coach asked for a 3-day food log.", to: "#header" },
+  { id: "checkIn", text: "Your weekly check-in is due.", to: "#header" },
+];
+
+/** The sample header's `notifications` for the chosen state: undefined draws no bell at all. */
+const headerNotifications = computed<HeaderNotification[] | undefined>(() => {
+  if (headerBellState.value === "absent") return undefined;
+  if (headerBellState.value === "empty") return [];
+  if (headerBellState.value === "two") return SAMPLE_NOTIFICATIONS;
+  return Array.from({ length: 12 }, (_, index) => ({
+    id: `thing${index}`,
+    text: `Sample thing ${index + 1} needs you.`,
+    to: "#header",
+  }));
+});
 
 /**
  * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
@@ -520,7 +546,14 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         the link kinds differing. In development a project passes <code>addresses</code> ({ site, app }, each optional) so the
         switch and the Tools menu's links lead to the other product's local dev server; left out, they lead to the live sites.
       </p>
+      <p>
+        The optional bell, <code>notifications</code>, is how a product says "these things need you": left out, no bell; an empty
+        list, the bell without a count; otherwise a count (9+ above nine) and a panel of links. It stays in the bar under 900px,
+        beside the Menu button. A notification is something that needs doing and goes away when it is done; the library stores
+        nothing.
+      </p>
       <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
+      <ChoiceSwitch v-model="headerBellState" label="Notifications the sample header has" :choices="HEADER_BELL_CHOICES" />
       <div class="sampleHeaderFrame">
         <SiteHeader
           name="The Sample Site"
@@ -530,6 +563,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           :is-on-tool-page="false"
           :link-component="SampleLink"
           :theme-storage-key="THEME_KEY"
+          :notifications="headerNotifications"
         >
           <template #status><span class="badge">Saved</span></template>
         </SiteHeader>

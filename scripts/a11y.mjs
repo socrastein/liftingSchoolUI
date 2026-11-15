@@ -28,6 +28,9 @@ const RUNS = [
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const VIEWPORT = { width: 1280, height: 900 };
 
+/** The widths the header's notifications bell is checked at: both sides of the 900px breakpoint and the narrowest phones. */
+const BELL_WIDTHS = [320, 375, 899, 900, 1280];
+
 /** WCAG minimums: 4.5:1 for normal text, 3:1 for large text. */
 const MIN_RATIO_NORMAL = 4.5;
 const MIN_RATIO_LARGE = 3;
@@ -275,6 +278,70 @@ async function runPixelContrast(page) {
 }
 
 /* ---------------------------------------------------------------------------
+   Check 3: the header's notifications bell
+   --------------------------------------------------------------------------- */
+
+/** Gives the showcase's sample header two notifications, so it draws the bell. */
+async function giveHeaderTwoNotifications(page) {
+  await page.getByRole("button", { name: "Two", exact: true }).click();
+}
+
+/** Opens the bell's panel (the bell that is on screen at this width) and waits for it to settle. */
+async function openBellPanel(page) {
+  const bell = page.locator(".siteHeaderBell:visible");
+  await bell.click();
+  await page.locator(".siteHeaderNoticeList").waitFor();
+  await waitUntilSettled(page);
+  return bell;
+}
+
+/**
+ * What must hold with the panel open: it adds no sideways scroll (the showcase page itself is wider than a phone because of its
+ * wide sample frame, so the width is compared with the page's width before the panel opened), the panel inside the window, and (under 900px) the bell in the bar
+ * on the same row as the Menu button, not inside the phone menu. Returns report lines for what does not.
+ */
+async function measureBellLayout(page, width, widthBeforeOpening) {
+  return page.evaluate(
+    ([viewportWidth, scrollWidthBefore]) => {
+      const lines = [];
+      if (document.documentElement.scrollWidth > scrollWidthBefore) lines.push("the page scrolls sideways with the panel open");
+      const panel = document.querySelector(".siteHeaderNoticeList").getBoundingClientRect();
+      if (panel.left < 0 || panel.right > viewportWidth)
+        lines.push(`the panel leaves the window (${panel.left} to ${panel.right})`);
+      if (viewportWidth < 900) {
+        const bell = document.querySelector(".siteHeaderBell").getBoundingClientRect();
+        const menuButton = document.querySelector("#phoneMenuButton").getBoundingClientRect();
+        if (Math.abs(bell.top - menuButton.top) > 8) lines.push("the bell is not beside the Menu button");
+        if (document.querySelector(".siteHeaderPhoneMenu .siteHeaderBell")) lines.push("the bell is inside the phone menu");
+      }
+      return lines;
+    },
+    [width, widthBeforeOpening],
+  );
+}
+
+/** Runs the bell checks at every width in this theme, with axe over the page with the panel open. Returns report lines. */
+async function runBellChecks(browser, run) {
+  const lines = [];
+  for (const width of BELL_WIDTHS) {
+    const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+    await context.addInitScript((pairs) => {
+      for (const [key, text] of pairs) localStorage.setItem(key, text);
+    }, toStorageEntries(run.storage));
+    const page = await context.newPage();
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
+    await giveHeaderTwoNotifications(page);
+    const widthBeforeOpening = await page.evaluate(() => document.documentElement.scrollWidth);
+    await openBellPanel(page);
+    for (const line of await measureBellLayout(page, width, widthBeforeOpening)) lines.push(`at ${width}px: ${line}`);
+    const axe = await runAxe(page);
+    for (const line of axe.lines) lines.push(`at ${width}px, axe ${line}`);
+    await context.close();
+  }
+  return lines;
+}
+
+/* ---------------------------------------------------------------------------
    Main
    --------------------------------------------------------------------------- */
 
@@ -287,17 +354,23 @@ let failures = 0;
 try {
   for (const run of RUNS) {
     const { context, page } = await openPage(browser, baseUrl, run.storage);
+    // The sample header with a bell and its panel open, so axe and the contrast check cover them (a closed panel has no text)
+    await giveHeaderTwoNotifications(page);
+    await openBellPanel(page);
     const axe = await runAxe(page);
     // Runs last: it hides the page's text.
     const contrast = await runPixelContrast(page);
     await context.close();
 
-    const problems = axe.count + contrast.lines.length;
+    const bellLines = await runBellChecks(browser, run);
+
+    const problems = axe.count + contrast.lines.length + bellLines.length;
     failures += problems;
     const status = problems === 0 ? "pass" : `${problems} problem(s)`;
     console.log(`\n${run.name}: ${status} (${contrast.checked} text runs measured)`);
     for (const line of axe.lines) console.log(`  axe       ${line}`);
     for (const line of contrast.lines) console.log(`  contrast  ${line}`);
+    for (const line of bellLines) console.log(`  bell      ${line}`);
   }
 } finally {
   await browser.close();
