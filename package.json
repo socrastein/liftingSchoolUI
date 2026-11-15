@@ -50,6 +50,10 @@
       "types": "./js/placeholderCopyCheck.d.ts",
       "default": "./js/placeholderCopyCheck.js"
     },
+    "./proteinFiber": {
+      "types": "./js/proteinFiber.d.ts",
+      "default": "./js/proteinFiber.js"
+    },
     "./dateUtils": {
       "types": "./js/dateUtils.d.ts",
       "default": "./js/dateUtils.js"
