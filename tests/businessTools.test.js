@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { APP_ADDRESS, BUSINESS_TOOLS, SITE_ADDRESS, addressOfPage, homeAddressOf, toolMenuEntries } from "../js/businessTools.js";
 
 describe("BUSINESS_TOOLS", () => {
-  it("lists the app's four tools, then the site's Protein & Fiber, in that order", () => {
+  it("lists the app's four tools, then the site's Protein & Fiber and Study Catalog, in that order", () => {
     expect(BUSINESS_TOOLS.map((tool) => [tool.name, tool.product, tool.path])).toEqual([
       ["Weight Log", "app", "/weight-log"],
       ["Plate Counter", "app", "/weight-plate-counter"],
       ["Stopwatch", "app", "/stopwatch"],
       ["Intervals", "app", "/interval"],
       ["Protein & Fiber", "site", "/protein-fiber"],
+      ["Study Catalog", "site", "/studies"],
     ]);
   });
 });
@@ -55,7 +56,15 @@ describe("addresses given for the products (development)", () => {
       { kind: "external", name: "Stopwatch", href: "http://localhost:5173/#/stopwatch" },
       { kind: "external", name: "Intervals", href: "http://localhost:5173/#/interval" },
       { kind: "link", name: "Protein & Fiber", to: "/protein-fiber" },
+      { kind: "link", name: "Study Catalog", to: "/studies" },
     ]);
+  });
+});
+
+describe("the app's Tools menu with the site's dev address", () => {
+  it("leads the Study Catalog row to the site's dev address", () => {
+    const entries = toolMenuEntries("app", { site: "http://localhost:4000", app: "http://localhost:5173" });
+    expect(entries.at(-1)).toEqual({ kind: "external", name: "Study Catalog", href: "http://localhost:4000/studies" });
   });
 });
 
@@ -69,8 +78,8 @@ describe("toolMenuEntries", () => {
   it("makes a router link of each tool the product hosts and an external link of the rest", () => {
     const appKinds = toolMenuEntries("app").map((entry) => entry.kind);
     const siteKinds = toolMenuEntries("site").map((entry) => entry.kind);
-    expect(appKinds).toEqual(["link", "link", "link", "link", "external"]);
-    expect(siteKinds).toEqual(["external", "external", "external", "external", "link"]);
+    expect(appKinds).toEqual(["link", "link", "link", "link", "external", "external"]);
+    expect(siteKinds).toEqual(["external", "external", "external", "external", "link", "link"]);
   });
 
   it("gives a router link its path and an external link its full address", () => {

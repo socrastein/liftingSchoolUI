@@ -4,7 +4,7 @@
  * it is, and cannot add to the list or change its order.
  *
  * A tool lives in one product: the app hosts the weight log, the plate counter and the two timers; the Protein & Fiber
- * calculator is a standalone tool of the site. In a product's own menu a tool it hosts is a link inside the project (drawn with
+ * calculator and the Study Catalog are tools of the site. In a product's own menu a tool it hosts is a link inside the project (drawn with
  * its router link), and the other product's tools are external links to the address where they live, opened in the same tab.
  */
 
@@ -51,6 +51,7 @@ export const BUSINESS_TOOLS = [
   { name: "Stopwatch", product: "app", path: "/stopwatch" },
   { name: "Intervals", product: "app", path: "/interval" },
   { name: "Protein & Fiber", product: "site", path: "/protein-fiber" },
+  { name: "Study Catalog", product: "site", path: "/studies" },
 ];
 
 /**

@@ -36,7 +36,7 @@ const PAGES: HeaderItem[] = [
 ];
 
 /** The Tools menu's rows, in the one order both products show them. */
-const TOOL_NAMES = ["Weight Log", "Plate Counter", "Stopwatch", "Intervals", "Protein & Fiber"];
+const TOOL_NAMES = ["Weight Log", "Plate Counter", "Stopwatch", "Intervals", "Protein & Fiber", "Study Catalog"];
 
 /** Mounts the header in the page (focus and outside clicks need a real document), with a "Saved" status in its slot. */
 function mountHeader(product: Product = "app", addresses?: ProductAddresses): VueWrapper {
@@ -248,13 +248,14 @@ describe("SiteHeader: the Tools menu", () => {
     expect(siteNames).toEqual(TOOL_NAMES);
   });
 
-  it("links to the app's tools inside the app, and out to the site's Protein & Fiber", async () => {
+  it("links to the app's tools inside the app, and out to the site's Protein & Fiber and Study Catalog", async () => {
     expect(await toolRows("app")).toEqual([
       ["Weight Log", "router", "/weight-log"],
       ["Plate Counter", "router", "/weight-plate-counter"],
       ["Stopwatch", "router", "/stopwatch"],
       ["Intervals", "router", "/interval"],
       ["Protein & Fiber", "external", "https://theliftingschool.com/protein-fiber"],
+      ["Study Catalog", "external", "https://theliftingschool.com/studies"],
     ]);
   });
 
@@ -265,6 +266,7 @@ describe("SiteHeader: the Tools menu", () => {
       ["Stopwatch", "external", "https://app.theliftingschool.com/#/stopwatch"],
       ["Intervals", "external", "https://app.theliftingschool.com/#/interval"],
       ["Protein & Fiber", "router", "/protein-fiber"],
+      ["Study Catalog", "router", "/studies"],
     ]);
   });
 
@@ -357,6 +359,7 @@ describe("SiteHeader: products at other addresses (development)", () => {
       "http://localhost:5173/#/stopwatch",
       "http://localhost:5173/#/interval",
       "/protein-fiber",
+      "/studies",
     ]);
     siteHeader.unmount();
   });
