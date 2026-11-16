@@ -713,6 +713,34 @@ async function runPrimaryDialogCheck(browser, run) {
   return lines;
 }
 
+/**
+ * The warning button's edge against the surface it sits on, in the page as drawn: at least 3:1 (WCAG 1.4.11) on the page, a
+ * card, a panel inside a card, a raised panel and a card inside it. Returns report lines. (Its text on its wash is measured
+ * by the pixel contrast check, which covers every text run on the page, and axe.)
+ */
+async function runWarningEdgeCheck(page) {
+  const readings = await page.evaluate(() => {
+    const parseColour = (text) => (text.match(/[\d.]+/g) ?? []).map(Number);
+    const solidBehind = (element) => {
+      for (let node = element.parentElement; node; node = node.parentElement) {
+        const [r, g, b, a = 1] = parseColour(getComputedStyle(node).backgroundColor);
+        if (a === 1) return [r, g, b];
+      }
+      return [255, 255, 255];
+    };
+    return [...document.querySelectorAll(".btnWarning")].map((button) => {
+      const [r, g, b] = parseColour(getComputedStyle(button).borderTopColor);
+      return { edge: [r, g, b], surface: solidBehind(button), label: button.textContent.trim() };
+    });
+  });
+  const lines = [];
+  for (const { edge, surface, label } of readings) {
+    const ratio = contrastRatio(edge, surface);
+    if (ratio < 3) lines.push(`warning button "${label}": edge ${ratio.toFixed(2)}:1 against its surface (needs 3:1)`);
+  }
+  return lines;
+}
+
 /** On a short window with a long question, the card stays inside the window or the dialog scrolls to all of it; returns report lines. */
 async function runDialogShortWindowCheck(browser, run) {
   const lines = [];
@@ -754,6 +782,7 @@ try {
     await giveHeaderTwoNotifications(page);
     await openBellPanel(page);
     const axe = await runAxe(page);
+    const warningEdgeLines = await runWarningEdgeCheck(page);
     // Runs last: it hides the page's text.
     const contrast = await runPixelContrast(page);
     await context.close();
@@ -769,12 +798,13 @@ try {
       ...(await runPrimaryDialogCheck(browser, run)),
     ];
 
-    const problems = axe.count + contrast.lines.length + bellLines.length + fitLines.length;
+    const problems = axe.count + contrast.lines.length + warningEdgeLines.length + bellLines.length + fitLines.length;
     failures += problems;
     const status = problems === 0 ? "pass" : `${problems} problem(s)`;
     console.log(`\n${run.name}: ${status} (${contrast.checked} text runs measured)`);
     for (const line of axe.lines) console.log(`  axe       ${line}`);
     for (const line of contrast.lines) console.log(`  contrast  ${line}`);
+    for (const line of warningEdgeLines) console.log(`  warning   ${line}`);
     for (const line of bellLines) console.log(`  bell      ${line}`);
     for (const line of fitLines) console.log(`  fit       ${line}`);
   }

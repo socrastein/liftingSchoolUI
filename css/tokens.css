@@ -112,6 +112,14 @@
      10% tint over each of them (4.7:1 at worst, on the page). */
   --danger: #b71c28;
 
+  /* Orange for "careful": the button that starts something destructive (Delete, Remove, Sign Out), which then asks for
+     confirmation on a red --danger button. Its hue sits clear of the accent purple and the danger red. Text and the 1px edge,
+     measured against every light surface: 5.5:1 on the page (--bgBase) and 6.3:1 on the card face (--bgMid and --bgTop are the
+     same colour). The edge needs 3:1, the text 4.5:1 on its own 10% wash (--warningSubtle): 4.8:1 on the page, 5.4:1 on the
+     face. A stronger wash would not clear it (4.4:1 at 16%), so a hovered button thickens its edge instead. */
+  --warning: #9c4400;
+  --warningSubtle: color-mix(in srgb, var(--warning) 10%, transparent);
+
   /* Green for something that went well or up. At least 4.5:1 on both light surfaces and on its own 10% tint over each of
      them (4.9:1 at worst, on the page). */
   --success: #176b3b;
@@ -188,6 +196,9 @@
   /* Dark-mode error red: at least 5:1 on the dark backgrounds and on the 8% banner tint. */
   --danger: #ff8a95;
   --success: #5fd98f;
+  /* Orange for "careful" (see light mode), measured on the dark surfaces: the text and edge on the page and base (#1a1a1a) 8.7:1,
+     on --bgMid 7.8:1 and on --bgTop 6.7:1; the text on its 10% wash 7.3:1, 6.4:1 and 5.5:1 in the same order. */
+  --warning: #ffa24d;
   --heroGlow: #900090;
 
   /* The plate colours again, for the dark face (--bgTop, #2f2f2f): blue 4.9, yellow 8.2, green 5.6, red 4.8, grey 4.8 */

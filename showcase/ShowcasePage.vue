@@ -372,11 +372,13 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <button type="button" class="btn btnSecondary">.btnSecondary</button>
         <button type="button" class="btn btnSubtle">.btnSubtle</button>
         <button type="button" class="btn btnDanger">.btnDanger</button>
-        <button type="button" class="btn btnDangerSubtle">.btnDangerSubtle</button>
+        <button type="button" class="btn btnWarning">.btnWarning</button>
+        <button type="button" class="btn btnDangerSubtle">.btnDangerSubtle (superseded)</button>
         <button type="button" class="btn btnPrimary" disabled>Disabled</button>
       </div>
       <div class="row">
         <button type="button" class="btn btnSecondary btnSm">.btnSm</button>
+        <button type="button" class="btn btnWarning btnSm">.btnWarning .btnSm</button>
         <button type="button" class="btn btnSecondary btnIcon" aria-label="An icon button (.btnIcon)">
           <img :src="arrowRightIcon" class="iconSmall" alt="" />
         </button>
@@ -384,6 +386,50 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <a href="#buttons" class="btn btnPrimary">A link as .btnPrimary</a>
       </div>
       <button type="button" class="btn btnPrimary btnBlock">.btnBlock</button>
+      <p>
+        <code>.btnWarning</code> starts something destructive (Delete, Remove, Sign Out) and always opens a confirmation, whose
+        button is <code>.btnDanger</code>. It is outlined where danger is solid, on every surface:
+      </p>
+      <div class="row" id="warningSurfaces">
+        <div class="row">
+          <button type="button" class="btn btnSecondary">Secondary</button>
+          <button type="button" class="btn btnWarning">Sign Out</button>
+          <button type="button" class="btn btnDanger">Sign Out</button>
+          <button type="button" class="btn btnWarning btnSm">Remove</button>
+        </div>
+      </div>
+      <div class="card sampleCard" id="warningOnCard">
+        <div class="row">
+          <button type="button" class="btn btnSecondary">Secondary</button>
+          <button type="button" class="btn btnWarning">Sign Out</button>
+          <button type="button" class="btn btnDanger">Sign Out</button>
+          <button type="button" class="btn btnWarning btnSm">Remove</button>
+        </div>
+        <div class="panel samplePanel">
+          <div class="row">
+            <button type="button" class="btn btnSecondary">Secondary</button>
+            <button type="button" class="btn btnWarning">Sign Out</button>
+            <button type="button" class="btn btnDanger">Sign Out</button>
+            <button type="button" class="btn btnWarning btnSm">Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="raisedPanel sampleCard" id="warningOnRaised">
+        <div class="row">
+          <button type="button" class="btn btnSecondary">Secondary</button>
+          <button type="button" class="btn btnWarning">Sign Out</button>
+          <button type="button" class="btn btnDanger">Sign Out</button>
+          <button type="button" class="btn btnWarning btnSm">Remove</button>
+        </div>
+        <div class="card samplePanel">
+          <div class="row">
+            <button type="button" class="btn btnSecondary">Secondary</button>
+            <button type="button" class="btn btnWarning">Sign Out</button>
+            <button type="button" class="btn btnDanger">Sign Out</button>
+            <button type="button" class="btn btnWarning btnSm">Remove</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="showcaseSection" aria-labelledby="segmented">
@@ -647,7 +693,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       </p>
       <!-- hostileParent: a consumer's child-spacing rule (> * { margin: 0 }) that used to pin the dialog to a corner; scripts/a11y.mjs checks the centring -->
       <div class="row hostileParent">
-        <button type="button" class="btn btnSecondary" @click="isDialogOpen = true">Delete the sample</button>
+        <button type="button" class="btn btnWarning" @click="isDialogOpen = true">Delete the sample</button>
         <ConfirmDialog
           v-if="isDialogOpen"
           :question="dialogQuestion"

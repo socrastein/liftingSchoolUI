@@ -8,8 +8,8 @@
 /*
  * Buttons. Every button, and every link dressed as one, says .btn plus one variant: .btnPrimary (the accent fill, for the
  * action a page is about), .btnSecondary (a plain face, for the alternative), .btnSubtle (the accent wash, for a quiet action
- * that must not be hit by accident), .btnDanger (for something destructive) or .btnDangerSubtle (the danger wash, for a button
- * that only asks before something destructive).
+ * that must not be hit by accident), .btnWarning (orange, for the button that STARTS something destructive and opens a
+ * confirmation), .btnDanger (red, for the confirmation's own button) or .btnDangerSubtle (superseded by .btnWarning).
  * Add .btnEdged and set --edgeColor for a coloured edge. Add .btnBlock to make it the full width of its container. Like a card, a button is lifted by a soft edge and shadow in
  * light mode and by tone in dark mode, and it sinks a little when pressed; there is no gloss and no lift on hover.
  * A component adds only its layout (for example how much room it takes in a row), never its own colours.
@@ -141,7 +141,36 @@
   background-color: color-mix(in srgb, var(--danger) 82%, var(--textFull));
 }
 
-/* The quiet danger button, for one that only opens a confirmation (Delete client asks first): the danger wash, no raised face,
+/*
+ * The warning button: the one that starts something that deletes, removes, ends or signs out (Delete, Remove, Sign Out) and
+ * always opens a confirmation, whose own button is the solid red .btnDanger. It is quiet on purpose, because it repeats on every
+ * row of a list: the orange wash, an orange 1px edge and orange text, no raised face. Next to .btnSecondary (a plain face with a
+ * faint grey edge) it reads as "careful", and next to .btnDanger (solid red) as the step before. Colour is never the only cue:
+ * the label says what it does, and it is outlined where danger is solid. The text clears 4.5:1 on the 10% wash and the edge 3:1
+ * on every surface in both themes (figures at --warning in tokens.css). Hovering thickens the edge (an inset ring, so nothing
+ * moves) rather than deepening the wash, which would drop below 4.5:1 in light mode; pressing keeps the shared sink.
+ * Disabled is the shared .btn:disabled look.
+ */
+.btnWarning,
+.btnWarning:link,
+.btnWarning:visited {
+  background-color: var(--warningSubtle);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.btnWarning:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px var(--warning);
+}
+
+.btnWarning:active:not(:disabled) {
+  box-shadow:
+    var(--shadowPressed),
+    0 0 0 1px var(--warning);
+}
+
+/* Superseded by .btnWarning, the one name for the button that opens a confirmation; kept for projects that still use it.
+   The quiet danger button, for one that only opens a confirmation (Delete client asks first): the danger wash, no raised face,
    so the page's main action stays the loudest thing on it. The confirmation's own button is the solid .btnDanger. The danger text
    clears 4.5:1 on the 10% wash over every surface in both themes (4.75:1 at worst, light mode on --bgBase); a stronger wash on
    hover would not (4.0:1 at 20%), so hovering brings in the danger edge instead. */
