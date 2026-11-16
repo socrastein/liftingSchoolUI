@@ -308,6 +308,21 @@ async function measureBellLayout(page, width, widthBeforeOpening) {
       const panel = document.querySelector(".siteHeaderNoticeList").getBoundingClientRect();
       if (panel.left < 0 || panel.right > viewportWidth)
         lines.push(`the panel leaves the window (${panel.left} to ${panel.right})`);
+      // The bell's button keeps a target of at least 24 by 24 CSS pixels (WCAG 2.2 target size), however small its drawing is
+      const MINIMUM_TARGET = 24;
+      const visibleBell = [...document.querySelectorAll(".siteHeaderBell")].find((element) => element.offsetParent !== null);
+      const button = visibleBell.getBoundingClientRect();
+      if (button.width < MINIMUM_TARGET || button.height < MINIMUM_TARGET)
+        lines.push(`the bell's button is ${button.width} by ${button.height}px (needs ${MINIMUM_TARGET} by ${MINIMUM_TARGET})`);
+      // The badge sits inside the header's bar, and inside the button, so it is neither clipped nor over a neighbour
+      const header = document.querySelector(".siteHeader").getBoundingClientRect();
+      const badge = visibleBell.querySelector(".siteHeaderBellBadge").getBoundingClientRect();
+      if (badge.top < header.top || badge.bottom > header.bottom)
+        lines.push(`the badge leaves the header (${badge.top} to ${badge.bottom}, header ${header.top} to ${header.bottom})`);
+      if (badge.left < button.left || badge.right > button.right)
+        lines.push(
+          `the badge leaves the bell's button (${badge.left} to ${badge.right}, button ${button.left} to ${button.right})`,
+        );
       if (viewportWidth < 900) {
         const bell = document.querySelector(".siteHeaderBell").getBoundingClientRect();
         const menuButton = document.querySelector("#phoneMenuButton").getBoundingClientRect();

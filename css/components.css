@@ -1259,25 +1259,37 @@ textarea.input {
   align-items: center;
   display: flex;
   justify-content: center;
+  /* As tall as the Menu button; as wide as a menu row is tall, which is above the 24px a touch target must have (WCAG 2.2) */
   min-height: 2.75rem;
-  min-width: 2.75rem;
+  min-width: 2.5rem;
   position: relative;
 }
 
-/* Accent fill with the on-accent text, the pair the segmented control's chosen side uses (measured in tokens.css); the figure is text, so the count never relies on colour */
+/* The bell is drawn at the size of the header's text (--fontSizeXl, the links and the name), not at the 2rem of the Menu icon, so it
+   sits in scale with the sun of the theme button; the button around it keeps its size, so the target is no smaller */
+.siteHeaderBell .iconSmall {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+/* Accent fill with the on-accent text, the pair the segmented control's chosen side uses (measured in tokens.css); the figure is text, so the count never relies on colour.
+   A small circle on the bell's top right corner (a pill for "9+"); its number is --fontSizeXs, the smallest size there is. */
 .siteHeaderBellBadge {
+  align-items: center;
   background-color: var(--accentFull);
   border-radius: var(--radiusFull);
   color: var(--onAccent);
+  display: flex;
   font-size: var(--fontSizeXs);
   font-weight: 700;
+  height: 1rem;
+  justify-content: center;
   line-height: 1;
-  min-width: 1.25rem;
-  padding: var(--spaceHalf);
+  min-width: 1rem;
+  padding: 0 var(--spaceHalf);
   position: absolute;
-  right: 0;
-  text-align: center;
-  top: 0;
+  right: var(--spaceHalf);
+  top: var(--space1);
 }
 
 /* Wider than a menu's list, for sentences; rows wrap and grow with their text, never a fixed height */
@@ -1286,11 +1298,29 @@ textarea.input {
   width: 22rem;
 }
 
+.siteHeaderNoticeList {
+  gap: var(--spaceHalf);
+}
+
 .siteHeaderNoticeList .menuItem {
   justify-content: flex-start;
   padding-block: var(--space1);
+  position: relative;
   text-align: left;
   white-space: normal;
+}
+
+/* Each notification is its own item: a hairline (the library's divider for the rows of a list, --borderSubtle) in the gap above
+   every row after the first, inset by the panel's padding. A line in the gap, not a border on the row, keeps the rows' rounded
+   hover wash. */
+.siteHeaderNoticeList .menuItem + .menuItem::before {
+  background-color: var(--borderSubtle);
+  content: "";
+  height: 1px;
+  left: var(--space1);
+  position: absolute;
+  right: var(--space1);
+  top: calc(var(--spaceHalf) / -2);
 }
 
 .siteHeaderNoticeEmpty {
