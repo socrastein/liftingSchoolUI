@@ -41,4 +41,11 @@ describe("the warning button", () => {
     expect(rule?.[1]).toContain("border-color: var(--warning)");
     expect(rule?.[1]).toContain("color: var(--warning)");
   });
+
+  it("colours a menu row that starts a destructive action from the same orange, as a link too, with a wash on hover", () => {
+    const rule = COMPONENTS_CSS.match(/\.menuItemWarning,\s*\.menuItemWarning:link,\s*\.menuItemWarning:visited\s*\{([^}]*)\}/);
+    expect(rule?.[1]).toContain("color: var(--warning)");
+    const hover = COMPONENTS_CSS.match(/\.menuItemWarning:hover\s*\{([^}]*)\}/);
+    expect(hover?.[1]).toContain("background-color: var(--warningSubtle)");
+  });
 });

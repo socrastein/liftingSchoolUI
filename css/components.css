@@ -314,7 +314,23 @@
   background-color: var(--accentSubtle);
 }
 
-/* A row that destroys something (Remove): marked by its words and the danger colour, never the colour alone. The danger text
+/* A row that STARTS something destructive (Delete, Remove, Sign Out) and so opens a confirmation: the warning colour, as
+   .btnWarning is for a button, never the colour alone (the words say what it does). Red is kept for the confirmation's own
+   button. The text is measured on the menu's face (--bgTop) and on its 10% hover wash over that face: light mode 6.3:1 and
+   5.4:1, dark mode 6.7:1 and 5.5:1, all over 4.5:1 (figures at --warning in tokens.css), so unlike .btnWarning the row can keep a
+   plain hover wash instead of thickening an edge; scripts/a11y.mjs measures the hovered row in both themes. */
+.menuItemWarning,
+.menuItemWarning:link,
+.menuItemWarning:visited {
+  color: var(--warning);
+}
+
+.menuItemWarning:hover {
+  background-color: var(--warningSubtle);
+}
+
+/* Superseded by .menuItemWarning, the one name for a menu row that opens a confirmation; kept for projects that still use it.
+   A row that destroys something (Remove): marked by its words and the danger colour, never the colour alone. The danger text
    clears 4.5:1 on its hover wash, as on .btnDangerSubtle. */
 .menuItemDanger,
 .menuItemDanger:link,

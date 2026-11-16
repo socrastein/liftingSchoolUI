@@ -661,7 +661,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         <a href="#menus" class="menuItem">Another page</a>
         <button type="button" class="menuItem">A button row</button>
         <button type="button" class="menuItem" disabled>A disabled row</button>
-        <button type="button" class="menuItem menuItemDanger">A danger row</button>
+        <button type="button" class="menuItem menuItemWarning">A warning row</button>
       </nav>
       <p><code>ThemeSlider</code> is the light/dark switch for a menu panel, on the same key as the header's button.</p>
       <ThemeSlider :storage-key="THEME_KEY" />
@@ -707,7 +707,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <div class="row">
         <ActionsMenu label="Actions for the sample row" toggle-id="sampleActions">
           <button type="button" class="menuItem">Edit</button>
-          <button type="button" class="menuItem menuItemDanger">Delete</button>
+          <button type="button" class="menuItem menuItemWarning">Delete</button>
         </ActionsMenu>
       </div>
       <p>

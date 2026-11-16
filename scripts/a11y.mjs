@@ -19,6 +19,9 @@
  *    around it, with the page, a card and a raised panel behind it. A dialog's scrim already separates its card by tone, so
  *    there the card's face against the dimmed page may stand in for the edge.
  *
+ * 7. Each .menuItemWarning row (the sample menu's and the open actions menu's) hovered: the orange text against the hover wash
+ *    actually drawn, 4.5:1 or better.
+ *
  * Exits with code 1 if either check finds a problem, so it can gate a release. Ported from the retired styleStandards kit.
  * First run on a machine: `npx playwright install firefox`.
  */
@@ -745,6 +748,50 @@ async function runWarningEdgeCheck(page) {
   return lines;
 }
 
+/**
+ * The text contrast of each .menuItemWarning row while it is hovered, in the sample menu and in the open actions menu: the
+ * pixel check sees only the resting row, and the hover wash is what could drop the orange below 4.5:1. Hides the page's
+ * text, so it runs last. Returns report lines and how many rows were measured.
+ */
+async function runWarningMenuRowChecks(page) {
+  const lines = [];
+  let measured = 0;
+  const measureHoveredRow = async (row) => {
+    await row.hover();
+    await waitUntilSettled(page);
+    const run = await row.evaluate((element) => {
+      const [r, g, b] = getComputedStyle(element)
+        .color.match(/[\d.]+/g)
+        .map(Number);
+      const box = element.getBoundingClientRect();
+      const textBox = { x: box.left + box.width * 0.1, y: box.top, width: box.width * 0.5, height: box.height };
+      return { rgb: [r, g, b], alpha: 1, box: textBox };
+    });
+    // Text hidden for the screenshot only, so the pixels are the row's own face and hover wash
+    const styleTag = await page.addStyleTag({ content: HIDE_TEXT_CSS });
+    // The row's colour transition would otherwise still be fading the text out when the screenshot is taken
+    await waitUntilSettled(page);
+    const png = PNG.sync.read(await page.screenshot());
+    await styleTag.evaluate((element) => element.remove());
+    const worst = worstContrast(run, png);
+    measured += 1;
+    const label = (await row.textContent()).trim();
+    if (process.env.A11Y_VERBOSE) console.log(`    hovered warning row "${label}": ${worst.ratio.toFixed(2)}:1`);
+    if (worst.ratio < MIN_RATIO_NORMAL)
+      lines.push(`hovered warning menu row "${label}": ${worst.ratio.toFixed(2)}:1 (needs 4.5)`);
+  };
+
+  // The sample menu is always on the page; the actions menu's row exists only while it is open (and scrolling would close it)
+  const sampleRow = page.locator(".sampleMenu .menuItemWarning");
+  await sampleRow.scrollIntoViewIfNeeded();
+  await measureHoveredRow(sampleRow);
+  await page.locator("#sampleActions").scrollIntoViewIfNeeded();
+  await page.locator("#sampleActions").click();
+  await waitUntilSettled(page);
+  await measureHoveredRow(page.locator(".actionsList .menuItemWarning"));
+  return { lines, measured };
+}
+
 /** On a short window with a long question, the card stays inside the window or the dialog scrolls to all of it; returns report lines. */
 async function runDialogShortWindowCheck(browser, run) {
   const lines = [];
@@ -1054,6 +1101,10 @@ try {
     const contrast = await runPixelContrast(page);
     await context.close();
 
+    const menuPage = await openPage(browser, baseUrl, run.storage);
+    const menuRows = await runWarningMenuRowChecks(menuPage.page);
+    await menuPage.context.close();
+
     const floating = await runFloatingEdgeChecks(browser, run);
     const bellLines = await runBellChecks(browser, run);
     const fitLines = [
@@ -1067,12 +1118,20 @@ try {
     ];
 
     const problems =
-      axe.count + contrast.lines.length + warningEdgeLines.length + floating.lines.length + bellLines.length + fitLines.length;
+      axe.count +
+      contrast.lines.length +
+      menuRows.lines.length +
+      warningEdgeLines.length +
+      floating.lines.length +
+      bellLines.length +
+      fitLines.length;
     failures += problems;
     const status = problems === 0 ? "pass" : `${problems} problem(s)`;
     console.log(`\n${run.name}: ${status} (${contrast.checked} text runs measured)`);
     for (const line of axe.lines) console.log(`  axe       ${line}`);
     for (const line of contrast.lines) console.log(`  contrast  ${line}`);
+    console.log(`  menu rows ${menuRows.measured} hovered warning rows measured`);
+    for (const line of menuRows.lines) console.log(`  menu rows ${line}`);
     for (const line of warningEdgeLines) console.log(`  warning   ${line}`);
     console.log(`  floating  ${floating.count} surfaces measured, lowest edge ${floating.lowest.toFixed(2)}:1`);
     for (const line of floating.lines) console.log(`  floating  ${line}`);

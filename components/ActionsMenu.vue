@@ -6,7 +6,7 @@ import PopupTransition from "./PopupTransition.vue";
 
 /**
  * A ⋮ button that opens a short list of actions: the usual "more actions" menu, for actions used too rarely to earn space of
- * their own (move, remove, edit, delete). The slot holds the actions as buttons (give each the shared `.menuItem` class);
+ * their own (move, remove, edit, delete). The slot holds the actions as buttons (give each the shared `.menuItem` class, and a row that starts a destructive action also `.menuItemWarning`, which then opens a `ConfirmDialog`);
  * clicking any of them closes the list, and the action itself is the parent's.
  *
  * It is a disclosure (a button that shows more buttons), not an ARIA menu: a few buttons need no arrow-key handling, and Tab
