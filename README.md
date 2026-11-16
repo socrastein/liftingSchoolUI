@@ -14,7 +14,7 @@ unless a project opts in, so first add a `.npmrc` beside the project's `package.
 allow-git=root
 ```
 
-Then install over HTTPS (not `github:…`, which records an SSH address in the lockfile that a CI runner cannot clone):
+Then install over HTTPS (not `github:…`, which records an SSH address in the lockfile that a clean machine without the SSH key (such as the `ci-run` container) cannot clone):
 
 ```sh
 npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.4.0"
@@ -82,7 +82,7 @@ npm install "git+https://github.com/socrastein/liftingSchoolUI.git#v0.4.0"
 Changing the tag in place (editing `package.json` and running `npm install`, or installing the new tag over the old) fails
 with `EALLOWGIT` under npm 12: with `allow-git=root` it accepts a project's own git dependency when it is added, but not when
 it replaces an older version of it (seen with npm 12.2.1). Removing it first makes the upgrade an addition. A fresh `npm ci`
-(CI, another machine) is not affected.
+(`ci-run`, another machine) is not affected.
 
 Then check the project's pages in both themes. Each release's changes are in this repo's commit history between the two tags.
 
@@ -158,7 +158,7 @@ const description = placeholderCopy("A draft of the service description.");
 The check is the `check-placeholder-copy` command, which a project names in its own `package.json` with the folders to scan
 (`"copy:check": "check-placeholder-copy app shared"`; with no folder it scans `src`). It lists each wrapped call as `file:line`
 and exits 1 while any remains, looking at `.ts`, `.vue` and `.js` files and skipping `__tests__` folders and `node_modules`.
-Where to run it is the project's choice: in the **deploy**, where it must fail, and in CI as a report only, so a branch that
+Where to run it is the project's choice: in the **deploy**, where it must fail, and in `ci:full` or the like as a report only, so a branch that
 holds drafts still passes its tests. A comment elsewhere must mention the wrapper by name only, never written as a call.
 
 ### Celebrations

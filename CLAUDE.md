@@ -23,7 +23,19 @@ repo.
 - `npm run format`: formats every file with Prettier (`.prettierrc.json`); `npm run format:check` only reports. Format before
   proposing a commit. The generated `js/*.d.ts` are left unformatted, so `types:check` compares exactly what tsc writes.
 
+- `npm run ci:fast`: format check, type checks and unit tests (about 8 seconds). `npm run ci:full`: those plus `types:check` and
+  `a11y`, everything the old GitHub Actions workflow ran.
+
 ## Rules that are easy to break
+
+- **No GitHub Actions** (since 2026-11-16: the free minutes ran out mid-month and a deploy was blocked). Checks run on Matt's own
+  machines; never add a workflow file. `ci-run` (from `~/repos/localCI`, see its README) runs `ci:full` on the home server from a
+  clean install of one commit in a throwaway container: `ci-run [<commit>]` waits and shows the output, `ci-run status` lists the
+  latest results. Run `npm run ci:full` (or `ci-run`) before tagging a release.
+- The pre-push hook (`.githooks/pre-push`; once per clone: `git config core.hooksPath .githooks`) runs `ci:fast` before every push
+  and refuses the push if it fails; a push to `main` also starts `ci-run` in the background, which sends a push notification only
+  if it fails. There is no `prepare` script that installs it, because consumers install this package from git and npm would run
+  it there.
 
 - **This repo is the only source of the look.** Consumers (`../nuxtBusinessSite`, `../liftingApp`, …) never edit or copy these
   files; a change to a token or shared class is made here, released, and picked up by bumping each consumer's tag.

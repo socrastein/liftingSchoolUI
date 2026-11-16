@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# git runs this before every push (once per clone: `git config core.hooksPath .githooks`). It replaces the checks
+# GitHub Actions ran on each push, at no cost in Actions minutes:
+#   - every push waits for the fast checks (`npm run ci:fast`, about 10 seconds) and is refused if they fail;
+#   - a push to main also starts the full checks on the home server (`ci-run`, from ~/repos/localCI: a clean install,
+#     the type declarations check and the accessibility check in a browser). The push does not wait for them; a failure arrives as a push notification.
+#
+# The fast checks read the working folder, not the commits being pushed, so stash unfinished work that would fail them.
+# `git push --no-verify` skips this hook.
+set -euo pipefail
+
+readonly MAIN_REF="refs/heads/main"
+
+main() {
+  # git lists what is being pushed on standard input, one line per branch; read it before a check can swallow it
+  local pushed_refs
+  pushed_refs="$(cat)"
+
+  npm run --silent ci:fast < /dev/null
+
+  local commit
+  commit="$(commit_pushed_to_main "${pushed_refs}")"
+  if [[ -n "${commit}" ]]; then
+    start_full_checks "${commit}"
+  fi
+}
+
+# Prints the commit this push puts on main, or nothing when main is not being pushed. Each line of git's list reads
+# "<local ref> <local commit> <remote ref> <remote commit>".
+commit_pushed_to_main() {
+  local pushed_refs="$1"
+  local local_commit remote_ref
+  # The two underscores skip the columns this does not need
+  while read -r _ local_commit remote_ref _; do
+    if [[ "${remote_ref}" == "${MAIN_REF}" ]]; then
+      echo "${local_commit}"
+    fi
+  done <<< "${pushed_refs}"
+}
+
+# Never refuses the push: away from home (the laptop, or the server switched off) the full checks simply do not run
+start_full_checks() {
+  local commit="$1"
+  if ! command -v ci-run > /dev/null; then
+    echo "pre-push: ci-run is not installed here, so the full checks were not started."
+    return
+  fi
+  if ! ci-run --background "${commit}"; then
+    echo "pre-push: could not start the full checks on the home server; pushing anyway."
+  fi
+}
+
+main

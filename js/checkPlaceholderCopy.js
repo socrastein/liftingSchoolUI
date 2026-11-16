@@ -5,7 +5,7 @@
  * "src" when none are given). It looks only at source files (.ts, .vue, .js), skipping test folders and node_modules.
  *
  * Where to run it is the project's choice: a deploy must not ship drafts, but a branch may hold them, so it belongs in the
- * deploy step and, as a report only, in CI. See placeholderCopy.js for the wrapper it looks for.
+ * deploy step and, as a report only, in the project's full checks. See placeholderCopy.js for the wrapper it looks for.
  */
 
 import { findPlaceholderCopy } from "./placeholderCopyCheck.js";

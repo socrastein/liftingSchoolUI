@@ -1,6 +1,6 @@
 /**
  * Finds the drafted copy a project still has to rewrite: every call of the placeholderCopy wrapper (placeholderCopy.js) in its
- * source. The `check-placeholder-copy` command (checkPlaceholderCopy.js) runs it for a project's scripts and CI; a project's
+ * source. The `check-placeholder-copy` command (checkPlaceholderCopy.js) runs it for a project's scripts and full checks; a project's
  * own tests can call it directly.
  *
  * Plain JavaScript for Node (it reads files), with no Vue or Nuxt: only scripts and tests import it, never a page.

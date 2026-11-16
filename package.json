@@ -126,7 +126,9 @@
     "types": "rm -f js/*.d.ts && tsc -p tsconfig.types.json",
     "types:check": "npm run types && git diff --exit-code -- js",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "ci:fast": "npm run format:check && npm run typecheck && npm test",
+    "ci:full": "npm run ci:fast && npm run types:check && npm run a11y"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
