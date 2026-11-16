@@ -12,6 +12,8 @@
  *    exactly when it does not) at windows from 899px to 1280px in both themes, with no sideways overflow and axe clean; the
  *    ordinary sample header behaves as it always did; stepping the window narrower and wider never flips the form without
  *    cause; and an open drop-down or phone menu closes, with focus kept on screen, when the form changes.
+ * 5. The confirm dialog opened inside a parent that zeroes its children's margins: its card is centred in the window within
+ *    a pixel at 320x640, 375x800 and 1280x800, a long question on a 375x360 window is reachable whole, and axe is clean.
  *
  * Exits with code 1 if either check finds a problem, so it can gate a release. Ported from the retired styleStandards kit.
  * First run on a machine: `npx playwright install firefox`.
@@ -628,6 +630,114 @@ async function runSwitchChecks(browser, run) {
 }
 
 /* ---------------------------------------------------------------------------
+   Check 5: the confirm dialog stays centred inside a parent that zeroes its children's margins
+   --------------------------------------------------------------------------- */
+
+/** Window sizes the dialog's centring is measured at: two phones and a desktop. */
+const DIALOG_WINDOWS = [
+  { width: 320, height: 640 },
+  { width: 375, height: 800 },
+  { width: 1280, height: 800 },
+];
+
+/** The shortest window the dialog must stay reachable in, with the long question. */
+const SHORT_WINDOW = { width: 375, height: 360 };
+
+/** How far the dialog card's centre may be from the window's centre, in pixels. */
+const CENTRE_TOLERANCE_PX = 1;
+
+/** Opens the sample dialog (inside the showcase's `> * { margin: 0 }` parent) and returns where its card is. */
+async function openSampleDialog(browser, run, size, query) {
+  const context = await browser.newContext({ viewport: size, reducedMotion: "reduce" });
+  await context.addInitScript((pairs) => {
+    for (const [key, text] of pairs) localStorage.setItem(key, text);
+  }, toStorageEntries(run.storage));
+  const page = await context.newPage();
+  await page.goto(baseUrl + query, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Delete the sample" }).click();
+  await page.locator(".confirmCard").waitFor();
+  await waitUntilSettled(page);
+  return { context, page };
+}
+
+/** Reads the card's box, and whether the dialog is scrolled or taller than the window, in the page. */
+function readDialogCard() {
+  const box = document.querySelector(".confirmCard").getBoundingClientRect();
+  const dialog = document.querySelector("dialog.confirmDialog");
+  return {
+    centreX: box.left + box.width / 2,
+    centreY: box.top + box.height / 2,
+    top: box.top,
+    bottom: box.bottom,
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
+    isScrollable: dialog.scrollHeight > dialog.clientHeight,
+  };
+}
+
+/** Centred within a pixel at each window size, axe clean with the dialog open; returns report lines. */
+async function runDialogCentringChecks(browser, run) {
+  const lines = [];
+  for (const size of DIALOG_WINDOWS) {
+    const { context, page } = await openSampleDialog(browser, run, size, "");
+    const card = await page.evaluate(readDialogCard);
+    const offX = Math.abs(card.centreX - card.windowWidth / 2);
+    const offY = Math.abs(card.centreY - card.windowHeight / 2);
+    const label = `dialog at ${size.width}x${size.height}`;
+    if (offX > CENTRE_TOLERANCE_PX) lines.push(`${label}: off centre horizontally by ${offX.toFixed(1)}px`);
+    if (offY > CENTRE_TOLERANCE_PX) lines.push(`${label}: off centre vertically by ${offY.toFixed(1)}px`);
+    const axe = await runAxe(page);
+    for (const line of axe.lines) lines.push(`${label}, axe ${line}`);
+    await context.close();
+  }
+  return lines;
+}
+
+/** The dialog with a primary confirm button is axe clean (contrast included) at a phone width; returns report lines. */
+async function runPrimaryDialogCheck(browser, run) {
+  const lines = [];
+  const context = await browser.newContext({ viewport: { width: 375, height: 800 }, reducedMotion: "reduce" });
+  await context.addInitScript((pairs) => {
+    for (const [key, text] of pairs) localStorage.setItem(key, text);
+  }, toStorageEntries(run.storage));
+  const page = await context.newPage();
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Send the sample" }).click();
+  await page.locator(".confirmCard").waitFor();
+  await waitUntilSettled(page);
+  const isPrimary = await page.evaluate(() => document.querySelector(".confirmButton")?.classList.contains("btnPrimary"));
+  if (!isPrimary) lines.push("primary dialog: the confirm button is not primary");
+  const axe = await runAxe(page);
+  for (const line of axe.lines) lines.push(`primary dialog, axe ${line}`);
+  await context.close();
+  return lines;
+}
+
+/** On a short window with a long question, the card stays inside the window or the dialog scrolls to all of it; returns report lines. */
+async function runDialogShortWindowCheck(browser, run) {
+  const lines = [];
+  const { context, page } = await openSampleDialog(browser, run, SHORT_WINDOW, "?longDialog");
+  // Opening focuses Cancel, which scrolls a tall dialog down to it: go back to the top to check the card's top is reachable
+  await page.evaluate(() => document.querySelector("dialog.confirmDialog").scrollTo(0, 0));
+  const card = await page.evaluate(readDialogCard);
+  const label = `dialog at ${SHORT_WINDOW.width}x${SHORT_WINDOW.height}`;
+  const fitsInWindow = card.top >= 0 && card.bottom <= card.windowHeight;
+  if (!fitsInWindow && !card.isScrollable) lines.push(`${label}: the card is cut off and the dialog does not scroll`);
+  if (card.top < 0) lines.push(`${label}: the card starts above the window even scrolled to the top (its top is out of reach)`);
+  // Scroll to the end: the last button must then be fully inside the window
+  await page.evaluate(() => document.querySelector("dialog.confirmDialog").scrollTo(0, 1e6));
+  const lastBottom = await page.evaluate(() => {
+    const buttons = [...document.querySelectorAll(".confirmCard .btn")];
+    return buttons[buttons.length - 1].getBoundingClientRect().bottom;
+  });
+  if (lastBottom > card.windowHeight) lines.push(`${label}: the last button is below the window even when scrolled to the end`);
+  const axe = await runAxe(page);
+  for (const line of axe.lines) lines.push(`${label}, axe ${line}`);
+  await context.close();
+  return lines;
+}
+
+/* ---------------------------------------------------------------------------
    Main
    --------------------------------------------------------------------------- */
 
@@ -654,6 +764,9 @@ try {
       ...(await runManyPagesChecks(browser, run)),
       ...(await runResizeSweep(browser, run)),
       ...(await runSwitchChecks(browser, run)),
+      ...(await runDialogCentringChecks(browser, run)),
+      ...(await runDialogShortWindowCheck(browser, run)),
+      ...(await runPrimaryDialogCheck(browser, run)),
     ];
 
     const problems = axe.count + contrast.lines.length + bellLines.length + fitLines.length;

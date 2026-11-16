@@ -167,4 +167,55 @@ describe("ConfirmDialog with several choices", () => {
 
     expect(document.activeElement).toBe(wrapper.get("button.cancelButton").element);
   });
+
+  // Its centring (the card's auto margins in the dialog's grid) needs the card to be the dialog's only child; the layout itself
+  // (a parent's `> * { margin: 0 }` not moving it) is measured in a real browser by `npm run a11y`, since jsdom does not apply
+  // the component's stylesheet or compute layout.
+  it("holds the card as its only child, which is what its centring relies on", () => {
+    const wrapper = mountDialog();
+
+    const dialog = wrapper.get("dialog").element;
+    expect(dialog.children).toHaveLength(1);
+    expect(dialog.children[0]?.classList.contains("confirmCard")).toBe(true);
+  });
+
+  describe("the confirm button's tone", () => {
+    it("is danger when the caller says nothing, as every dialog was before tones existed", () => {
+      const wrapper = mountDialog();
+
+      expect(wrapper.get("button.confirmButton").classes()).toContain("btnDanger");
+      expect(wrapper.get("button.confirmButton").classes()).not.toContain("btnPrimary");
+    });
+
+    it("is primary on the single form when asked, and Cancel stays secondary and first to take focus", async () => {
+      const wrapper = mount(ConfirmDialog, {
+        props: { question: "Send the food log?", confirmLabel: "Send Food Log", confirmTone: "primary" },
+        attachTo: document.body,
+      });
+      await nextTick();
+
+      const confirm = wrapper.get("button.confirmButton");
+      expect(confirm.classes()).toContain("btnPrimary");
+      expect(confirm.classes()).not.toContain("btnDanger");
+      expect(wrapper.get("button.cancelButton").classes()).toContain("btnSecondary");
+      expect(document.activeElement).toBe(wrapper.get("button.cancelButton").element);
+    });
+
+    it("is chosen per button among several choices, each defaulting to danger", () => {
+      const wrapper = mount(ConfirmDialog, {
+        props: {
+          question: "Paste over this week?",
+          choices: [
+            { value: "copy", label: "Copy and Replace", confirmTone: "primary" },
+            { value: "remove", label: "Remove Week" },
+          ],
+        },
+        attachTo: document.body,
+      });
+
+      expect(wrapper.get('[data-choice="copy"]').classes()).toContain("btnPrimary");
+      expect(wrapper.get('[data-choice="remove"]').classes()).toContain("btnDanger");
+      expect(wrapper.get("button.cancelButton").classes()).toContain("btnSecondary");
+    });
+  });
 });

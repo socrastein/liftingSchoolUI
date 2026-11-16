@@ -215,6 +215,15 @@ const bareCardOpener = ref<HTMLButtonElement | null>(null);
 const isBareCardOpen = ref(false);
 const bareCardText = ref("");
 const isDialogOpen = ref(false);
+const isPrimaryDialogOpen = ref(false);
+// The sample's words; the a11y check swaps in long ones (the "long" query) to prove a tall card on a short window stays reachable
+const isLongDialog = new URLSearchParams(window.location.search).has("longDialog");
+const dialogQuestion = isLongDialog
+  ? "Delete the sample and all its history, every entry, note and attachment, and the copies kept on your other devices?"
+  : "Delete the sample and all its history?";
+const dialogDetail = isLongDialog
+  ? "Its 12 entries go with it. ".repeat(12) + "This cannot be undone."
+  : "Its 12 entries go with it. This cannot be undone.";
 
 /** The toast sample, shown by its button. */
 const toast = ref<InstanceType<typeof StatusToast> | null>(null);
@@ -631,16 +640,31 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         jumps back to the top.
       </p>
       <ScrollToTop />
-      <p><code>ConfirmDialog</code> asks a question that has to be answered first, before something that cannot be taken back.</p>
-      <div class="row">
+      <p>
+        <code>ConfirmDialog</code> asks a question that has to be answered first. Its confirm button is red (the default) when it
+        deletes, removes or ends something, and primary (<code>confirm-tone="primary"</code>) when it sends, copies or applies
+        something that can be redone.
+      </p>
+      <!-- hostileParent: a consumer's child-spacing rule (> * { margin: 0 }) that used to pin the dialog to a corner; scripts/a11y.mjs checks the centring -->
+      <div class="row hostileParent">
         <button type="button" class="btn btnSecondary" @click="isDialogOpen = true">Delete the sample</button>
         <ConfirmDialog
           v-if="isDialogOpen"
-          question="Delete the sample and all its history?"
-          detail="Its 12 entries go with it. This cannot be undone."
+          :question="dialogQuestion"
+          :detail="dialogDetail"
           confirm-label="Delete sample"
           @confirm="isDialogOpen = false"
           @cancel="isDialogOpen = false"
+        />
+        <button type="button" class="btn btnSecondary" @click="isPrimaryDialogOpen = true">Send the sample</button>
+        <ConfirmDialog
+          v-if="isPrimaryDialogOpen"
+          question="Send the sample to your coach?"
+          detail="They will see it at once. You can send it again later."
+          confirm-label="Send Sample"
+          confirm-tone="primary"
+          @confirm="isPrimaryDialogOpen = false"
+          @cancel="isPrimaryDialogOpen = false"
         />
       </div>
       <p>
@@ -775,6 +799,11 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
 </template>
 
 <style scoped>
+/* Like the app's `.devices > *`: a parent that zeroes its children's margins, which the dialog must survive */
+.hostileParent > * {
+  margin: 0;
+}
+
 /* The page's own layout; everything it shows is the library's classes */
 .showcaseHeader {
   align-items: center;
