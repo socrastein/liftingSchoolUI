@@ -305,6 +305,8 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <a href="#plates">Plates</a>
       <a href="#header">Header</a>
       <a href="#menus">Menu</a>
+      <a href="#floating">Floating cards</a>
+      <a href="#popups">Popups</a>
       <a href="#celebrations">Celebrations</a>
       <a href="#disclosure">Disclosure</a>
       <a href="#highlights">Highlights</a>
@@ -665,6 +667,33 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <ThemeSlider :storage-key="THEME_KEY" />
     </section>
 
+    <section class="showcaseSection" aria-labelledby="floating">
+      <h2 id="floating" class="h3">Floating Cards</h2>
+      <p>
+        <code>.floatingCard</code> is the one look of anything drawn above the page: a face, a thin edge
+        (<code>--floatingBorder</code>, at least 3:1 against what it can sit over) and the popup shadow. Anything drawn through
+        <code>FloatingPanel</code> uses it, as do <code>AnchoredCard</code>, the dialog, the toast, <code>.menu</code> and the
+        drop-down's list. Here it is over the page, over a card, over a raised panel and over a card on a raised panel, the places
+        where the face alone used to vanish in dark mode.
+      </p>
+      <div class="floatingSamples">
+        <div class="floatingSampleOverPage">
+          <p class="floatingSample floatingCard">Over the page</p>
+        </div>
+        <div class="card floatingSampleSurface">
+          <p class="floatingSample floatingCard">Over a card</p>
+        </div>
+        <div class="raisedPanel floatingSampleSurface">
+          <p class="floatingSample floatingCard">Over a raised panel</p>
+        </div>
+        <div class="raisedPanel floatingSampleSurface">
+          <div class="card floatingSampleInner">
+            <p class="floatingSample floatingCard">Over a card on a raised panel</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="showcaseSection" aria-labelledby="popups">
       <h2 id="popups" class="h3">Popups</h2>
       <p>
@@ -949,6 +978,27 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
   height: 4rem;
   justify-content: center;
   width: 8rem;
+}
+
+/* The floating card samples: each sits on its own surface, with room around it so its edge is seen against that surface */
+.floatingSamples {
+  display: grid;
+  gap: var(--space3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.floatingSampleOverPage,
+.floatingSampleSurface {
+  padding: var(--space3) var(--space2);
+}
+
+.floatingSampleInner {
+  padding: var(--space2);
+}
+
+.floatingSample {
+  margin: 0;
+  padding: var(--space2);
 }
 
 .sampleCard {

@@ -140,7 +140,7 @@ function onDialogClick(event: MouseEvent): void {
     @cancel="onCancelEvent"
     @click="onDialogClick"
   >
-    <div class="card confirmCard">
+    <div class="floatingCard confirmCard">
       <p :id="questionId" class="question">{{ props.question }}</p>
       <p v-if="props.detail" :id="detailId" class="detail">{{ props.detail }}</p>
       <div v-if="props.choices" class="buttons stacked">

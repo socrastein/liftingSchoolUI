@@ -246,7 +246,7 @@ defineExpose({ play, stop });
 <template>
   <div>
     <div class="celebrationMessageRegion" role="status">
-      <p v-if="visibleMessage !== ''" class="celebrationMessage card h4">{{ visibleMessage }}</p>
+      <p v-if="visibleMessage !== ''" class="celebrationMessage floatingCard h4">{{ visibleMessage }}</p>
     </div>
     <div v-if="isPlaying" class="celebration" @click="showCloseButton">
       <canvas
@@ -259,7 +259,7 @@ defineExpose({ play, stop });
         v-if="isCloseButtonShown"
         ref="closeButton"
         type="button"
-        class="btn btnSecondary btnIcon celebrationClose"
+        class="btn btnSecondary btnIcon floatingEdge celebrationClose"
         :aria-label="props.closeLabel"
         @click.stop="end"
       >

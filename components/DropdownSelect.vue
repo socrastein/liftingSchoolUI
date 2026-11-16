@@ -494,7 +494,7 @@ onClickOutside(list, close, { ignore: [combobox] });
       <ul
         :id="listId"
         ref="list"
-        class="dropdownList"
+        class="floatingCard dropdownList"
         :class="{ regular: size === 'regular' }"
         role="listbox"
         :aria-labelledby="labelledBy"
@@ -628,8 +628,7 @@ onClickOutside(list, close, { ignore: [combobox] });
   padding: var(--spaceHalf);
   overflow-y: auto;
   list-style: none;
-  background-color: var(--bgTop);
-  border: solid 1px var(--borderMuted);
+  /* The shared floating look (.floatingCard) with the smaller radius of the field it drops from */
   border-radius: var(--radius);
 }
 

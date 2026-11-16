@@ -80,7 +80,7 @@ defineExpose({ show });
 
 <template>
   <div class="toastRegion" role="status">
-    <p v-if="message !== ''" class="toast card">{{ message }}</p>
+    <p v-if="message !== ''" class="toast floatingCard">{{ message }}</p>
   </div>
 </template>
 
@@ -103,6 +103,5 @@ defineExpose({ show });
   padding: var(--space1) var(--space3);
   /* The subtle accent is a see-through wash, so it is laid over the card's solid face to keep the page from showing through */
   background: linear-gradient(var(--accentSubtle), var(--accentSubtle)), var(--bgTop);
-  box-shadow: var(--shadowRaised);
 }
 </style>

@@ -253,29 +253,42 @@
 }
 
 /*
- * Menus: a list of links that drops down from a button (the header's Tools) or opens from the phone menu button. .menu is the
- * floating surface, lifted like a card in light mode and given a faint edge in dark mode, where there is no shadow; .menuItem
+ * Floating surfaces: anything drawn above the page content (a tooltip or note card, a menu, a drop-down's list, a dialog, a toast,
+ * the scroll-to-top button) has ONE look from here, so a new overlay gets it by taking one of these classes. A floating card is
+ * often the same tone as what is under it (a card in dark mode, the page-white card in light mode), so a face alone does not
+ * outline it: it takes a thin edge from --floatingBorder (at least 3:1 against every surface it can sit over, in both themes, as
+ * measured in tokens.css and checked by scripts/a11y.mjs) and the popup shadow. In dark mode that shadow is none, so the
+ * edge does the work.
+ * - .floatingCard: the face, the edge and the shadow, for anything drawn through FloatingPanel (the site's tooltip), the dialog's
+ *   card, the toast and the celebration's message. Use it in place of .card, never together with it.
+ * - .floatingEdge: only the edge and the shadow, for a control that has its own face (the scroll-to-top .btn).
+ * - .menu (below) is a floating card with the smaller radius and a column layout.
+ */
+.floatingCard {
+  background-color: var(--bgTop);
+  border-radius: var(--radiusLg);
+}
+
+.floatingCard,
+.floatingEdge,
+.menu {
+  border: 1px solid var(--floatingBorder);
+  box-shadow: var(--shadowRaised);
+}
+
+/*
+ * Menus: a list of links that drops down from a button (the header's Tools) or opens from the phone menu button. .menu is a
+ * floating surface (see above); .menuItem
  * is one row, a link or a button. The link to the page being shown carries aria-current="page" (NuxtLink and RouterLink add it), and that
  * is what marks it; a row that opens a group holding that page (Tools) carries aria-current="true" and is marked the same way.
  */
 .menu {
   background-color: var(--bgTop);
-  border: 1px solid var(--raisedBorder);
   border-radius: var(--radius);
-  box-shadow: var(--shadowRaised);
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: var(--space1);
-}
-
-/*
- * In dark mode a raised surface is a lighter tone with no edge (see .card), which is lost when it floats over another raised
- * surface of the same tone. Menus and anchored cards (AnchoredCard) open over cards, so they take a light edge.
- */
-.dark .menu,
-.dark .anchoredCard {
-  border-color: color-mix(in srgb, var(--textFull) 20%, transparent);
 }
 
 /* Written for links too: the global a:link and a:visited colours would otherwise paint every row in the accent */
@@ -1056,6 +1069,10 @@ textarea.input {
  */
 .siteHeader {
   background-color: var(--bgTop);
+  /* It floats over the page as it scrolls under it: the floating edge (see .floatingCard), at the bottom only. The border sits
+     inside the box (every element is border-box, base.css), so the header stays exactly --headerHeight tall and nothing that
+     measures from it (the body's top padding, scroll-padding-top, popups under it) moves. */
+  border-bottom: 1px solid var(--floatingBorder);
   height: var(--headerHeight);
   left: 0;
   position: fixed;

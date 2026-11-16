@@ -96,7 +96,7 @@ onClickOutside(card, closeFromOutside, { ignore: [anchorElement] });
   <FloatingPanel :anchor="anchor">
     <div
       ref="card"
-      class="card anchoredCard"
+      class="floatingCard anchoredCard"
       role="dialog"
       tabindex="-1"
       :aria-labelledby="headingId"

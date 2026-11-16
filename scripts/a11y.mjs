@@ -14,6 +14,10 @@
  *    cause; and an open drop-down or phone menu closes, with focus kept on screen, when the form changes.
  * 5. The confirm dialog opened inside a parent that zeroes its children's margins: its card is centred in the window within
  *    a pixel at 320x640, 375x800 and 1280x800, a long question on a 375x360 window is reachable whole, and axe is clean.
+ * 6. The floating surfaces' edge: every floating card, menu, drop-down list, dialog card, toast and floating button the showcase can
+ *    open (and the static samples) has an edge of at least 3:1 against the surface drawn behind it, measured from the pixels
+ *    around it, with the page, a card and a raised panel behind it. A dialog's scrim already separates its card by tone, so
+ *    there the card's face against the dimmed page may stand in for the edge.
  *
  * Exits with code 1 if either check finds a problem, so it can gate a release. Ported from the retired styleStandards kit.
  * First run on a machine: `npx playwright install firefox`.
@@ -766,6 +770,269 @@ async function runDialogShortWindowCheck(browser, run) {
 }
 
 /* ---------------------------------------------------------------------------
+   Check 6: the edge of floating surfaces
+   --------------------------------------------------------------------------- */
+
+/** Everything the library draws above the page, as the classes that give the floating look (css/components.css). */
+const FLOATING_SELECTOR = ".floatingCard, .floatingEdge, .menu, .dropdownList";
+
+/** WCAG 1.4.11: the edge that tells a component from what is behind it needs 3:1. */
+const MIN_RATIO_EDGE = 3;
+
+/** How far outside a floating surface's box the pixel standing for "what is behind it" is read, past the 1px edge and its blur. */
+const OUTSIDE_PX = 4;
+
+/** How far inside the box the face is read: past the edge and the corner rounding, in the padding. */
+const FACE_INSET_PX = 4;
+
+/** Reads where each visible floating surface is, its edge colour, and whether a modal dialog's scrim is behind it. */
+function readFloatingSurfaces(selector) {
+  // Firefox reports a colour made by color-mix() as color(srgb 0.5 0.5 0.6), so the colour is turned into 0-255 channels by drawing it
+  const canvas = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  const toRgb = (text) => {
+    canvas.clearRect(0, 0, 1, 1);
+    canvas.fillStyle = text;
+    canvas.fillRect(0, 0, 1, 1);
+    return [...canvas.getImageData(0, 0, 1, 1).data].slice(0, 3);
+  };
+  // While a modal dialog is open everything else is inert and dimmed by its scrim, so only the dialog's own surfaces are judged
+  const modal = document.querySelector("dialog[open]");
+  return [...document.querySelectorAll(selector)]
+    .filter((element) => modal === null || modal.contains(element))
+    .filter((element) => element.getBoundingClientRect().width > 0 && getComputedStyle(element).visibility !== "hidden")
+    .map((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        name: `${element.tagName.toLowerCase()}.${[...element.classList].join(".")}`,
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        edge: toRgb(getComputedStyle(element).borderTopColor),
+        hasScrim: element.closest("dialog[open]") !== null,
+      };
+    });
+}
+
+/** The pixels just outside the middle of each side of a box that are inside the picture. */
+function readPixelsOutside(box, png) {
+  const middleX = box.x + box.width / 2;
+  const middleY = box.y + box.height / 2;
+  const points = [
+    [middleX, box.y - OUTSIDE_PX],
+    [middleX, box.y + box.height + OUTSIDE_PX],
+    [box.x - OUTSIDE_PX, middleY],
+    [box.x + box.width + OUTSIDE_PX, middleY],
+  ];
+  return points
+    .filter(([x, y]) => x >= 0 && y >= 0 && x < png.width && y < png.height)
+    .map(([x, y]) => {
+      const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
+      return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
+    });
+}
+
+/** The face's pixel just inside the left side, in the padding. */
+function readFacePixel(box, png) {
+  const offset = (Math.round(box.y + box.height / 2) * png.width + Math.round(box.x + FACE_INSET_PX)) * 4;
+  return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
+}
+
+/**
+ * The middle value of a list of numbers (the lower one of two). The sides of a surface are judged by their median, so another
+ * edge that happens to be close on one side (the header's own edge a few pixels above its drop-down) does not decide the result.
+ */
+function median(numbers) {
+  const sorted = [...numbers].sort((a, b) => a - b);
+  return sorted[Math.floor((sorted.length - 1) / 2)];
+}
+
+/** Takes the shadow off every floating surface, so the pixels around one show the surface behind it and not its own shadow. */
+const NO_SHADOW_CSS = `${FLOATING_SELECTOR} { box-shadow: none !important; }`;
+
+/**
+ * Judges every floating surface open on the page right now, from a screenshot of the window. Returns the report lines for the ones
+ * whose edge is under 3:1 against what is behind them, and how many were measured (with the lowest figure, for the summary).
+ */
+async function measureFloatingEdges(page, where) {
+  const surfaces = await page.evaluate(readFloatingSurfaces, FLOATING_SELECTOR);
+  const noShadow = await page.addStyleTag({ content: NO_SHADOW_CSS });
+  const png = PNG.sync.read(await page.screenshot());
+  await noShadow.evaluate((tag) => tag.remove());
+  const lines = [];
+  const figures = [];
+  for (const surface of surfaces) {
+    const behind = readPixelsOutside(surface.box, png);
+    if (behind.length === 0) continue;
+    const edgeRatio = median(behind.map((pixel) => contrastRatio(surface.edge, pixel)));
+    const faceRatio = median(behind.map((pixel) => contrastRatio(readFacePixel(surface.box, png), pixel)));
+    // Under a scrim the dimmed page behind the card is told from it by its face, which is what a person sees first
+    const ratio = surface.hasScrim ? Math.max(edgeRatio, faceRatio) : edgeRatio;
+    figures.push(ratio);
+    // A11Y_VERBOSE=1 lists every figure, for the numbers in a token's comment
+    if (process.env.A11Y_VERBOSE)
+      console.log(`    ${where}, ${surface.name}: edge ${edgeRatio.toFixed(2)}:1, face ${faceRatio.toFixed(2)}:1`);
+    if (ratio < MIN_RATIO_EDGE) {
+      lines.push(
+        `${where}, ${surface.name}: edge ${edgeRatio.toFixed(2)}:1 (face ${faceRatio.toFixed(2)}:1) against what is behind it (needs 3:1)`,
+      );
+    }
+  }
+  return { lines, figures };
+}
+
+/**
+ * The popups of the showcase page, each as its name, a move that opens it and a move that closes it again (a table of steps: the
+ * runner below measures every floating surface on screen between the two).
+ */
+function floatingSteps(page) {
+  const closeWithEscape = () => page.keyboard.press("Escape");
+  const doNothing = async () => {};
+  const noteButton = page.getByRole("button", { name: "Add a note" });
+  const scrollTo = (selector) => () => page.locator(selector).scrollIntoViewIfNeeded();
+  return [
+    { where: "static samples", open: scrollTo("#floating"), close: doNothing },
+    {
+      where: "header Tools menu",
+      open: async () => {
+        await giveHeaderTwoNotifications(page);
+        await scrollTo(".sampleHeaderFrame")();
+        await page.locator(".sampleHeaderFrame").getByRole("button", { name: "Tools" }).click();
+      },
+      close: closeWithEscape,
+    },
+    { where: "header notifications", open: () => openBellPanel(page), close: closeWithEscape },
+    {
+      where: "actions menu",
+      open: async () => {
+        await scrollTo("#popups")();
+        await page.locator("#sampleActions").click();
+      },
+      close: closeWithEscape,
+    },
+    { where: "anchored card", open: () => noteButton.click(), close: () => noteButton.click() },
+    { where: "toast", open: () => page.getByRole("button", { name: "Copy the sample" }).click(), close: doNothing },
+    {
+      where: "drop-down list",
+      open: async () => {
+        await scrollTo("#sampleGoal")();
+        await page.locator("#sampleGoal").click();
+      },
+      close: closeWithEscape,
+    },
+    { where: "searchable drop-down list", open: () => page.locator("#sampleCountry").click(), close: closeWithEscape },
+    {
+      where: "celebration message",
+      open: async () => {
+        await scrollTo("#celebrations")();
+        await page.getByRole("button", { name: "Play Confetti" }).click();
+      },
+      close: closeWithEscape,
+    },
+    // The scroll-to-top button appears two screens down
+    {
+      where: "scroll-to-top button",
+      open: () => page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)),
+      close: doNothing,
+    },
+  ];
+}
+
+/** Opens each popup the showcase has, one at a time, and measures every floating surface on screen at each step. */
+async function runFloatingEdgeChecks(browser, run) {
+  const lines = [];
+  const figures = [];
+  const record = (result) => {
+    lines.push(...result.lines);
+    figures.push(...result.figures);
+  };
+
+  const { context, page } = await openPage(browser, baseUrl, run.storage);
+  for (const step of floatingSteps(page)) {
+    await step.open();
+    await waitUntilSettled(page);
+    record(await measureFloatingEdges(page, step.where));
+    await step.close();
+    await waitUntilSettled(page);
+  }
+  await context.close();
+
+  // The dialog, with its scrim, on its own page since a modal dialog blocks the rest
+  const dialog = await openSampleDialog(browser, run, { width: 1280, height: 800 }, "");
+  record(await measureFloatingEdges(dialog.page, "dialog"));
+  await dialog.context.close();
+
+  // The phone menu's panel, under 900px
+  const phone = await openAtWidth(browser, run, 375);
+  await phone.page.locator(".siteHeaderMenuButton").click();
+  await waitUntilSettled(phone.page);
+  record(await measureFloatingEdges(phone.page, "phone menu"));
+  await phone.context.close();
+
+  const header = await runHeaderEdgeChecks(browser, run);
+  record(header);
+
+  return { lines, count: figures.length, lowest: Math.min(...figures) };
+}
+
+/**
+ * Makes the sample header a real fixed header: the showcase draws it inside a frame whose transform would make "fixed" mean
+ * "fixed to the frame", and a header over scrolling content is exactly what its edge is for.
+ */
+const REAL_FIXED_HEADER_CSS = `
+  .sampleHeaderFrame { transform: none !important; translate: none !important; overflow: visible !important; }
+  .sampleHeaderFrame .siteHeader { position: fixed !important; top: 0; left: 0; width: 100%; }
+`;
+
+/** What can scroll under the header: a card, a raised panel, or (at the page's far left) the page itself. */
+const HEADER_BEHIND_TARGETS = [
+  { label: "a card", selector: ".sampleCard" },
+  { label: "a raised panel", selector: ".raisedPanel" },
+  { label: "the page", selector: null },
+];
+
+/**
+ * Scrolls so the target sits under the header's bottom edge, and returns the header's bottom and the x where the surface behind
+ * the header is read: just inside the target's left side (the padding, not its text), or the page's left margin.
+ */
+function scrollTargetUnderHeader(selector) {
+  const headerBottom = document.querySelector(".siteHeader").getBoundingClientRect().bottom;
+  if (selector === null) {
+    window.scrollTo(0, 0);
+    return { headerBottom, x: 2 };
+  }
+  const target = document.querySelector(selector);
+  // Ten pixels of the target are above the header's bottom, so the pixels under the edge are the target's own face
+  window.scrollBy(0, target.getBoundingClientRect().top - (headerBottom - 10));
+  return { headerBottom, x: target.getBoundingClientRect().left + 6 };
+}
+
+/** The header's bottom edge against a card, a raised panel and the page scrolling under it, at a desktop and a phone width. */
+async function runHeaderEdgeChecks(browser, run) {
+  const lines = [];
+  const figures = [];
+  for (const width of [1280, 375]) {
+    const { context, page } = await openAtWidth(browser, run, width);
+    await page.addStyleTag({ content: REAL_FIXED_HEADER_CSS });
+    for (const target of HEADER_BEHIND_TARGETS) {
+      const place = await page.evaluate(scrollTargetUnderHeader, target.selector);
+      await waitUntilSettled(page);
+      const png = PNG.sync.read(await page.screenshot());
+      const pixelAt = (x, y) => {
+        const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
+        return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
+      };
+      // The edge is the bottom row of the header's own box; the surface behind starts a few pixels below it
+      const edge = pixelAt(place.x, place.headerBottom - 1);
+      const behind = pixelAt(place.x, place.headerBottom + OUTSIDE_PX);
+      const ratio = contrastRatio(edge, behind);
+      figures.push(ratio);
+      if (process.env.A11Y_VERBOSE) console.log(`    header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1`);
+      if (ratio < MIN_RATIO_EDGE) lines.push(`header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1 (needs 3:1)`);
+    }
+    await context.close();
+  }
+  return { lines, figures };
+}
+
+/* ---------------------------------------------------------------------------
    Main
    --------------------------------------------------------------------------- */
 
@@ -787,6 +1054,7 @@ try {
     const contrast = await runPixelContrast(page);
     await context.close();
 
+    const floating = await runFloatingEdgeChecks(browser, run);
     const bellLines = await runBellChecks(browser, run);
     const fitLines = [
       ...(await runOrdinaryHeaderChecks(browser, run)),
@@ -798,13 +1066,16 @@ try {
       ...(await runPrimaryDialogCheck(browser, run)),
     ];
 
-    const problems = axe.count + contrast.lines.length + warningEdgeLines.length + bellLines.length + fitLines.length;
+    const problems =
+      axe.count + contrast.lines.length + warningEdgeLines.length + floating.lines.length + bellLines.length + fitLines.length;
     failures += problems;
     const status = problems === 0 ? "pass" : `${problems} problem(s)`;
     console.log(`\n${run.name}: ${status} (${contrast.checked} text runs measured)`);
     for (const line of axe.lines) console.log(`  axe       ${line}`);
     for (const line of contrast.lines) console.log(`  contrast  ${line}`);
     for (const line of warningEdgeLines) console.log(`  warning   ${line}`);
+    console.log(`  floating  ${floating.count} surfaces measured, lowest edge ${floating.lowest.toFixed(2)}:1`);
+    for (const line of floating.lines) console.log(`  floating  ${line}`);
     for (const line of bellLines) console.log(`  bell      ${line}`);
     for (const line of fitLines) console.log(`  fit       ${line}`);
   }

@@ -53,7 +53,13 @@ function moveFocusToStartOfPage(): void {
 
 <template>
   <PopupTransition>
-    <button v-if="isShowing" type="button" class="btn btnSecondary btnIcon scrollToTop" :aria-label="label" @click="goToTop">
+    <button
+      v-if="isShowing"
+      type="button"
+      class="btn btnSecondary btnIcon floatingEdge scrollToTop"
+      :aria-label="label"
+      @click="goToTop"
+    >
       <!-- Lucide's arrow-up (ISC licence, icons/licences/lucide.txt), drawn inline so it takes the button's text colour -->
       <svg
         viewBox="0 0 24 24"

@@ -50,6 +50,12 @@
   /* A little deeper, for a card that is a link while the pointer is on it */
   --shadowRaisedHover: 0 2px 4px rgb(40 50 110 / 0.16), 0 10px 26px -8px rgb(40 50 110 / 0.2);
 
+  /* The edge of everything that floats above the page (a menu, a tooltip, a dialog, a toast: the .floatingCard look). Opaque,
+     --borderMuted at 70% over the card face, so it follows the theme. Measured as contrast against what it can sit over: 3.5:1
+     on the page (--bgBase) and 4.0:1 on a card or raised panel (--bgTop and --bgMid are the same colour here). It needs 3:1
+     (WCAG 1.4.11) because a floating card is often the same tone as what is under it. */
+  --floatingBorder: color-mix(in srgb, var(--borderMuted) 70%, var(--bgTop));
+
   /* Corner rounding. --radius is the default softness for almost everything (controls, images, small panels),
      --radiusLg is for large surfaces such as cards, and --radiusFull makes a pill. Circles use 50%. */
   --radius: 0.5rem;
@@ -192,6 +198,9 @@
   --shadowRaised: none;
   --shadowPressed: none;
   --shadowRaisedHover: none;
+  /* The floating edge (see light mode) at 55% of --borderMuted: 4.6:1 on the page (--bgBase), 4.1:1 on --bgMid and 3.6:1 on a card
+     (--bgTop). Unlike a card, a floating card keeps its edge in dark mode, where there is no shadow to separate it. */
+  --floatingBorder: color-mix(in srgb, var(--borderMuted) 55%, var(--bgTop));
 
   /* Dark-mode error red: at least 5:1 on the dark backgrounds and on the 8% banner tint. */
   --danger: #ff8a95;
