@@ -44,6 +44,26 @@ const SAMPLE_HEADER_PAGES: HeaderItem[] = [
   },
 ];
 
+/** Two more pages, enough that the row needs a window of about 1000px to 1100px (on top of the title and status), to show it giving way to the phone menu. */
+const EXTRA_SAMPLE_HEADER_PAGES: HeaderItem[] = ["Studies", "Blog"].map((name): HeaderItem => ({
+  kind: "link",
+  name,
+  to: "#header",
+}));
+
+/** How many pages the sample header has: the few of an ordinary header, or enough that its row needs about 1000px to 1100px of window. */
+type PageCount = "few" | "many";
+const headerPageCount = ref<PageCount>("few");
+const HEADER_PAGE_COUNT_CHOICES: { value: PageCount; label: string }[] = [
+  { value: "few", label: "Few" },
+  { value: "many", label: "Many" },
+];
+
+/** The sample header's pages for the chosen count. */
+const headerPages = computed<HeaderItem[]>(() =>
+  headerPageCount.value === "few" ? SAMPLE_HEADER_PAGES : [...SAMPLE_HEADER_PAGES, ...EXTRA_SAMPLE_HEADER_PAGES],
+);
+
 /** The product the sample header is in; the control above it flips it, to see both products' headers (ids in a header are unique, so one is drawn at a time). */
 const headerProduct = ref<Product>("site");
 const HEADER_PRODUCT_CHOICES: { value: Product; label: string }[] = [
@@ -552,14 +572,21 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         beside the Menu button. A notification is something that needs doing and goes away when it is done; the library stores
         nothing.
       </p>
+      <p>
+        The header shows the Menu button, in place of the row, under 900px wide and also whenever its row does not fit in the room
+        the bar has, so a product never sets a breakpoint: what it puts in the row (more pages, a bell) decides. Choose Many pages
+        and narrow the window below about 1100px to see the row give way. A page drawn before its scripts run follows the 900px
+        rule alone; the measurement corrects it once the header is mounted.
+      </p>
       <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
+      <ChoiceSwitch v-model="headerPageCount" label="Pages the sample header has" :choices="HEADER_PAGE_COUNT_CHOICES" />
       <ChoiceSwitch v-model="headerBellState" label="Notifications the sample header has" :choices="HEADER_BELL_CHOICES" />
-      <div class="sampleHeaderFrame">
+      <div class="sampleHeaderFrame" :class="{ sampleHeaderFrameFull: headerPageCount === 'many' }">
         <SiteHeader
           name="The Sample Site"
           home-to="#header"
           :product="headerProduct"
-          :pages="SAMPLE_HEADER_PAGES"
+          :pages="headerPages"
           :is-on-tool-page="false"
           :link-component="SampleLink"
           :theme-storage-key="THEME_KEY"
@@ -890,6 +917,15 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
   overflow: hidden;
   position: relative;
   transform: translate(0);
+}
+
+/* The many-pages sample's frame is as wide as the window, like a product's header, so it is the window's width that decides whether
+   the row fits. Centred like the ordinary frame (which starts at half the column) by moving it back half its own width, with
+   `transform`, which also keeps the fixed header inside it: the build's CSS minifier drops the ordinary frame's `translate`, so
+   that frame, in a built showcase, starts at the column's middle. */
+.sampleHeaderFrameFull {
+  transform: translate(-50%, 0);
+  width: calc(100vw - 2rem);
 }
 
 .sampleMenu {

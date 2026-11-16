@@ -9,6 +9,7 @@ import type { HeaderItem } from "./SiteHeader.vue";
 import SiteHeaderEntry from "./SiteHeaderEntry.vue";
 import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
 import ThemeSlider from "./ThemeSlider.vue";
+import { closeWhenHeaderFormChanges } from "./useHeaderFit";
 
 /**
  * The header's menu on a phone-width screen: a button that opens a panel holding the switch between the products, the pages,
@@ -17,7 +18,7 @@ import ThemeSlider from "./ThemeSlider.vue";
  * The button shows a word beside its icon ("Menu", then "Close"), since three lines alone are not recognised by everyone
  * (Nielsen Norman Group's finding on hamburger menus). It works from the keyboard and with a screen reader: the button reports
  * whether the panel is open, the rows are real links, each section is a disclosure button, Tab moves through the panel in
- * order, and Escape closes it and puts focus back on the button.
+ * order, and Escape closes it and puts focus back on the button. It also closes when the header switches to its wide row.
  */
 defineProps<{
   /** The pages and drop-downs, in order (the Tools menu is the last of them). */
@@ -53,6 +54,9 @@ function closeFromKeyboard(): void {
   isOpen.value = false;
   toggle.value?.focus();
 }
+
+// A panel left open would hang under a Menu button that is gone when the header switches to its wide row
+closeWhenHeaderFormChanges(() => (isOpen.value = false));
 
 // A click anywhere else closes the panel. The button is exempt: it opens and closes the panel itself.
 onClickOutside(panel, () => (isOpen.value = false), { ignore: [toggle] });

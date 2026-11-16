@@ -1016,11 +1016,14 @@ textarea.input {
 
 /*
  * The header of every site and app (the SiteHeader component and its parts): a bar fixed to the top of the window,
- * --headerHeight tall, with the logo and name on the left and, on the right, either the row of links or, under 900px wide, the
- * Menu button and its panel. Both are always in the page and the media query at the end shows one, so a page drawn before its
- * scripts run already has the right one. The links and drop-down buttons are .menuItem, like the rows of the menus they open,
- * at the header's larger size and only as wide as their words. Its layout is here rather than in the components, since four
- * components share it.
+ * --headerHeight tall, with the logo and name on the left and, on the right, either the row of links (the wide form) or the
+ * Menu button and its panel (the phone form). Both are always in the page, and the rules below draw the phone form unless the
+ * window is 900px wide or more and the header has not been forced into it (the last rules of the header, which are the only
+ * ones that draw the wide form), so a page drawn before its scripts run already has the right one. SiteHeader adds
+ * .siteHeaderCompact once it has measured that the row does not fit, which is why the phone form is the default here: a window
+ * under 900px and a row too wide for its room are both "not the wide form", and one set of rules draws that. The links and
+ * drop-down buttons are .menuItem, like the rows of the menus they open, at the header's larger size and only as wide as their
+ * words. Its layout is here rather than in the components, since five components share it.
  */
 .siteHeader {
   background-color: var(--bgTop);
@@ -1077,12 +1080,26 @@ textarea.input {
 }
 
 .siteHeaderPhone {
-  display: none;
+  display: block;
 }
 
-.siteHeaderLinks {
+/* With a bell, the Menu button and the bell sit side by side in the bar */
+.siteHeaderPhone.siteHeaderPhoneWithBell {
   align-items: center;
   display: flex;
+  gap: var(--space1);
+}
+
+/*
+ * The wide row. Not drawn at all (display: none, so out of sight, out of the tab order and out of the accessibility tree) in the
+ * phone form, which is the default here; the wide form's rules at the end of the header draw it. It never shrinks, so in the wide
+ * form its width is its natural one, which SiteHeader reads (and, in the phone form, reads by drawing it out of sight for a
+ * moment).
+ */
+.siteHeaderLinks {
+  align-items: center;
+  display: none;
+  flex-shrink: 0;
   font-size: var(--fontSizeXl);
   font-weight: 700;
   gap: var(--space1);
@@ -1252,7 +1269,10 @@ textarea.input {
  * instead of keeping to one line, since a notification is a sentence.
  */
 .siteHeaderNotifications {
-  position: relative;
+  /* The phone form: the panel hangs from the whole header, not from the bell, so on a narrow screen it can span nearly the full width
+     (the bell is not at the screen's edge: the Menu button is). The header is fixed, which makes it the panel's containing block.
+     The wide form anchors the panel to its bell instead. */
+  position: static;
 }
 
 .siteHeaderBell {
@@ -1292,10 +1312,14 @@ textarea.input {
   top: var(--space1);
 }
 
-/* Wider than a menu's list, for sentences; rows wrap and grow with their text, never a fixed height */
+/* Wider than a menu's list, for sentences; rows wrap and grow with their text, never a fixed height. The phone form's placement:
+   against the header's right padding, as wide as 22rem allows but never wider than the screen less its padding. */
 .siteHeaderNoticeList {
   max-width: none;
-  width: 22rem;
+  min-width: 0;
+  right: var(--space2);
+  top: 100%;
+  width: min(22rem, calc(100% - var(--space2) * 2));
 }
 
 .siteHeaderNoticeList {
@@ -1335,34 +1359,32 @@ textarea.input {
   }
 }
 
-/* Under 900px the name, the links, the switch and the theme button no longer fit on one line, so the phone menu takes over */
-@media (max-width: 899px) {
-  .siteHeaderPhone {
-    display: block;
-  }
-
-  .siteHeaderLinks {
+/*
+ * The wide form: the row of links in place of the Menu button. Every rule above draws the phone form, so these are the exceptions,
+ * and they apply only at 900px or more (the first guess, which the name, the links, the switch and the theme button need
+ * at the least) and only while the header is not forced into the phone form by a row too wide for its room (SiteHeader's
+ * measurement, .siteHeaderCompact). One selector list for both causes of the phone form is why it is written this way round.
+ */
+@media (min-width: 900px) {
+  .siteHeader:not(.siteHeaderCompact) .siteHeaderPhone {
     display: none;
   }
 
-  /* With a bell, the Menu button and the bell sit side by side in the bar */
-  .siteHeaderPhone.siteHeaderPhoneWithBell {
-    align-items: center;
+  .siteHeader:not(.siteHeaderCompact) .siteHeaderLinks {
     display: flex;
-    gap: var(--space1);
   }
 
-  /* The bell's panel hangs from the whole header, not from the bell, so on a narrow screen it can span nearly the full width
-     (the bell is not at the screen's edge: the Menu button is). The header is fixed, which makes it the panel's containing block. */
-  .siteHeaderNotifications {
-    position: static;
+  .siteHeader:not(.siteHeaderCompact) .siteHeaderNotifications {
+    position: relative;
   }
 
-  .siteHeaderNoticeList {
-    min-width: 0;
-    right: var(--space2);
-    top: 100%;
-    width: min(22rem, calc(100% - var(--space2) * 2));
+  /* The panel under its bell, placed like every header list (.siteHeaderList: its minimum width, its right edge on its button's,
+     a gap below it), at the width of the sentences it holds */
+  .siteHeader:not(.siteHeaderCompact) .siteHeaderNoticeList {
+    min-width: 10rem;
+    right: 0;
+    top: calc(100% + var(--space1));
+    width: 22rem;
   }
 }
 

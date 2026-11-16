@@ -1,12 +1,17 @@
 /**
  * Accessibility check for the showcase page: `npm run a11y` (builds it first).
  *
- * In each theme it loads the built showcase in headless Firefox and runs two checks:
+ * In each theme it loads the built showcase in headless Firefox and runs these checks:
  *
  * 1. axe (WCAG 2.2 A/AA rules): labels, roles, ARIA, contrast where axe can measure it, and so on.
  * 2. A pixel-based text contrast check. axe gives up on text over translucent washes and gradients, so this one measures the
  *    background that was actually drawn: it screenshots the page with all text made transparent, samples the pixels behind
  *    each run of text, and compares the text colour against the worst one.
+ * 3. The header's notifications bell at both sides of the 900px rule and on the narrowest phones: its panel, badge and place.
+ * 4. The header's fit: the sample header with many pages shows its wide row exactly when the row fits (and the Menu button
+ *    exactly when it does not) at windows from 899px to 1280px in both themes, with no sideways overflow and axe clean; the
+ *    ordinary sample header behaves as it always did; stepping the window narrower and wider never flips the form without
+ *    cause; and an open drop-down or phone menu closes, with focus kept on screen, when the form changes.
  *
  * Exits with code 1 if either check finds a problem, so it can gate a release. Ported from the retired styleStandards kit.
  * First run on a machine: `npx playwright install firefox`.
@@ -30,6 +35,15 @@ const VIEWPORT = { width: 1280, height: 900 };
 
 /** The widths the header's notifications bell is checked at: both sides of the 900px breakpoint and the narrowest phones. */
 const BELL_WIDTHS = [320, 375, 899, 900, 1280];
+
+/** The widths the header's fit is checked at: either side of the 900px rule, and across the span where the many-pages row gives way. */
+const FIT_WIDTHS = [899, 900, 950, 1000, 1100, 1280];
+
+/** The widths the ordinary sample header is checked at to show it behaves as it did before the header measured its row. */
+const ORDINARY_HEADER_WIDTHS = [899, 900, 1280];
+
+/** How far over its room the row may be, in pixels, and still count as fitting (rounding; js/headerFit.js has the same tolerance). */
+const SUBPIXEL_TOLERANCE = 0.5;
 
 /** WCAG minimums: 4.5:1 for normal text, 3:1 for large text. */
 const MIN_RATIO_NORMAL = 4.5;
@@ -357,6 +371,263 @@ async function runBellChecks(browser, run) {
 }
 
 /* ---------------------------------------------------------------------------
+   Check 4: the header's fit (the wide row, or the phone menu when the row does not fit)
+   --------------------------------------------------------------------------- */
+
+/** Opens the showcase at a window width, in this theme, and returns its page. */
+async function openAtWidth(browser, run, width) {
+  const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+  await context.addInitScript((pairs) => {
+    for (const [key, text] of pairs) localStorage.setItem(key, text);
+  }, toStorageEntries(run.storage));
+  const page = await context.newPage();
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  return { context, page };
+}
+
+/** Gives the sample header many pages: enough that its row needs about 1000px to 1100px of window. */
+async function giveHeaderManyPages(page) {
+  await page.getByRole("button", { name: "Many", exact: true }).click();
+}
+
+/** How many frames to wait for the header to settle: see waitForHeaderToSettle. */
+const FRAMES_TO_SETTLE = 8;
+
+/**
+ * Waits long enough for the header to measure and apply its form after a change. Under reduced motion (which these runs use) every
+ * transition lasts 0.01ms, not nothing, so a size that a stylesheet changes (the many-pages sample's frame, when it is chosen)
+ * reaches its new value a frame late, and the header, which re-measures when its bar resizes, settles a few frames after that.
+ */
+async function waitForHeaderToSettle(page) {
+  await page.evaluate(async (frames) => {
+    for (let frame = 0; frame < frames; frame += 1) await new Promise((resolve) => requestAnimationFrame(resolve));
+  }, FRAMES_TO_SETTLE);
+}
+
+/** Reads, in the page, which form the sample header shows and whether it overflows sideways. */
+function readWhatHeaderShows() {
+  const header = document.querySelector(".siteHeader");
+
+  /** Whether the element is drawn and can be seen, reached by keyboard and read by a screen reader (not display: none, not visibility: hidden). */
+  const isShown = (element) => element.getClientRects().length > 0 && getComputedStyle(element).visibility === "visible";
+
+  return {
+    isForced: header.classList.contains("siteHeaderCompact"),
+    isMenuShown: isShown(header.querySelector(".siteHeaderMenuButton")),
+    isRowShown: isShown(header.querySelector(".siteHeaderLinks")),
+    // The header's own box: its content never extends past its edge in either form
+    headerOverflow: header.scrollWidth - header.clientWidth,
+    pageOverflow: document.documentElement.scrollWidth - window.innerWidth,
+  };
+}
+
+/**
+ * Reads, in the page, whether the row would fit in the wide form, from the real layout and independently of the header's own
+ * arithmetic: it takes the forcing class off for a moment (in one script task, so nothing is painted and the header's observer
+ * sees no change), lets the wide form lay out, checks that the row, with the squeeze it causes in the title, ends inside the bar's padding, and puts the class back.
+ */
+function readWhetherRowFitsInWideForm() {
+  const header = document.querySelector(".siteHeader");
+  const nav = header.querySelector(".siteHeaderNav");
+  const row = header.querySelector(".siteHeaderLinks");
+  const title = header.querySelector(".siteHeaderTitle");
+
+  const wasForced = header.classList.contains("siteHeaderCompact");
+  header.classList.remove("siteHeaderCompact");
+  const rowRight = row.getBoundingClientRect().right;
+  const roomEdge = nav.getBoundingClientRect().right - parseFloat(getComputedStyle(nav).paddingRight);
+  // A row too wide squeezes the title's box (its logo and name then overflow it) before it pushes past the bar's padding: the
+  // overflow is how far the row ends past its room plus how far the title's content spills out of its box
+  const squeeze = Math.max(0, title.scrollWidth - title.getBoundingClientRect().width);
+  if (wasForced) header.classList.add("siteHeaderCompact");
+  // Taking the class off and on is the probe's doing, not a change of form: drop it from the count of the sweep's observer
+  window.classObserver?.takeRecords();
+
+  return rowRight - roomEdge + squeeze <= 0.5;
+}
+
+/** What the sample header shows now, and whether its row would fit, as one object. */
+async function readHeaderForm(page) {
+  const shown = await page.evaluate(readWhatHeaderShows);
+  const rowFitsInWideForm = await page.evaluate(readWhetherRowFitsInWideForm);
+  return { ...shown, rowFitsInWideForm };
+}
+
+/** Whether the row must be the form shown at this width: never under 900px, and at 900px or more exactly when it fits. */
+function mustShowRow(width, form) {
+  return width >= 900 && form.rowFitsInWideForm;
+}
+
+/** Checks that the row is shown exactly when it fits (and the Menu button exactly when it does not). Returns report lines. */
+function judgeWhichFormShows(width, form) {
+  const lines = [];
+  const mustShow = mustShowRow(width, form);
+  const fitWords = mustShow ? "fits" : "does not fit";
+  if (form.isMenuShown === mustShow)
+    lines.push(`the Menu button is ${form.isMenuShown ? "shown" : "hidden"} but the row ${fitWords}`);
+  if (form.isRowShown !== mustShow) lines.push(`the wide row is ${form.isRowShown ? "shown" : "hidden"} but it ${fitWords}`);
+  return lines;
+}
+
+/** Checks that the header does not overflow sideways in the form it shows. Returns report lines. */
+function judgeHeaderOverflow(form) {
+  return form.headerOverflow > 1 ? [`the header overflows sideways by ${form.headerOverflow}px`] : [];
+}
+
+/** Checks that the page does not scroll sideways (true of the many-pages sample, whose frame is as wide as the window). */
+function judgePageOverflow(form) {
+  return form.pageOverflow > 0 ? [`the page scrolls sideways by ${form.pageOverflow}px`] : [];
+}
+
+/** Checks the many-pages sample at every width of FIT_WIDTHS, in both forms, with axe. Returns report lines. */
+async function runManyPagesChecks(browser, run) {
+  const lines = [];
+  for (const width of FIT_WIDTHS) {
+    const { context, page } = await openAtWidth(browser, run, width);
+    await giveHeaderManyPages(page);
+    await waitForHeaderToSettle(page);
+    const form = await readHeaderForm(page);
+    const problems = [...judgeWhichFormShows(width, form), ...judgeHeaderOverflow(form), ...judgePageOverflow(form)];
+    for (const line of problems) lines.push(`many pages at ${width}px: ${line}`);
+    const axe = await runAxe(page);
+    for (const line of axe.lines) lines.push(`many pages at ${width}px, axe ${line}`);
+    await context.close();
+  }
+  return lines;
+}
+
+/** Checks the ordinary sample header: the row at 900px and over, the phone menu under it, and the forcing class never added. */
+async function runOrdinaryHeaderChecks(browser, run) {
+  const lines = [];
+  for (const width of ORDINARY_HEADER_WIDTHS) {
+    const { context, page } = await openAtWidth(browser, run, width);
+    await waitForHeaderToSettle(page);
+    const form = await readHeaderForm(page);
+    const problems = [...judgeWhichFormShows(width, form), ...judgeHeaderOverflow(form)];
+    if (form.isForced) problems.push("forced into the phone menu, which only a row too wide may be");
+    for (const line of problems) lines.push(`ordinary header at ${width}px: ${line}`);
+    const axe = await runAxe(page);
+    for (const line of axe.lines) lines.push(`ordinary header at ${width}px, axe ${line}`);
+    await context.close();
+  }
+  return lines;
+}
+
+/** The window widths of the sweep: from 1280px down to 880px in steps of 4px (through the 900px rule), then back up. */
+function sweepWidths() {
+  const widths = [];
+  for (let width = 1280; width >= 880; width -= 4) widths.push(width);
+  for (let width = 884; width <= 1280; width += 4) widths.push(width);
+  return widths;
+}
+
+/** Starts counting, in the page, how many times the sample header's class attribute changes. */
+async function startCountingClassChanges(page) {
+  await page.evaluate(() => {
+    window.classChanges = 0;
+    const observer = new MutationObserver((records) => (window.classChanges += records.length));
+    window.classObserver = observer;
+    observer.observe(document.querySelector(".siteHeader"), { attributes: true, attributeFilter: ["class"] });
+  });
+}
+
+/** Sets the window to a width, waits for the header to settle, and returns what it shows with the report lines for what is wrong. */
+async function sweepStep(page, width) {
+  await page.setViewportSize({ width, height: 900 });
+  await waitForHeaderToSettle(page);
+  const form = await readHeaderForm(page);
+  const problems = [...judgeWhichFormShows(width, form), ...judgeHeaderOverflow(form), ...judgePageOverflow(form)];
+  return { form, lines: problems.map((problem) => `sweep at ${width}px: ${problem}`) };
+}
+
+/** Compares the class changes counted in the page with the changes of form between steps. Returns report lines. */
+async function judgeClassChanges(page, changesBetweenSteps) {
+  const classChanges = await page.evaluate(() => window.classChanges);
+  if (classChanges === changesBetweenSteps) return [];
+  return [
+    `the class changed ${classChanges} times but the form it asks for changed ${changesBetweenSteps} times (it flipped without cause)`,
+  ];
+}
+
+/**
+ * Narrows and widens the window in small steps with the many-pages sample, and checks that at every step the form shown is the
+ * one that fits (so it neither lags a step behind nor flips without cause) and that the header's class changed no more often
+ * than the form it asks for did between steps.
+ */
+async function runResizeSweep(browser, run) {
+  const lines = [];
+  const { context, page } = await openAtWidth(browser, run, 1280);
+  await giveHeaderManyPages(page);
+  await waitForHeaderToSettle(page);
+  await startCountingClassChanges(page);
+
+  let changesBetweenSteps = 0;
+  let previousForced = (await readHeaderForm(page)).isForced;
+  for (const width of sweepWidths()) {
+    const step = await sweepStep(page, width);
+    lines.push(...step.lines);
+    if (step.form.isForced !== previousForced) changesBetweenSteps += 1;
+    previousForced = step.form.isForced;
+  }
+
+  lines.push(...(await judgeClassChanges(page, changesBetweenSteps)));
+  await context.close();
+  return lines;
+}
+
+/** Whether the element leaves the page within a second (a popup eases out before it is removed). */
+async function isGone(locator) {
+  try {
+    await locator.waitFor({ state: "detached", timeout: 1000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * With the many-pages sample wide, a drop-down open and focus on its button, narrows the window until the row gives way and
+ * checks that the drop-down closed and focus moved to the Menu button. Returns report lines.
+ */
+async function checkRowGivingWayToPhoneMenu(page) {
+  const lines = [];
+  await page.locator('.siteHeaderLinks [data-menu="tools"] button').click();
+  await page.locator("#toolsList").waitFor();
+  await page.setViewportSize({ width: 950, height: 900 });
+  await waitForHeaderToSettle(page);
+  if (!(await isGone(page.locator("#toolsList")))) lines.push("an open drop-down stayed open when the row gave way");
+  const isOnMenuButton = await page.evaluate(() => document.activeElement?.classList.contains("siteHeaderMenuButton"));
+  if (!isOnMenuButton) lines.push("focus was not moved to the Menu button when the row gave way");
+  return lines;
+}
+
+/**
+ * With the phone menu open and focus in it, widens the window until the row fits and checks that the menu closed and focus
+ * moved to the name. Returns report lines.
+ */
+async function checkRowReturning(page) {
+  const lines = [];
+  await page.locator("#phoneMenuButton").click();
+  await page.locator("#phoneMenuPanel").waitFor();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await waitForHeaderToSettle(page);
+  if (!(await isGone(page.locator("#phoneMenuPanel")))) lines.push("the phone menu stayed open when the row returned");
+  const isOnName = await page.evaluate(() => document.activeElement?.classList.contains("siteHeaderName"));
+  if (!isOnName) lines.push("focus was not moved to the name when the row returned");
+  return lines;
+}
+
+/** Runs both switches, in one page: wide to phone menu, then back. Returns report lines. */
+async function runSwitchChecks(browser, run) {
+  const { context, page } = await openAtWidth(browser, run, 1280);
+  await giveHeaderManyPages(page);
+  await waitForHeaderToSettle(page);
+  const lines = [...(await checkRowGivingWayToPhoneMenu(page)), ...(await checkRowReturning(page))];
+  await context.close();
+  return lines;
+}
+
+/* ---------------------------------------------------------------------------
    Main
    --------------------------------------------------------------------------- */
 
@@ -378,14 +649,21 @@ try {
     await context.close();
 
     const bellLines = await runBellChecks(browser, run);
+    const fitLines = [
+      ...(await runOrdinaryHeaderChecks(browser, run)),
+      ...(await runManyPagesChecks(browser, run)),
+      ...(await runResizeSweep(browser, run)),
+      ...(await runSwitchChecks(browser, run)),
+    ];
 
-    const problems = axe.count + contrast.lines.length + bellLines.length;
+    const problems = axe.count + contrast.lines.length + bellLines.length + fitLines.length;
     failures += problems;
     const status = problems === 0 ? "pass" : `${problems} problem(s)`;
     console.log(`\n${run.name}: ${status} (${contrast.checked} text runs measured)`);
     for (const line of axe.lines) console.log(`  axe       ${line}`);
     for (const line of contrast.lines) console.log(`  contrast  ${line}`);
     for (const line of bellLines) console.log(`  bell      ${line}`);
+    for (const line of fitLines) console.log(`  fit       ${line}`);
   }
 } finally {
   await browser.close();

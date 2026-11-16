@@ -1,5 +1,6 @@
 import { onClickOutside } from "@vueuse/core";
 import { ref, type Ref } from "vue";
+import { closeWhenHeaderFormChanges } from "./useHeaderFit";
 
 /** What a header popup's template needs: whether it is open, the two elements to bind with `ref`, and how to close it. */
 export interface HeaderPopup {
@@ -17,7 +18,8 @@ export interface HeaderPopup {
 /**
  * How a popup under a header button opens and closes, shared by the header's drop-downs (Tools, Clients) and the
  * notifications bell so they behave alike: it closes when a row is chosen (the caller calls `close`), on a click anywhere
- * else (which is also what closes it when another popup is opened) and on Escape, which puts focus back on the button.
+ * else (which is also what closes it when another popup is opened), on Escape (which puts focus back on the button) and when
+ * the header switches between its wide row and its phone menu.
  */
 export function useHeaderPopup(): HeaderPopup {
   const isOpen = ref(false);
@@ -34,6 +36,8 @@ export function useHeaderPopup(): HeaderPopup {
   }
 
   onClickOutside(root, close);
+  // When the header switches between its wide row and its phone menu, a popup left open would hang under a form that is gone
+  closeWhenHeaderFormChanges(close);
 
   return { isOpen, root, toggle, close, closeFromKeyboard };
 }

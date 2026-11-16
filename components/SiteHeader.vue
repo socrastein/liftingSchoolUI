@@ -26,6 +26,7 @@ import SiteHeaderNotifications, { notificationsAnnouncement, type HeaderNotifica
 import SiteHeaderPhoneMenu from "./SiteHeaderPhoneMenu.vue";
 import SiteHeaderSwitch from "./SiteHeaderSwitch.vue";
 import ThemeButton from "./ThemeButton.vue";
+import { useHeaderFit } from "./useHeaderFit";
 
 /**
  * The header of every site and app of the business: the logo and name on the left, then, always in this order, the product's
@@ -34,9 +35,15 @@ import ThemeButton from "./ThemeButton.vue";
  * cannot drift apart and a fix reaches both. The Tools menu is the business's one list (js/businessTools.js): a project says
  * which product it is, and can neither add to the list nor put anything after it.
  *
- * Both layouts are always in the page and CSS shows the one that fits (see .siteHeaderLinks in components.css), never a
- * script: a prerendered page then shows a phone its menu from the first paint. The one hidden is display: none, so it is also
- * out of reach of the keyboard and screen readers.
+ * Both layouts are always in the page and CSS shows the one that fits (see .siteHeaderLinks in components.css): the phone menu
+ * under 900px, the row from 900px up, so a prerendered page shows a phone its menu from the first paint, with no script. The
+ * one not shown is `display: none`, so it is also out of reach of the keyboard and screen readers.
+ *
+ * A fixed 900px cannot suit every product, though: what a product puts in the row varies (the app's coach has a Clients
+ * drop-down, a profile page and a bell). So once mounted, the header measures its row (useHeaderFit) and, when the row does not
+ * fit in the room the bar has, shows the phone menu at wider windows too. It never shows the row under 900px, and a product
+ * sets no breakpoint. Anything open in the form that goes away (a drop-down, the bell's panel, the phone menu) closes, and
+ * focus that was in it moves to the Menu button (row to phone menu) or to the name (phone menu to row).
  *
  * The bell is optional (`notifications`): a product's way to say "these things need you". Absent, nothing is drawn; an empty list
  * draws the bell without a count. It sits just before the theme button in the wide row and, under 900px, in the bar beside the
@@ -94,22 +101,42 @@ const notificationCount = computed(() => props.notifications?.length);
 /** What the live region says: empty on first render, then the new state each time the count changes. */
 const announcement = ref("");
 
+// The parts the fit is measured from (see useHeaderFit)
+const navElement = ref<HTMLElement | null>(null);
+const titleElement = ref<HTMLElement | null>(null);
+const endElement = ref<HTMLElement | null>(null);
+const rowElement = ref<HTMLElement | null>(null);
+const phoneElement = ref<HTMLElement | null>(null);
+
+/** True once the row has been measured as too wide: the header then forces the phone menu, whatever the window's width. */
+const { isForcedCompact } = useHeaderFit({
+  nav: navElement,
+  title: titleElement,
+  end: endElement,
+  row: rowElement,
+  phone: phoneElement,
+});
+
 watch(notificationCount, (count) => {
   announcement.value = count === undefined ? "" : notificationsAnnouncement(count);
 });
 </script>
 
 <template>
-  <header class="siteHeader" :class="{ siteHeaderWithBell: notifications !== undefined }" data-fixed-header>
+  <header
+    class="siteHeader"
+    :class="{ siteHeaderWithBell: notifications !== undefined, siteHeaderCompact: isForcedCompact }"
+    data-fixed-header
+  >
     <!-- Named, because a page can have navigation of its own: a screen reader lists this one as "Main navigation" -->
-    <nav class="siteHeaderNav" aria-label="Main">
-      <div class="siteHeaderTitle">
+    <nav ref="navElement" class="siteHeaderNav" aria-label="Main">
+      <div ref="titleElement" class="siteHeaderTitle">
         <img :src="logoIcon" alt="" class="siteHeaderLogo" />
         <component :is="linkComponent" :to="homeTo" class="siteHeaderName">{{ name }}</component>
       </div>
-      <div class="siteHeaderEnd">
+      <div ref="endElement" class="siteHeaderEnd">
         <slot name="status" />
-        <div class="siteHeaderPhone" :class="{ siteHeaderPhoneWithBell: notifications !== undefined }">
+        <div ref="phoneElement" class="siteHeaderPhone" :class="{ siteHeaderPhoneWithBell: notifications !== undefined }">
           <SiteHeaderNotifications
             v-if="notifications"
             layout="phone"
@@ -124,7 +151,7 @@ watch(notificationCount, (count) => {
             :theme-storage-key="themeStorageKey"
           />
         </div>
-        <div class="siteHeaderLinks">
+        <div ref="rowElement" class="siteHeaderLinks">
           <template v-for="item in items" :key="item.kind === 'menu' ? item.id : item.to">
             <component :is="linkComponent" v-if="item.kind === 'link'" :to="item.to" class="menuItem siteHeaderLink">
               {{ item.name }}
