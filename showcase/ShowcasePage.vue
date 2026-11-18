@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
+ * already exists and a change can be checked in both themes before it is released. Ported from the business site's style
+ * guide. Its own scoped styles below only lay the samples out; everything they show is the library's.
+ */
 import { computed, defineComponent, h, ref } from "vue";
 import { plateColor, type PlateColor } from "../js/plateColors.js";
 import { useColorScheme } from "../js/colorScheme.js";
@@ -85,23 +90,23 @@ const SAMPLE_NOTIFICATIONS: HeaderNotification[] = [
   { id: "checkIn", text: "Your weekly check-in is due.", to: "#header" },
 ];
 
+/**
+ * How many notifications the "Twelve" state shows. Above nine the bell's badge reads "9+", so twelve shows the capped count
+ * with more behind it.
+ */
+const MANY_NOTIFICATION_COUNT = 12;
+
 /** The sample header's `notifications` for the chosen state: undefined draws no bell at all. */
 const headerNotifications = computed<HeaderNotification[] | undefined>(() => {
   if (headerBellState.value === "absent") return undefined;
   if (headerBellState.value === "empty") return [];
   if (headerBellState.value === "two") return SAMPLE_NOTIFICATIONS;
-  return Array.from({ length: 12 }, (_, index) => ({
+  return Array.from({ length: MANY_NOTIFICATION_COUNT }, (_, index) => ({
     id: `thing${index}`,
     text: `Sample thing ${index + 1} needs you.`,
     to: "#header",
   }));
 });
-
-/**
- * The showcase: every design token, standard class and icon of the library, in use, so something new can be built from what
- * already exists and a change can be checked in both themes before it is released. Ported from the business site's style
- * guide. Its own scoped styles below only lay the samples out; everything they show is the library's.
- */
 
 /** The two themes the showcase can show, in the order of its Light / Dark control. */
 const THEMES = ["light", "dark"] as const;
@@ -157,8 +162,8 @@ function plateBadgeClass(color: PlateColor): string {
 }
 
 /** The plate's weight and unit as its badge text, such as "45 lb". */
-function plateLabel(weight: number, lbs: boolean): string {
-  const unit = lbs ? "lb" : "kg";
+function plateLabel(weight: number, isPounds: boolean): string {
+  const unit = isPounds ? "lb" : "kg";
   return `${weight} ${unit}`;
 }
 
@@ -241,12 +246,23 @@ function fireSeveralToasts(): void {
 /** Whether the loading screen sample is up. */
 const isSampleLoading = ref(false);
 
-/** Shows the loading screen for a few seconds, as if the next page were loading, then lets it fade out. */
+/**
+ * How long the loading sample stays up. Its button's label says "Load for 4 Seconds", so change both together.
+ */
+const LOADING_SAMPLE_MS = 4000;
+/** The pending timer that hides the loading sample, so a press during the last one can restart it. */
+let loadingSampleTimer: number | undefined;
+
+/**
+ * Shows the loading screen for a few seconds, as if the next page were loading, then lets it fade out. A press while it is up
+ * starts the count again: the earlier timer is cleared, or it would hide the screen before the newer press's time is up.
+ */
 function showLoadingScreen(): void {
   isSampleLoading.value = true;
-  window.setTimeout(() => {
+  window.clearTimeout(loadingSampleTimer);
+  loadingSampleTimer = window.setTimeout(() => {
     isSampleLoading.value = false;
-  }, 4000);
+  }, LOADING_SAMPLE_MS);
 }
 
 /** The celebration sample, played by its buttons. */
@@ -267,12 +283,21 @@ function playCelebration(name: CelebrationName): void {
 /** Whether the cue sample is showing its highlight. */
 const isCueActive = ref(false);
 
-/** Flashes the cue sample's highlight for a moment, the way the interval timer does at an alert. */
+/** How long the cue sample's highlight stays on after a flash. */
+const CUE_FLASH_MS = 1200;
+/** The pending timer that ends the cue flash, so a press during a flash restarts it. */
+let cueFlashTimer: number | undefined;
+
+/**
+ * Flashes the cue sample's highlight for a moment, the way the interval timer does at an alert. A press during a flash
+ * restarts it: the earlier timer is cleared, or it would end the newer flash early.
+ */
 function flashCue(): void {
   isCueActive.value = true;
-  window.setTimeout(() => {
+  window.clearTimeout(cueFlashTimer);
+  cueFlashTimer = window.setTimeout(() => {
     isCueActive.value = false;
-  }, 1200);
+  }, CUE_FLASH_MS);
 }
 
 const chevronIcon = iconModules["../icons/chevron-down.svg"];
@@ -437,7 +462,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
     <section class="showcaseSection" aria-labelledby="segmented">
       <h2 id="segmented" class="h3">Segmented control</h2>
       <!-- ChoiceSwitch: pressing the choice already on moves to the next one -->
-      <ChoiceSwitch v-model="period" label="Time period" :choices="PERIODS" />
+      <ChoiceSwitch v-model="period" label="Time Period" :choices="PERIODS" />
     </section>
 
     <section class="showcaseSection" aria-labelledby="surfaces">
@@ -635,9 +660,9 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         and narrow the window below about 1100px to see the row give way. A page drawn before its scripts run follows the 900px
         rule alone; the measurement corrects it once the header is mounted.
       </p>
-      <ChoiceSwitch v-model="headerProduct" label="Product the sample header is in" :choices="HEADER_PRODUCT_CHOICES" />
-      <ChoiceSwitch v-model="headerPageCount" label="Pages the sample header has" :choices="HEADER_PAGE_COUNT_CHOICES" />
-      <ChoiceSwitch v-model="headerBellState" label="Notifications the sample header has" :choices="HEADER_BELL_CHOICES" />
+      <ChoiceSwitch v-model="headerProduct" label="Product the Sample Header Is In" :choices="HEADER_PRODUCT_CHOICES" />
+      <ChoiceSwitch v-model="headerPageCount" label="Pages the Sample Header Has" :choices="HEADER_PAGE_COUNT_CHOICES" />
+      <ChoiceSwitch v-model="headerBellState" label="Notifications the Sample Header Has" :choices="HEADER_BELL_CHOICES" />
       <div class="sampleHeaderFrame" :class="{ sampleHeaderFrameFull: headerPageCount === 'many' }">
         <SiteHeader
           name="The Sample Site"
@@ -657,11 +682,11 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
     <section class="showcaseSection" aria-labelledby="menus">
       <h2 id="menus" class="h3">Menu</h2>
       <nav class="menu sampleMenu" aria-label="Sample menu">
-        <a href="#menus" class="menuItem" aria-current="page">The current page</a>
-        <a href="#menus" class="menuItem">Another page</a>
-        <button type="button" class="menuItem">A button row</button>
-        <button type="button" class="menuItem" disabled>A disabled row</button>
-        <button type="button" class="menuItem menuItemWarning">A warning row</button>
+        <a href="#menus" class="menuItem" aria-current="page">The Current Page</a>
+        <a href="#menus" class="menuItem">Another Page</a>
+        <button type="button" class="menuItem">A Button Row</button>
+        <button type="button" class="menuItem" disabled>A Disabled Row</button>
+        <button type="button" class="menuItem menuItemWarning">A Warning Row</button>
       </nav>
       <p><code>ThemeSlider</code> is the light/dark switch for a menu panel, on the same key as the header's button.</p>
       <ThemeSlider :storage-key="THEME_KEY" />
@@ -722,16 +747,16 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       </p>
       <!-- hostileParent: a consumer's child-spacing rule (> * { margin: 0 }) that used to pin the dialog to a corner; scripts/a11y.mjs checks the centring -->
       <div class="row hostileParent">
-        <button type="button" class="btn btnWarning" @click="isDialogOpen = true">Delete the sample</button>
+        <button type="button" class="btn btnWarning" @click="isDialogOpen = true">Delete the Sample</button>
         <ConfirmDialog
           v-if="isDialogOpen"
           :question="dialogQuestion"
           :detail="dialogDetail"
-          confirm-label="Delete sample"
+          confirm-label="Delete Sample"
           @confirm="isDialogOpen = false"
           @cancel="isDialogOpen = false"
         />
-        <button type="button" class="btn btnSecondary" @click="isPrimaryDialogOpen = true">Send the sample</button>
+        <button type="button" class="btn btnSecondary" @click="isPrimaryDialogOpen = true">Send the Sample</button>
         <ConfirmDialog
           v-if="isPrimaryDialogOpen"
           question="Send the sample to your coach?"
@@ -747,7 +772,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       </p>
       <div class="row">
         <button type="button" class="btn btnSecondary" @click="toast?.show('Sample copied to clipboard.')">
-          Copy the sample
+          Copy the Sample
         </button>
       </div>
       <p>Toasts queue: several fired together, even from separate instances, appear one after the other and never overlap.</p>
@@ -758,7 +783,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <StatusToast ref="otherToast" />
       <p><code>LoadingScreen</code> covers the window while something loads, and fades out when it is ready.</p>
       <div class="row">
-        <button type="button" class="btn btnSecondary" @click="showLoadingScreen">Load for 4 seconds</button>
+        <button type="button" class="btn btnSecondary" @click="showLoadingScreen">Load for 4 Seconds</button>
       </div>
       <LoadingScreen :is-loading="isSampleLoading" />
       <div class="row">
@@ -769,7 +794,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           :aria-expanded="isCardOpen"
           @click="isCardOpen = !isCardOpen"
         >
-          Add a note
+          Add a Note
         </button>
         <PopupTransition>
           <AnchoredCard v-if="isCardOpen && cardOpener" :anchor="cardOpener" heading="A note" @close="isCardOpen = false">
@@ -784,7 +809,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           :aria-expanded="isBareCardOpen"
           @click="isBareCardOpen = !isBareCardOpen"
         >
-          Add a comment
+          Add a Comment
         </button>
         <PopupTransition>
           <AnchoredCard
@@ -849,7 +874,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
       <h2 id="highlights" class="h3">Highlights</h2>
       <div class="row">
         <p class="cue highlightSample" :class="{ cueActive: isCueActive }">.cue</p>
-        <button type="button" class="btn btnSecondary btnSm" @click="flashCue">Flash the cue</button>
+        <button type="button" class="btn btnSecondary btnSm" @click="flashCue">Flash the Cue</button>
       </div>
       <div class="row">
         <p class="target highlightSample">.target</p>
