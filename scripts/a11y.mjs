@@ -91,6 +91,15 @@ function toHex(color) {
   return "#" + pairs.join("");
 }
 
+/**
+ * The [r, g, b] colour of a screenshot's pixel at a page position. The position is rounded to the nearest pixel, and the caller
+ * keeps it inside the picture.
+ */
+function pixelAt(png, x, y) {
+  const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
+  return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
+}
+
 /* ---------------------------------------------------------------------------
    Page setup
    --------------------------------------------------------------------------- */
@@ -251,27 +260,30 @@ const HIDE_TEXT_CSS = `
   }`;
 
 /**
- * Finds the lowest contrast between a text run and the background pixels
- * behind it, by sampling a grid across its box (7 columns x 3 rows).
+ * The grid of page positions inside a box that the contrast check samples: 7 columns from 5% to 95% of its width, 3 rows from
+ * 20% to 70% of its height. Positions outside the picture are left out.
  */
-function worstContrast(run, png) {
-  const readPixel = (x, y) => {
-    const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
-    return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
-  };
-
-  let worst = { ratio: Infinity, background: null };
+function samplePointsInBox(box, png) {
+  const points = [];
   for (let fx = 0.05; fx < 1; fx += 0.15) {
     for (let fy = 0.2; fy < 0.9; fy += 0.25) {
-      const x = run.box.x + run.box.width * fx;
-      const y = run.box.y + run.box.height * fy;
-      if (x >= png.width || y >= png.height) continue;
-
-      const background = readPixel(x, y);
-      const shownText = blend(run.rgb, run.alpha, background);
-      const ratio = contrastRatio(shownText, background);
-      if (ratio < worst.ratio) worst = { ratio, background };
+      points.push({ x: box.x + box.width * fx, y: box.y + box.height * fy });
     }
+  }
+  return points.filter((point) => point.x < png.width && point.y < png.height);
+}
+
+/**
+ * Finds the lowest contrast between a text run and the background pixels
+ * behind it, sampling the grid across its box (see samplePointsInBox).
+ */
+function worstContrast(run, png) {
+  let worst = { ratio: Infinity, background: null };
+  for (const point of samplePointsInBox(run.box, png)) {
+    const background = pixelAt(png, point.x, point.y);
+    const shownText = blend(run.rgb, run.alpha, background);
+    const ratio = contrastRatio(shownText, background);
+    if (ratio < worst.ratio) worst = { ratio, background };
   }
   return worst;
 }
@@ -324,38 +336,89 @@ async function openBellPanel(page) {
  * on the same row as the Menu button, not inside the phone menu. Returns report lines for what does not.
  */
 async function measureBellLayout(page, width, widthBeforeOpening) {
-  return page.evaluate(
-    ([viewportWidth, scrollWidthBefore]) => {
-      const lines = [];
-      if (document.documentElement.scrollWidth > scrollWidthBefore) lines.push("the page scrolls sideways with the panel open");
-      const panel = document.querySelector(".siteHeaderNoticeList").getBoundingClientRect();
-      if (panel.left < 0 || panel.right > viewportWidth)
-        lines.push(`the panel leaves the window (${panel.left} to ${panel.right})`);
-      // The bell's button keeps a target of at least 24 by 24 CSS pixels (WCAG 2.2 target size), however small its drawing is
-      const MINIMUM_TARGET = 24;
-      const visibleBell = [...document.querySelectorAll(".siteHeaderBell")].find((element) => element.offsetParent !== null);
-      const button = visibleBell.getBoundingClientRect();
-      if (button.width < MINIMUM_TARGET || button.height < MINIMUM_TARGET)
-        lines.push(`the bell's button is ${button.width} by ${button.height}px (needs ${MINIMUM_TARGET} by ${MINIMUM_TARGET})`);
-      // The badge sits inside the header's bar, and inside the button, so it is neither clipped nor over a neighbour
-      const header = document.querySelector(".siteHeader").getBoundingClientRect();
-      const badge = visibleBell.querySelector(".siteHeaderBellBadge").getBoundingClientRect();
-      if (badge.top < header.top || badge.bottom > header.bottom)
-        lines.push(`the badge leaves the header (${badge.top} to ${badge.bottom}, header ${header.top} to ${header.bottom})`);
-      if (badge.left < button.left || badge.right > button.right)
-        lines.push(
-          `the badge leaves the bell's button (${badge.left} to ${badge.right}, button ${button.left} to ${button.right})`,
-        );
-      if (viewportWidth < 900) {
-        const bell = document.querySelector(".siteHeaderBell").getBoundingClientRect();
-        const menuButton = document.querySelector("#phoneMenuButton").getBoundingClientRect();
-        if (Math.abs(bell.top - menuButton.top) > 8) lines.push("the bell is not beside the Menu button");
-        if (document.querySelector(".siteHeaderPhoneMenu .siteHeaderBell")) lines.push("the bell is inside the phone menu");
-      }
-      return lines;
-    },
-    [width, widthBeforeOpening],
-  );
+  const layout = await page.evaluate(readBellLayout, width);
+  // Under 900px the bell belongs in the bar beside the Menu button, not in the phone menu, so only then is that read
+  const phone = width < 900 ? await page.evaluate(readPhoneBell) : null;
+  return judgeBellLayout(layout, widthBeforeOpening, phone);
+}
+
+/** The bell's button keeps a target of at least 24 by 24 CSS pixels (WCAG 2.2 target size), however small its drawing is. */
+const MINIMUM_BELL_TARGET_PX = 24;
+
+/** How far apart, in pixels, the bell and the Menu button's tops may be and still count as beside each other on a phone. */
+const BELL_BESIDE_MENU_TOLERANCE_PX = 8;
+
+/**
+ * Reads, in the page, where the bell, its button, its badge, the header and the panel are, as plain numbers. Judging them is left
+ * to judgeBellLayout, so the page only measures.
+ *
+ * @param {number} viewportWidth The window's width, which the page reads back so the judging knows which form to expect.
+ */
+function readBellLayout(viewportWidth) {
+  const panel = document.querySelector(".siteHeaderNoticeList").getBoundingClientRect();
+  const visibleBell = [...document.querySelectorAll(".siteHeaderBell")].find((element) => element.offsetParent !== null);
+  const button = visibleBell.getBoundingClientRect();
+  const header = document.querySelector(".siteHeader").getBoundingClientRect();
+  const badge = visibleBell.querySelector(".siteHeaderBellBadge").getBoundingClientRect();
+  return {
+    viewportWidth,
+    pageScrollWidth: document.documentElement.scrollWidth,
+    panel: { left: panel.left, right: panel.right },
+    button: { width: button.width, height: button.height, left: button.left, right: button.right },
+    header: { top: header.top, bottom: header.bottom },
+    badge: { top: badge.top, bottom: badge.bottom, left: badge.left, right: badge.right },
+  };
+}
+
+/**
+ * Reads, in the page, the bell's top, the Menu button's top and whether a bell has got into the phone menu. Only used under 900px,
+ * where the bell belongs in the bar beside the Menu button.
+ */
+function readPhoneBell() {
+  return {
+    bellTop: document.querySelector(".siteHeaderBell").getBoundingClientRect().top,
+    menuButtonTop: document.querySelector("#phoneMenuButton").getBoundingClientRect().top,
+    isBellInPhoneMenu: document.querySelector(".siteHeaderPhoneMenu .siteHeaderBell") !== null,
+  };
+}
+
+/**
+ * Checks the bell layout that readBellLayout measured. Returns report lines for what does not hold.
+ *
+ * @param {ReturnType<typeof readBellLayout>} layout The numbers the page read.
+ * @param {number} widthBeforeOpening The page's scroll width before the panel opened: the showcase is wider than a phone on its own.
+ * @param {ReturnType<typeof readPhoneBell> | null} phone The phone numbers, or null at 900px and over.
+ */
+function judgeBellLayout(layout, widthBeforeOpening, phone) {
+  const lines = [];
+  if (layout.pageScrollWidth > widthBeforeOpening) lines.push("the page scrolls sideways with the panel open");
+  if (layout.panel.left < 0 || layout.panel.right > layout.viewportWidth)
+    lines.push(`the panel leaves the window (${layout.panel.left} to ${layout.panel.right})`);
+  const { button, badge, header } = layout;
+  if (button.width < MINIMUM_BELL_TARGET_PX || button.height < MINIMUM_BELL_TARGET_PX)
+    lines.push(
+      `the bell's button is ${button.width} by ${button.height}px (needs ${MINIMUM_BELL_TARGET_PX} by ${MINIMUM_BELL_TARGET_PX})`,
+    );
+  // The badge sits inside the header's bar, and inside the button, so it is neither clipped nor over a neighbour
+  if (badge.top < header.top || badge.bottom > header.bottom)
+    lines.push(`the badge leaves the header (${badge.top} to ${badge.bottom}, header ${header.top} to ${header.bottom})`);
+  if (badge.left < button.left || badge.right > button.right)
+    lines.push(`the badge leaves the bell's button (${badge.left} to ${badge.right}, button ${button.left} to ${button.right})`);
+  if (phone !== null) lines.push(...judgePhoneBell(phone));
+  return lines;
+}
+
+/**
+ * Checks the bell under 900px: beside the Menu button in the bar, and never inside the phone menu.
+ *
+ * @param {ReturnType<typeof readPhoneBell>} phone The numbers readPhoneBell measured.
+ */
+function judgePhoneBell(phone) {
+  const lines = [];
+  if (Math.abs(phone.bellTop - phone.menuButtonTop) > BELL_BESIDE_MENU_TOLERANCE_PX)
+    lines.push("the bell is not beside the Menu button");
+  if (phone.isBellInPhoneMenu) lines.push("the bell is inside the phone menu");
+  return lines;
 }
 
 /** Runs the bell checks at every width in this theme, with axe over the page with the panel open. Returns report lines. */
@@ -653,14 +716,17 @@ const SHORT_WINDOW = { width: 375, height: 360 };
 /** How far the dialog card's centre may be from the window's centre, in pixels. */
 const CENTRE_TOLERANCE_PX = 1;
 
-/** Opens the sample dialog (inside the showcase's `> * { margin: 0 }` parent) and returns where its card is. */
-async function openSampleDialog(browser, run, size, query) {
-  const context = await browser.newContext({ viewport: size, reducedMotion: "reduce" });
+/**
+ * Opens the sample dialog (inside the showcase's `> * { margin: 0 }` parent) and returns its context and page. `options.size` is the
+ * window's size, and `options.query` the query string on the address (`""`, or `"?longDialog"` for the long question).
+ */
+async function openSampleDialog(browser, run, options) {
+  const context = await browser.newContext({ viewport: options.size, reducedMotion: "reduce" });
   await context.addInitScript((pairs) => {
     for (const [key, text] of pairs) localStorage.setItem(key, text);
   }, toStorageEntries(run.storage));
   const page = await context.newPage();
-  await page.goto(baseUrl + query, { waitUntil: "networkidle" });
+  await page.goto(baseUrl + options.query, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Delete the sample" }).click();
   await page.locator(".confirmCard").waitFor();
   await waitUntilSettled(page);
@@ -686,7 +752,7 @@ function readDialogCard() {
 async function runDialogCentringChecks(browser, run) {
   const lines = [];
   for (const size of DIALOG_WINDOWS) {
-    const { context, page } = await openSampleDialog(browser, run, size, "");
+    const { context, page } = await openSampleDialog(browser, run, { size, query: "" });
     const card = await page.evaluate(readDialogCard);
     const offX = Math.abs(card.centreX - card.windowWidth / 2);
     const offY = Math.abs(card.centreY - card.windowHeight / 2);
@@ -726,24 +792,40 @@ async function runPrimaryDialogCheck(browser, run) {
  * by the pixel contrast check, which covers every text run on the page, and axe.)
  */
 async function runWarningEdgeCheck(page) {
-  const readings = await page.evaluate(() => {
-    const parseColour = (text) => (text.match(/[\d.]+/g) ?? []).map(Number);
-    const solidBehind = (element) => {
-      for (let node = element.parentElement; node; node = node.parentElement) {
-        const [r, g, b, a = 1] = parseColour(getComputedStyle(node).backgroundColor);
-        if (a === 1) return [r, g, b];
-      }
-      return [255, 255, 255];
-    };
-    return [...document.querySelectorAll(".btnWarning")].map((button) => {
-      const [r, g, b] = parseColour(getComputedStyle(button).borderTopColor);
-      return { edge: [r, g, b], surface: solidBehind(button), label: button.textContent.trim() };
-    });
+  return judgeWarningEdges(await page.evaluate(readWarningButtonSurfaces));
+}
+
+/**
+ * Reads, in the page, each warning button's edge colour and the opaque colour behind it: the nearest ancestor with a solid
+ * background. Judging them is left to judgeWarningEdges.
+ */
+function readWarningButtonSurfaces() {
+  const parseColour = (text) => (text.match(/[\d.]+/g) ?? []).map(Number);
+  const solidBehind = (element) => {
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const [r, g, b, a = 1] = parseColour(getComputedStyle(node).backgroundColor);
+      if (a === 1) return [r, g, b];
+    }
+    // Nothing opaque behind the button: judge it against white, the canvas a browser paints a page on by default
+    return [255, 255, 255];
+  };
+  return [...document.querySelectorAll(".btnWarning")].map((button) => {
+    const [r, g, b] = parseColour(getComputedStyle(button).borderTopColor);
+    return { edge: [r, g, b], surface: solidBehind(button), label: button.textContent.trim() };
   });
+}
+
+/**
+ * Checks each warning button's edge against the surface behind it. Returns report lines for the ones under 3:1.
+ *
+ * @param {ReturnType<typeof readWarningButtonSurfaces>} readings The edge and surface of each warning button.
+ */
+function judgeWarningEdges(readings) {
   const lines = [];
   for (const { edge, surface, label } of readings) {
     const ratio = contrastRatio(edge, surface);
-    if (ratio < 3) lines.push(`warning button "${label}": edge ${ratio.toFixed(2)}:1 against its surface (needs 3:1)`);
+    if (ratio < MIN_RATIO_EDGE)
+      lines.push(`warning button "${label}": edge ${ratio.toFixed(2)}:1 against its surface (needs 3:1)`);
   }
   return lines;
 }
@@ -754,48 +836,58 @@ async function runWarningEdgeCheck(page) {
  * text, so it runs last. Returns report lines and how many rows were measured.
  */
 async function runWarningMenuRowChecks(page) {
-  const lines = [];
-  let measured = 0;
-  const measureHoveredRow = async (row) => {
-    await row.hover();
-    await waitUntilSettled(page);
-    const run = await row.evaluate((element) => {
-      const [r, g, b] = getComputedStyle(element)
-        .color.match(/[\d.]+/g)
-        .map(Number);
-      const box = element.getBoundingClientRect();
-      const textBox = { x: box.left + box.width * 0.1, y: box.top, width: box.width * 0.5, height: box.height };
-      return { rgb: [r, g, b], alpha: 1, box: textBox };
-    });
-    // Text hidden for the screenshot only, so the pixels are the row's own face and hover wash
-    const styleTag = await page.addStyleTag({ content: HIDE_TEXT_CSS });
-    // The row's colour transition would otherwise still be fading the text out when the screenshot is taken
-    await waitUntilSettled(page);
-    const png = PNG.sync.read(await page.screenshot());
-    await styleTag.evaluate((element) => element.remove());
-    const worst = worstContrast(run, png);
-    measured += 1;
-    const label = (await row.textContent()).trim();
-    if (process.env.A11Y_VERBOSE) console.log(`    hovered warning row "${label}": ${worst.ratio.toFixed(2)}:1`);
-    if (worst.ratio < MIN_RATIO_NORMAL)
-      lines.push(`hovered warning menu row "${label}": ${worst.ratio.toFixed(2)}:1 (needs 4.5)`);
-  };
-
   // The sample menu is always on the page; the actions menu's row exists only while it is open (and scrolling would close it)
   const sampleRow = page.locator(".sampleMenu .menuItemWarning");
   await sampleRow.scrollIntoViewIfNeeded();
-  await measureHoveredRow(sampleRow);
+  const rows = [await measureHoveredWarningRow(page, sampleRow)];
   await page.locator("#sampleActions").scrollIntoViewIfNeeded();
   await page.locator("#sampleActions").click();
   await waitUntilSettled(page);
-  await measureHoveredRow(page.locator(".actionsList .menuItemWarning"));
-  return { lines, measured };
+  rows.push(await measureHoveredWarningRow(page, page.locator(".actionsList .menuItemWarning")));
+
+  const lines = rows
+    .filter((row) => row.ratio < MIN_RATIO_NORMAL)
+    .map((row) => `hovered warning menu row "${row.label}": ${row.ratio.toFixed(2)}:1 (needs ${MIN_RATIO_NORMAL})`);
+  return { lines, measured: rows.length };
+}
+
+/**
+ * Reads, in the page, the text colour of a warning row and the box its text fills (the left half of the row), for the contrast
+ * check. The text is treated as fully opaque.
+ */
+function readRowTextRun(element) {
+  const [r, g, b] = getComputedStyle(element)
+    .color.match(/[\d.]+/g)
+    .map(Number);
+  const box = element.getBoundingClientRect();
+  const textBox = { x: box.left + box.width * 0.1, y: box.top, width: box.width * 0.5, height: box.height };
+  return { rgb: [r, g, b], alpha: 1, box: textBox };
+}
+
+/**
+ * Hovers a warning row and measures its text against the hover wash that is drawn under it. The pixel check sees only the resting
+ * row, and the wash is what could drop the orange below 4.5:1. Returns the row's label and its lowest contrast.
+ */
+async function measureHoveredWarningRow(page, row) {
+  await row.hover();
+  await waitUntilSettled(page);
+  const run = await row.evaluate(readRowTextRun);
+  // Text hidden for the screenshot only, so the pixels are the row's own face and hover wash
+  const styleTag = await page.addStyleTag({ content: HIDE_TEXT_CSS });
+  // The row's colour transition would otherwise still be fading the text out when the screenshot is taken
+  await waitUntilSettled(page);
+  const png = PNG.sync.read(await page.screenshot());
+  await styleTag.evaluate((element) => element.remove());
+  const worst = worstContrast(run, png);
+  const label = (await row.textContent()).trim();
+  if (process.env.A11Y_VERBOSE) console.log(`    hovered warning row "${label}": ${worst.ratio.toFixed(2)}:1`);
+  return { label, ratio: worst.ratio };
 }
 
 /** On a short window with a long question, the card stays inside the window or the dialog scrolls to all of it; returns report lines. */
 async function runDialogShortWindowCheck(browser, run) {
   const lines = [];
-  const { context, page } = await openSampleDialog(browser, run, SHORT_WINDOW, "?longDialog");
+  const { context, page } = await openSampleDialog(browser, run, { size: SHORT_WINDOW, query: "?longDialog" });
   // Opening focuses Cancel, which scrolls a tall dialog down to it: go back to the top to check the card's top is reachable
   await page.evaluate(() => document.querySelector("dialog.confirmDialog").scrollTo(0, 0));
   const card = await page.evaluate(readDialogCard);
@@ -868,18 +960,12 @@ function readPixelsOutside(box, png) {
     [box.x - OUTSIDE_PX, middleY],
     [box.x + box.width + OUTSIDE_PX, middleY],
   ];
-  return points
-    .filter(([x, y]) => x >= 0 && y >= 0 && x < png.width && y < png.height)
-    .map(([x, y]) => {
-      const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
-      return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
-    });
+  return points.filter(([x, y]) => x >= 0 && y >= 0 && x < png.width && y < png.height).map(([x, y]) => pixelAt(png, x, y));
 }
 
 /** The face's pixel just inside the left side, in the padding. */
 function readFacePixel(box, png) {
-  const offset = (Math.round(box.y + box.height / 2) * png.width + Math.round(box.x + FACE_INSET_PX)) * 4;
-  return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
+  return pixelAt(png, box.x + FACE_INSET_PX, box.y + box.height / 2);
 }
 
 /**
@@ -895,8 +981,22 @@ function median(numbers) {
 const NO_SHADOW_CSS = `${FLOATING_SELECTOR} { box-shadow: none !important; }`;
 
 /**
+ * Judges one floating surface against the pixels around it: its edge, and under a scrim also its face. Returns null when no pixel
+ * around it is in the picture (it is off screen), so there is nothing to judge.
+ */
+function judgeSurfaceEdge(surface, png) {
+  const behind = readPixelsOutside(surface.box, png);
+  if (behind.length === 0) return null;
+  const edgeRatio = median(behind.map((pixel) => contrastRatio(surface.edge, pixel)));
+  const faceRatio = median(behind.map((pixel) => contrastRatio(readFacePixel(surface.box, png), pixel)));
+  // Under a scrim the dimmed page behind the card is told from it by its face, which is what a person sees first
+  const ratio = surface.hasScrim ? Math.max(edgeRatio, faceRatio) : edgeRatio;
+  return { ratio, edgeRatio, faceRatio };
+}
+
+/**
  * Judges every floating surface open on the page right now, from a screenshot of the window. Returns the report lines for the ones
- * whose edge is under 3:1 against what is behind them, and how many were measured (with the lowest figure, for the summary).
+ * whose edge is under 3:1 against what is behind them, and the figure of each one measured (for the lowest figure in the summary).
  */
 async function measureFloatingEdges(page, where) {
   const surfaces = await page.evaluate(readFloatingSurfaces, FLOATING_SELECTOR);
@@ -906,23 +1006,26 @@ async function measureFloatingEdges(page, where) {
   const lines = [];
   const figures = [];
   for (const surface of surfaces) {
-    const behind = readPixelsOutside(surface.box, png);
-    if (behind.length === 0) continue;
-    const edgeRatio = median(behind.map((pixel) => contrastRatio(surface.edge, pixel)));
-    const faceRatio = median(behind.map((pixel) => contrastRatio(readFacePixel(surface.box, png), pixel)));
-    // Under a scrim the dimmed page behind the card is told from it by its face, which is what a person sees first
-    const ratio = surface.hasScrim ? Math.max(edgeRatio, faceRatio) : edgeRatio;
-    figures.push(ratio);
-    // A11Y_VERBOSE=1 lists every figure, for the numbers in a token's comment
-    if (process.env.A11Y_VERBOSE)
-      console.log(`    ${where}, ${surface.name}: edge ${edgeRatio.toFixed(2)}:1, face ${faceRatio.toFixed(2)}:1`);
-    if (ratio < MIN_RATIO_EDGE) {
-      lines.push(
-        `${where}, ${surface.name}: edge ${edgeRatio.toFixed(2)}:1 (face ${faceRatio.toFixed(2)}:1) against what is behind it (needs 3:1)`,
-      );
-    }
+    const judged = judgeSurfaceEdge(surface, png);
+    if (judged === null) continue;
+    figures.push(judged.ratio);
+    logSurfaceFigures(where, surface, judged);
+    if (judged.ratio < MIN_RATIO_EDGE) lines.push(describeSurfaceFailure(where, surface, judged));
   }
   return { lines, figures };
+}
+
+/** With A11Y_VERBOSE=1, prints every surface's figures, for the numbers in a token's comment. */
+function logSurfaceFigures(where, surface, judged) {
+  if (!process.env.A11Y_VERBOSE) return;
+  console.log(`    ${where}, ${surface.name}: edge ${judged.edgeRatio.toFixed(2)}:1, face ${judged.faceRatio.toFixed(2)}:1`);
+}
+
+/** The report line for a surface whose edge (or face, under a scrim) is under 3:1 against what is behind it. */
+function describeSurfaceFailure(where, surface, judged) {
+  const edge = judged.edgeRatio.toFixed(2);
+  const face = judged.faceRatio.toFixed(2);
+  return `${where}, ${surface.name}: edge ${edge}:1 (face ${face}:1) against what is behind it (needs 3:1)`;
 }
 
 /**
@@ -930,93 +1033,178 @@ async function measureFloatingEdges(page, where) {
  * runner below measures every floating surface on screen between the two).
  */
 function floatingSteps(page) {
-  const closeWithEscape = () => page.keyboard.press("Escape");
-  const doNothing = async () => {};
-  const noteButton = page.getByRole("button", { name: "Add a note" });
-  const scrollTo = (selector) => () => page.locator(selector).scrollIntoViewIfNeeded();
   return [
-    { where: "static samples", open: scrollTo("#floating"), close: doNothing },
-    {
-      where: "header Tools menu",
-      open: async () => {
-        await giveHeaderTwoNotifications(page);
-        await scrollTo(".sampleHeaderFrame")();
-        await page.locator(".sampleHeaderFrame").getByRole("button", { name: "Tools" }).click();
-      },
-      close: closeWithEscape,
-    },
-    { where: "header notifications", open: () => openBellPanel(page), close: closeWithEscape },
-    {
-      where: "actions menu",
-      open: async () => {
-        await scrollTo("#popups")();
-        await page.locator("#sampleActions").click();
-      },
-      close: closeWithEscape,
-    },
-    { where: "anchored card", open: () => noteButton.click(), close: () => noteButton.click() },
-    { where: "toast", open: () => page.getByRole("button", { name: "Copy the sample" }).click(), close: doNothing },
-    {
-      where: "drop-down list",
-      open: async () => {
-        await scrollTo("#sampleGoal")();
-        await page.locator("#sampleGoal").click();
-      },
-      close: closeWithEscape,
-    },
-    { where: "searchable drop-down list", open: () => page.locator("#sampleCountry").click(), close: closeWithEscape },
-    {
-      where: "celebration message",
-      open: async () => {
-        await scrollTo("#celebrations")();
-        await page.getByRole("button", { name: "Play Confetti" }).click();
-      },
-      close: closeWithEscape,
-    },
-    // The scroll-to-top button appears two screens down
-    {
-      where: "scroll-to-top button",
-      open: () => page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)),
-      close: doNothing,
-    },
+    staticSamplesStep(page),
+    headerToolsStep(page),
+    headerNotificationsStep(page),
+    actionsMenuStep(page),
+    anchoredCardStep(page),
+    toastStep(page),
+    dropDownStep(page),
+    searchableDropDownStep(page),
+    celebrationStep(page),
+    scrollToTopStep(page),
   ];
 }
 
+/** A close action for a popup that closes by itself, or that the next step's open replaces: nothing to press. */
+async function doNothing() {}
+
+/** The action that scrolls the element with this selector into view. */
+function scrollIntoViewAction(page, selector) {
+  return () => page.locator(selector).scrollIntoViewIfNeeded();
+}
+
+/** The action that presses Escape, which closes most of the popups. */
+function pressEscapeAction(page) {
+  return () => page.keyboard.press("Escape");
+}
+
+/** The static samples: opened by scrolling to them, nothing to close. */
+function staticSamplesStep(page) {
+  return { where: "static samples", open: scrollIntoViewAction(page, "#floating"), close: doNothing };
+}
+
+/** The header's Tools menu, with two notifications first so the header is in its usual state. */
+function headerToolsStep(page) {
+  return {
+    where: "header Tools menu",
+    open: async () => {
+      await giveHeaderTwoNotifications(page);
+      await scrollIntoViewAction(page, ".sampleHeaderFrame")();
+      await page.locator(".sampleHeaderFrame").getByRole("button", { name: "Tools" }).click();
+    },
+    close: pressEscapeAction(page),
+  };
+}
+
+/** The header's notifications panel, opened from its bell. */
+function headerNotificationsStep(page) {
+  return { where: "header notifications", open: () => openBellPanel(page), close: pressEscapeAction(page) };
+}
+
+/** The actions menu of the popups section. */
+function actionsMenuStep(page) {
+  return {
+    where: "actions menu",
+    open: async () => {
+      await scrollIntoViewAction(page, "#popups")();
+      await page.locator("#sampleActions").click();
+    },
+    close: pressEscapeAction(page),
+  };
+}
+
+/** The anchored card, which opens from its note button and closes from the same button. */
+function anchoredCardStep(page) {
+  const noteButton = page.getByRole("button", { name: "Add a note" });
+  return { where: "anchored card", open: () => noteButton.click(), close: () => noteButton.click() };
+}
+
+/** The toast, which closes by itself, so there is nothing to press. */
+function toastStep(page) {
+  return {
+    where: "toast",
+    open: () => page.getByRole("button", { name: "Copy the sample" }).click(),
+    close: doNothing,
+  };
+}
+
+/** The drop-down list of the sample form. */
+function dropDownStep(page) {
+  return {
+    where: "drop-down list",
+    open: async () => {
+      await scrollIntoViewAction(page, "#sampleGoal")();
+      await page.locator("#sampleGoal").click();
+    },
+    close: pressEscapeAction(page),
+  };
+}
+
+/** The searchable drop-down list of the sample form. */
+function searchableDropDownStep(page) {
+  return {
+    where: "searchable drop-down list",
+    open: () => page.locator("#sampleCountry").click(),
+    close: pressEscapeAction(page),
+  };
+}
+
+/** The celebration message, from its Play button in the celebrations section. */
+function celebrationStep(page) {
+  return {
+    where: "celebration message",
+    open: async () => {
+      await scrollIntoViewAction(page, "#celebrations")();
+      await page.getByRole("button", { name: "Play Confetti" }).click();
+    },
+    close: pressEscapeAction(page),
+  };
+}
+
+/** The scroll-to-top button, which appears two screens down (so the step scrolls to the bottom of the page). */
+function scrollToTopStep(page) {
+  return {
+    where: "scroll-to-top button",
+    open: () => page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)),
+    close: doNothing,
+  };
+}
+
 /** Opens each popup the showcase has, one at a time, and measures every floating surface on screen at each step. */
-async function runFloatingEdgeChecks(browser, run) {
+async function measurePopupSteps(browser, run) {
   const lines = [];
   const figures = [];
-  const record = (result) => {
-    lines.push(...result.lines);
-    figures.push(...result.figures);
-  };
-
   const { context, page } = await openPage(browser, baseUrl, run.storage);
   for (const step of floatingSteps(page)) {
     await step.open();
     await waitUntilSettled(page);
-    record(await measureFloatingEdges(page, step.where));
+    const measured = await measureFloatingEdges(page, step.where);
+    lines.push(...measured.lines);
+    figures.push(...measured.figures);
     await step.close();
     await waitUntilSettled(page);
   }
   await context.close();
+  return { lines, figures };
+}
 
-  // The dialog, with its scrim, on its own page since a modal dialog blocks the rest
-  const dialog = await openSampleDialog(browser, run, { width: 1280, height: 800 }, "");
-  record(await measureFloatingEdges(dialog.page, "dialog"));
+/** The dialog, with its scrim, on its own page since a modal dialog blocks the rest of the page. */
+async function measureDialogEdges(browser, run) {
+  const dialog = await openSampleDialog(browser, run, { size: { width: 1280, height: 800 }, query: "" });
+  const measured = await measureFloatingEdges(dialog.page, "dialog");
   await dialog.context.close();
+  return measured;
+}
 
-  // The phone menu's panel, under 900px
+/** The phone menu's panel, opened at 375px where the header shows its Menu button. */
+async function measurePhoneMenuEdges(browser, run) {
   const phone = await openAtWidth(browser, run, 375);
   await phone.page.locator(".siteHeaderMenuButton").click();
   await waitUntilSettled(phone.page);
-  record(await measureFloatingEdges(phone.page, "phone menu"));
+  const measured = await measureFloatingEdges(phone.page, "phone menu");
   await phone.context.close();
+  return measured;
+}
 
-  const header = await runHeaderEdgeChecks(browser, run);
-  record(header);
-
-  return { lines, count: figures.length, lowest: Math.min(...figures) };
+/**
+ * Every floating surface check, in the order their lines are reported: the popups, the dialog, the phone menu, and the header's edge.
+ * Returns the lines, how many figures were measured, and the lowest of them (for the summary).
+ */
+async function runFloatingEdgeChecks(browser, run) {
+  const results = [
+    await measurePopupSteps(browser, run),
+    await measureDialogEdges(browser, run),
+    await measurePhoneMenuEdges(browser, run),
+    await runHeaderEdgeChecks(browser, run),
+  ];
+  const figures = results.flatMap((result) => result.figures);
+  return {
+    lines: results.flatMap((result) => result.lines),
+    count: figures.length,
+    lowest: Math.min(...figures),
+  };
 }
 
 /**
@@ -1035,6 +1223,9 @@ const HEADER_BEHIND_TARGETS = [
   { label: "the page", selector: null },
 ];
 
+/** The window widths the header's edge is measured at: a desktop and a phone. */
+const HEADER_EDGE_WIDTHS = [1280, 375];
+
 /**
  * Scrolls so the target sits under the header's bottom edge, and returns the header's bottom and the x where the surface behind
  * the header is read: just inside the target's left side (the padding, not its text), or the page's left margin.
@@ -1051,31 +1242,48 @@ function scrollTargetUnderHeader(selector) {
   return { headerBottom, x: target.getBoundingClientRect().left + 6 };
 }
 
-/** The header's bottom edge against a card, a raised panel and the page scrolling under it, at a desktop and a phone width. */
+/**
+ * The contrast between the header's bottom edge and the surface behind it, with the target scrolled under the header. Returns the
+ * ratio.
+ */
+async function measureHeaderEdgeOver(page, target) {
+  const place = await page.evaluate(scrollTargetUnderHeader, target.selector);
+  await waitUntilSettled(page);
+  const png = PNG.sync.read(await page.screenshot());
+  // The edge is the bottom row of the header's own box; the surface behind starts a few pixels below it
+  const edge = pixelAt(png, place.x, place.headerBottom - 1);
+  const behind = pixelAt(png, place.x, place.headerBottom + OUTSIDE_PX);
+  return contrastRatio(edge, behind);
+}
+
+/**
+ * The header's bottom edge against a card, a raised panel and the page scrolling under it, at a desktop and a phone width
+ * (1280px and 375px). Returns report lines and the figure of each edge measured.
+ */
 async function runHeaderEdgeChecks(browser, run) {
   const lines = [];
   const figures = [];
-  for (const width of [1280, 375]) {
-    const { context, page } = await openAtWidth(browser, run, width);
-    await page.addStyleTag({ content: REAL_FIXED_HEADER_CSS });
-    for (const target of HEADER_BEHIND_TARGETS) {
-      const place = await page.evaluate(scrollTargetUnderHeader, target.selector);
-      await waitUntilSettled(page);
-      const png = PNG.sync.read(await page.screenshot());
-      const pixelAt = (x, y) => {
-        const offset = (Math.round(y) * png.width + Math.round(x)) * 4;
-        return [png.data[offset], png.data[offset + 1], png.data[offset + 2]];
-      };
-      // The edge is the bottom row of the header's own box; the surface behind starts a few pixels below it
-      const edge = pixelAt(place.x, place.headerBottom - 1);
-      const behind = pixelAt(place.x, place.headerBottom + OUTSIDE_PX);
-      const ratio = contrastRatio(edge, behind);
-      figures.push(ratio);
-      if (process.env.A11Y_VERBOSE) console.log(`    header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1`);
-      if (ratio < MIN_RATIO_EDGE) lines.push(`header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1 (needs 3:1)`);
-    }
-    await context.close();
+  for (const width of HEADER_EDGE_WIDTHS) {
+    const measured = await measureHeaderEdgesAtWidth(browser, run, width);
+    lines.push(...measured.lines);
+    figures.push(...measured.figures);
   }
+  return { lines, figures };
+}
+
+/** The header's edge over each target at one window width, in its own page. Returns report lines and the figures. */
+async function measureHeaderEdgesAtWidth(browser, run, width) {
+  const lines = [];
+  const figures = [];
+  const { context, page } = await openAtWidth(browser, run, width);
+  await page.addStyleTag({ content: REAL_FIXED_HEADER_CSS });
+  for (const target of HEADER_BEHIND_TARGETS) {
+    const ratio = await measureHeaderEdgeOver(page, target);
+    figures.push(ratio);
+    if (process.env.A11Y_VERBOSE) console.log(`    header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1`);
+    if (ratio < MIN_RATIO_EDGE) lines.push(`header at ${width}px over ${target.label}: edge ${ratio.toFixed(2)}:1 (needs 3:1)`);
+  }
+  await context.close();
   return { lines, figures };
 }
 
