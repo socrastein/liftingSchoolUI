@@ -30,7 +30,7 @@ defineProps<{
   /** The checkbox's id, for tests and for anything that needs to point at it. */
   id?: string;
   /**
-   * A sentence saying what the switch does, e.g. "Concentric of every rep as fast as possible.". Shown as the tooltip and
+   * A sentence saying what the switch does, e.g. "Lift the concentric part of every rep as fast as possible.". Shown as the tooltip and
    * read by screen readers as the description; never part of the accessible name. Absent: no tooltip, no description.
    */
   hint?: string;

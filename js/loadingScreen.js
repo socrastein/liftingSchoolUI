@@ -26,13 +26,14 @@ export function hideStartupLoadingScreen() {
   if (startupScreen === null) return Promise.resolve();
 
   return new Promise((resolve) => {
-    let fallbackTimer = 0;
+    // `remove` runs only from the timer or from the fade, and the fade starts after the timer exists, so `remove` always
+    // finds the timer already set
     const remove = () => {
       clearTimeout(fallbackTimer);
       startupScreen.remove();
       resolve();
     };
-    fallbackTimer = window.setTimeout(remove, REMOVAL_FALLBACK_MS);
+    const fallbackTimer = window.setTimeout(remove, REMOVAL_FALLBACK_MS);
     fadeOut(startupScreen, remove);
   });
 }

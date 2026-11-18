@@ -24,6 +24,9 @@ const props = withDefaults(
   { seconds: 4 },
 );
 
+/** setTimeout counts milliseconds, while `seconds` is what a person reads: one second is 1000 milliseconds (SI, by definition). */
+const MILLISECONDS_PER_SECOND = 1000;
+
 /** What the toast says, or "" while it is hidden. */
 const message = ref("");
 let hideTimer: ReturnType<typeof setTimeout> | undefined;
@@ -65,7 +68,7 @@ function stayUp(): Promise<void> {
     hideTimer = setTimeout(() => {
       message.value = "";
       nextTick().then(resolve);
-    }, props.seconds * 1000);
+    }, props.seconds * MILLISECONDS_PER_SECOND);
   });
 }
 

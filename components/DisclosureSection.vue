@@ -39,8 +39,8 @@ const KEEP_IN_VIEW_MS = 1000;
 function followGrowth(section: HTMLElement, body: HTMLElement): () => void {
   const scrollToShowSection = (): void => section.scrollIntoView({ block: "nearest", behavior: "instant" });
   const stopEveryFrame = repeatEveryFrame(scrollToShowSection, KEEP_IN_VIEW_MS);
-  // One last scroll at the end: the final frame of growing can land after the last frame followed
-  // The body's own opening, not a transition of something inside it, which also reaches here (transitionend bubbles)
+  // One last scroll at the end: the final frame of growing can land after the last frame followed.
+  // Only the body's own opening counts, not a transition of something inside it, which also reaches here (transitionend bubbles).
   const finish = (event: TransitionEvent): void => {
     const isBodyOpening = event.target === body && event.propertyName === "grid-template-rows";
     if (!isBodyOpening) return;

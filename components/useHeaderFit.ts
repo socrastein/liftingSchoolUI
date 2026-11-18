@@ -132,16 +132,16 @@ async function updateFit(parts: HeaderParts, fit: HeaderFit): Promise<void> {
 function watchParts(parts: HeaderParts, onChange: () => void): (() => void) | undefined {
   if (typeof ResizeObserver === "undefined") return undefined;
 
-  const resizes = new ResizeObserver(onChange);
-  observeParts(parts, resizes);
+  const resizeObserver = new ResizeObserver(onChange);
+  observeParts(parts, resizeObserver);
   const stopWatchingContent = watchContent(parts, () => {
-    observeParts(parts, resizes);
+    observeParts(parts, resizeObserver);
     onChange();
   });
   const stopWatchingFonts = watchFonts(onChange);
 
   return () => {
-    resizes.disconnect();
+    resizeObserver.disconnect();
     stopWatchingContent();
     stopWatchingFonts();
   };
@@ -176,9 +176,9 @@ function watchFonts(onChange: () => void): () => void {
 }
 
 /** Points the observer at the parts that exist now, dropping what it watched before. */
-function observeParts(parts: HeaderParts, resizes: ResizeObserver): void {
-  resizes.disconnect();
-  for (const element of partsToObserve(parts)) resizes.observe(element);
+function observeParts(parts: HeaderParts, resizeObserver: ResizeObserver): void {
+  resizeObserver.disconnect();
+  for (const element of partsToObserve(parts)) resizeObserver.observe(element);
 }
 
 /** Whether the element takes room in the page (false for one that is not drawn, as CSS `display: none` leaves it). */
@@ -233,7 +233,10 @@ function pixelsOf(computedLength: string): number {
   return Number.parseFloat(computedLength) || 0;
 }
 
-/** The things in the end that the project put there (the status slot): everything but the phone menu's block and the row. */
+/**
+ * The things in the end that the project put there (the status slot): everything but the phone menu's block and the row, and
+ * only those drawn now (a status element CSS hides takes no room, so it is not measured).
+ */
 function statusElements(parts: HeaderParts): Element[] {
   const children = [...(parts.end.value?.children ?? [])];
   return children.filter((child) => child !== parts.phone.value && child !== parts.row.value && isDrawn(child));

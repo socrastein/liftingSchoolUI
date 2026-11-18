@@ -150,6 +150,9 @@ const activeOptionId = computed(() => {
   return optionId(activeIndex.value);
 });
 
+/**
+ * The element id of the option at `index`. Each option has one, so aria-activedescendant can name the highlighted one.
+ */
 function optionId(index: number): string {
   return `${listId}-${index}`;
 }
@@ -195,16 +198,23 @@ function close(): void {
 }
 
 /**
+ * The `MouseEvent.button` value of the main button (the left one on a right-handed mouse), as the DOM defines it: 0 is the main
+ * button, 1 the wheel and 2 the secondary button.
+ */
+const MAIN_MOUSE_BUTTON = 0;
+
+/**
  * The main mouse button pressed on the box opens or closes the list, as a native select does: on the press, not the click. A
  * click needs the press and release on the same element, and leaving the field before (a date box showing its error) can
  * push this box down in between, so a click would be lost. On a phone the browser sends the press when the tap ends, so
  * starting to scroll on a drop-down does not open it.
  */
 function onBoxMousedown(event: MouseEvent): void {
-  if (event.button !== 0) return;
+  if (event.button !== MAIN_MOUSE_BUTTON) return;
   toggleOpen();
 }
 
+/** A press on the box: close the list when it is open, open it when it is closed. */
 function toggleOpen(): void {
   if (isOpen.value) close();
   else open();
@@ -271,6 +281,7 @@ function firstOptionStartingWith(prefix: string, fromIndex: number): number | un
   const count = shownOptions.value.length;
   for (let step = 0; step < count; step++) {
     const index = (fromIndex + step) % count;
+    // index is always below count, so this option exists; the ! tells the type checker so.
     const label = shownOptions.value[index]!.label.toLowerCase();
     if (label.startsWith(prefix)) return index;
   }
@@ -288,6 +299,7 @@ function firstOptionStartingWith(prefix: string, fromIndex: number): number | un
  */
 function searchMatch(fromIndex: number): number | undefined {
   if (isOneCharacterRepeated(searchText)) {
+    // typeCharacter adds a character before searching, so searchText is never empty here.
     const character = searchText[0]!;
     return firstOptionStartingWith(character, fromIndex + 1);
   }
@@ -419,7 +431,7 @@ function selectAllText(event: FocusEvent): void {
  * plain drop-down's, it does not close it, since a click in a text box moves the caret.
  */
 function openOnMousedown(event: MouseEvent): void {
-  if (event.button !== 0 || isOpen.value) return;
+  if (event.button !== MAIN_MOUSE_BUTTON || isOpen.value) return;
   open();
 }
 

@@ -4,6 +4,7 @@ import { closeWhenHeaderFormChanges } from "./useHeaderFit";
 
 /** What a header popup's template needs: whether it is open, the two elements to bind with `ref`, and how to close it. */
 export interface HeaderPopup {
+  /** Whether the popup is showing. */
   isOpen: Ref<boolean>;
   /** Bind to the element holding both the button and the popup: a click outside it closes the popup. */
   root: Ref<HTMLElement | null>;

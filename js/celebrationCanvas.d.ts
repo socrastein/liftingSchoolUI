@@ -40,6 +40,9 @@ export type CelebrationPalette = import("./celebrationParticles.js").Celebration
  * What the canvas needs besides the celebration's name.
  */
 export type CanvasShowSetup = {
+    /**
+     * The colours, from `readCelebrationPalette`.
+     */
     palette: CelebrationPalette;
     /**
      * How far the planned times are stretched (see `choreographyPace`).

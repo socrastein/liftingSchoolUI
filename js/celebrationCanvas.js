@@ -17,16 +17,21 @@ import { createShow, fastForwardToStillPicture, stepShow } from "./celebrationPa
  * What the canvas needs besides the celebration's name.
  *
  * @typedef {object} CanvasShowSetup
- * @property {CelebrationPalette} palette
+ * @property {CelebrationPalette} palette The colours, from `readCelebrationPalette`.
  * @property {number} pace How far the planned times are stretched (see `choreographyPace`).
  */
 
 /** The sharpest the canvas is drawn: past 2 device pixels per CSS pixel the extra sharpness is invisible on moving particles. */
 const MAX_PIXEL_RATIO = 2;
-/** The most pixels the canvas may hold (about a 1920 by 1080 screen at ratio 1.4): a big screen at ratio 2 would be 4x the work. */
+/**
+ * The most pixels the canvas may hold: a 1920 by 1080 screen at ratio 1.2 is about 3 million, so the cap starts to bite there,
+ * and a big screen at ratio 2 would be 4x the work of ratio 1.
+ */
 const MAX_CANVAS_PIXELS = 3_000_000;
 /** The longest step of the show, in seconds: after a stall (a busy phone) the show carries on from where it was instead of jumping. */
 const MAX_FRAME_SECONDS = 0.05;
+/** requestAnimationFrame timestamps are in milliseconds; the show's steps are in seconds. */
+const MILLISECONDS_PER_SECOND = 1000;
 /** What the palette falls back to when a token is not defined (the library's CSS was not loaded): the canvas's own text colour. */
 const MISSING_TOKEN_COLOR = "currentColor";
 
@@ -82,6 +87,18 @@ function fitCanvas(canvas, context) {
 }
 
 /**
+ * The time between two animation frames, in seconds. The first frame has no earlier one, so it counts as no time passing.
+ *
+ * @param {number | null} previousTimestamp The previous frame's timestamp in milliseconds, or null before the first frame.
+ * @param {number} timestamp This frame's timestamp in milliseconds.
+ * @returns {number} Seconds since the previous frame; 0 on the first frame.
+ */
+function secondsBetween(previousTimestamp, timestamp) {
+  if (previousTimestamp === null) return 0;
+  return (timestamp - previousTimestamp) / MILLISECONDS_PER_SECOND;
+}
+
+/**
  * Runs a show on a canvas frame by frame, with requestAnimationFrame (which the browser pauses while the tab is hidden), until
  * the returned function is called.
  *
@@ -101,7 +118,7 @@ export function startShowOnCanvas(canvas, name, setup) {
 
   /** Moves the show on by the time since the previous frame and paints it. */
   const drawFrame = (/** @type {number} */ timestamp) => {
-    const secondsSinceLastFrame = lastTimestamp === null ? 0 : (timestamp - lastTimestamp) / 1000;
+    const secondsSinceLastFrame = secondsBetween(lastTimestamp, timestamp);
     lastTimestamp = timestamp;
     stepShow(show, Math.min(secondsSinceLastFrame, MAX_FRAME_SECONDS));
     drawShow(context, show);
