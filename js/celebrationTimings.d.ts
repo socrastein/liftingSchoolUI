@@ -1,7 +1,7 @@
 /**
  * How long a celebration will last: the length the caller asked for, kept between the minimum and the maximum.
  *
- * @param {number | undefined} requestedSeconds What the caller asked for; undefined or not a number means the default.
+ * @param {number | undefined} requestedSeconds What the caller asked for; undefined or not a finite number means the default.
  * @returns {number} Seconds, from `MIN_CELEBRATION_SECONDS` to `MAX_CELEBRATION_SECONDS`.
  */
 export function clampCelebrationSeconds(requestedSeconds: number | undefined): number;
@@ -25,7 +25,7 @@ export function choreographyPace(celebrationSeconds: number): number;
 export const CELEBRATION_SECONDS: 6;
 /**
  * The shortest a caller can ask for: squeezed this far, the last confetti burst pops at 4.2 seconds and the last firework bursts
- * at 3.3, both before the fade begins, as they do in the default length.
+ * at 3.9 (its launch is squeezed, its flight is not), both before the fade begins, as they do in the default length.
  */
 export const MIN_CELEBRATION_SECONDS: 5;
 /** The longest a caller can ask for: a celebration is a moment, not a screensaver, and the page is under it the whole time. */

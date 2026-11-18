@@ -77,6 +77,7 @@ function drawConfettiPiece(context, piece) {
   context.rotate(piece.rotation);
   context.scale(1, FLUTTER_THINNEST + (1 - FLUTTER_THINNEST) * flip);
   context.fillStyle = piece.color;
+  // Centred on the origin: the piece is `size` wide and half as tall
   context.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2);
 }
 
@@ -120,6 +121,7 @@ function drawTrail(context, rocket) {
   context.lineWidth = TRAIL_WIDTH;
   context.strokeStyle = rocket.color;
   trail.forEach((point, index) => {
+    // Each stroke runs to the next point; the last one runs to the head, so the trail has no gap
     const next = trail[index + 1] ?? { x: rocket.x, y: rocket.y };
     // The newest stroke is the strongest
     context.globalAlpha = (index + 1) / (trail.length + 1);
@@ -128,6 +130,7 @@ function drawTrail(context, rocket) {
     context.lineTo(next.x - rocket.x, next.y - rocket.y);
     context.stroke();
   });
+  // Reset so the head that is drawn next is at full strength, not at the faint alpha of the last stroke
   context.globalAlpha = 1;
 }
 

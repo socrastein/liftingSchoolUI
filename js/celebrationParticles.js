@@ -117,6 +117,34 @@ const TRAIL_LENGTH = 16;
 const CULL_MARGIN_PIXELS = 120;
 /** The step the fast-forward to a still picture takes: one frame at 60 per second. */
 const STILL_STEP_SECONDS = 1 / 60;
+/** A full turn, in radians. */
+const FULL_TURN_RADIANS = Math.PI * 2;
+
+/*
+ * The ranges the random pieces are drawn from, each [minimum, maximum) in the unit its name gives. They were tuned by eye on the
+ * showcase rather than taken from a source, so changing one changes how a celebration looks and nothing else.
+ */
+/**
+ * The upward fan a confetti burst pops out in, in radians. Canvas y points down, so -PI/2 is straight up; the fan stops just
+ * short of the horizontal on each side, so no piece is shot sideways.
+ *
+ * @type {[number, number]}
+ */
+const CONFETTI_FAN_RADIANS = [-Math.PI * 0.95, -Math.PI * 0.05];
+/** @type {[number, number]} Pixels per second. */
+const CONFETTI_SPEED_RANGE = [220, 620];
+/** @type {[number, number]} Radians per second. */
+const CONFETTI_SPIN_RANGE = [-9, 9];
+/** @type {[number, number]} Pixels along the long side. */
+const CONFETTI_SIZE_RANGE = [7, 13];
+/** @type {[number, number]} Seconds. Long enough to drift down until the next burst. */
+const CONFETTI_LIFETIME_RANGE = [3, 4.5];
+/** @type {[number, number]} Pixels per second. */
+const SPARK_SPEED_RANGE = [60, 340];
+/** @type {[number, number]} Radius in pixels. */
+const SPARK_RADIUS_RANGE = [2, 3.5];
+/** @type {[number, number]} Seconds. */
+const SPARK_LIFETIME_RANGE = [1, 1.6];
 
 /**
  * How the loose pieces of each show move: gravity in pixels per second squared, drag as the fraction of speed kept each second
@@ -235,22 +263,21 @@ function launchDueConfettiBurst(show) {
  * @returns {ConfettiPiece}
  */
 function createConfettiPiece(show, x, y) {
-  const angle = randomBetween(show, -Math.PI * 0.95, -Math.PI * 0.05);
-  const speed = randomBetween(show, 220, 620);
+  const angle = randomBetween(show, ...CONFETTI_FAN_RADIANS);
+  const speed = randomBetween(show, ...CONFETTI_SPEED_RANGE);
   return {
     kind: "confetti",
     x,
     y,
     velocityX: Math.cos(angle) * speed,
     velocityY: Math.sin(angle) * speed,
-    rotation: randomBetween(show, 0, Math.PI * 2),
-    spin: randomBetween(show, -9, 9),
-    size: randomBetween(show, 7, 13),
+    rotation: randomBetween(show, 0, FULL_TURN_RADIANS),
+    spin: randomBetween(show, ...CONFETTI_SPIN_RANGE),
+    size: randomBetween(show, ...CONFETTI_SIZE_RANGE),
     color: randomPieceColor(show),
     age: 0,
-    // Long enough to drift down until the next burst
-    lifetime: randomBetween(show, 3, 4.5),
-    wobblePhase: randomBetween(show, 0, Math.PI * 2),
+    lifetime: randomBetween(show, ...CONFETTI_LIFETIME_RANGE),
+    wobblePhase: randomBetween(show, 0, FULL_TURN_RADIANS),
   };
 }
 
@@ -295,6 +322,7 @@ function createRocket(show, x, targetY) {
  * @param {Show} show The show, changed in place.
  */
 function burstArrivedRockets(show) {
+  // addParticle pushes onto the array this loop walks, so the sparks added here are walked too; the kind check skips them
   for (const particle of show.particles) {
     if (particle.kind !== "rocket" || particle.age < particle.lifetime) continue;
     for (let count = 0; count < FIREWORK_SPARKS; count++) {
@@ -311,18 +339,18 @@ function burstArrivedRockets(show) {
  * @returns {Spark}
  */
 function createSpark(show, rocket) {
-  const angle = randomBetween(show, 0, Math.PI * 2);
-  const speed = randomBetween(show, 60, 340);
+  const angle = randomBetween(show, 0, FULL_TURN_RADIANS);
+  const speed = randomBetween(show, ...SPARK_SPEED_RANGE);
   return {
     kind: "spark",
     x: rocket.x,
     y: rocket.y,
     velocityX: Math.cos(angle) * speed,
     velocityY: Math.sin(angle) * speed,
-    size: randomBetween(show, 2, 3.5),
+    size: randomBetween(show, ...SPARK_RADIUS_RANGE),
     color: rocket.color,
     age: 0,
-    lifetime: randomBetween(show, 1, 1.6),
+    lifetime: randomBetween(show, ...SPARK_LIFETIME_RANGE),
   };
 }
 
@@ -340,6 +368,7 @@ function moveParticle(show, particle, seconds) {
     return;
   }
   const { gravity, drag } = PHYSICS[show.name];
+  // Drag compounds once per second, so one long step and many short ones slow a piece by the same amount
   const speedKept = Math.pow(drag, seconds);
   particle.velocityY += gravity * seconds;
   particle.velocityX *= speedKept;
