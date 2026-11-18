@@ -60,6 +60,7 @@ interface Run {
   stopCanvas: () => void;
   /** Silences the sound; does nothing until the sound has started. */
   stopSound: () => void;
+  /** The timers that fade it and end it; cleared however it ends. */
   timers: ReturnType<typeof setTimeout>[];
   /** When it began, in milliseconds, to tell if a late audio context started too late for the sound to match. */
   startedAtMilliseconds: number;
@@ -72,6 +73,9 @@ interface Run {
  * take a moment; past this the sound would no longer match what is on screen, so it is left out.
  */
 const MAX_SOUND_DELAY_MILLISECONDS = 500;
+
+/** Timers take milliseconds, while the lengths a caller gives are in seconds. */
+const MILLISECONDS_PER_SECOND = 1000;
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 const closeButton = ref<HTMLButtonElement | null>(null);
@@ -129,8 +133,8 @@ function startRun(seconds: number): Run {
     startedAtMilliseconds: Date.now(),
     focusBefore: document.activeElement,
   };
-  newRun.timers.push(setTimeout(fadeOut, (seconds - FADE_OUT_SECONDS) * 1000));
-  newRun.timers.push(setTimeout(end, seconds * 1000));
+  newRun.timers.push(setTimeout(fadeOut, (seconds - FADE_OUT_SECONDS) * MILLISECONDS_PER_SECOND));
+  newRun.timers.push(setTimeout(end, seconds * MILLISECONDS_PER_SECOND));
   window.addEventListener("keydown", onKeydown);
   document.addEventListener("visibilitychange", onVisibilityChange);
   run = newRun;
@@ -172,18 +176,26 @@ async function drawCelebration(thisRun: Run, name: CelebrationName, how: { pace:
 }
 
 /**
+ * Logs why the sound was left out. A refused or failed sound is expected in some browsers, so the celebration carries on with
+ * its visuals; the warning is for the console, where a developer can see the cause.
+ */
+function warnSoundLeftOut(error: unknown): void {
+  console.warn("A celebration's sound was left out; the visuals still play:", error);
+}
+
+/**
  * Starts the sound once the audio context is running. It may be suspended still (the browser has not finished resuming it, or
  * refused): then the sound waits a moment for it, and is left out if it comes too late or never.
  */
 async function startSound(thisRun: Run, name: CelebrationName, how: { pace: number; audioContext: AudioContext }): Promise<void> {
   const { pace, audioContext } = how;
-  if (audioContext.state !== "running") await audioContext.resume().catch(() => {});
+  if (audioContext.state !== "running") await audioContext.resume().catch(warnSoundLeftOut);
   const isTooLate = Date.now() - thisRun.startedAtMilliseconds > MAX_SOUND_DELAY_MILLISECONDS;
   if (run !== thisRun || isTooLate || audioContext.state !== "running") return;
   try {
     thisRun.stopSound = startCelebrationSound(name, audioContext, pace);
-  } catch {
-    // The visuals do not need the sound
+  } catch (error) {
+    warnSoundLeftOut(error);
   }
 }
 

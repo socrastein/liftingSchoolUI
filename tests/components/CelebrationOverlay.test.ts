@@ -289,6 +289,17 @@ describe("sound", () => {
     expect(canvasContext.clearRect.mock.calls.length).toBeGreaterThan(20);
   });
 
+  it("says in the console why the sound was left out when the browser refuses audio", async () => {
+    audio.state = "suspended";
+    audio.resumeOutcome = "refuses";
+    const warnings = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const wrapper = mount(CelebrationOverlay);
+
+    await playAndSettle(wrapper, { sound: true });
+
+    expect(warnings).toHaveBeenCalledWith(expect.stringContaining("sound was left out"), expect.any(Error));
+  });
+
   it("starts the sound after a context that was suspended has resumed", async () => {
     audio.state = "suspended";
     const wrapper = mount(CelebrationOverlay);
