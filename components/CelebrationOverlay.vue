@@ -74,9 +74,6 @@ interface Run {
  */
 const MAX_SOUND_DELAY_MILLISECONDS = 500;
 
-/** Timers take milliseconds, while the lengths a caller gives are in seconds. */
-const MILLISECONDS_PER_SECOND = 1000;
-
 const canvas = ref<HTMLCanvasElement | null>(null);
 const closeButton = ref<HTMLButtonElement | null>(null);
 /** Whether a celebration is playing, and so whether its layer is on the page. */
@@ -133,8 +130,9 @@ function startRun(seconds: number): Run {
     startedAtMilliseconds: Date.now(),
     focusBefore: document.activeElement,
   };
-  newRun.timers.push(setTimeout(fadeOut, (seconds - FADE_OUT_SECONDS) * MILLISECONDS_PER_SECOND));
-  newRun.timers.push(setTimeout(end, seconds * MILLISECONDS_PER_SECOND));
+  // setTimeout takes milliseconds, the lengths a caller gives are in seconds
+  newRun.timers.push(setTimeout(fadeOut, (seconds - FADE_OUT_SECONDS) * 1000));
+  newRun.timers.push(setTimeout(end, seconds * 1000));
   window.addEventListener("keydown", onKeydown);
   document.addEventListener("visibilitychange", onVisibilityChange);
   run = newRun;

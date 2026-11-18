@@ -198,19 +198,14 @@ function close(): void {
 }
 
 /**
- * The `MouseEvent.button` value of the main button (the left one on a right-handed mouse), as the DOM defines it: 0 is the main
- * button, 1 the wheel and 2 the secondary button.
- */
-const MAIN_MOUSE_BUTTON = 0;
-
-/**
  * The main mouse button pressed on the box opens or closes the list, as a native select does: on the press, not the click. A
  * click needs the press and release on the same element, and leaving the field before (a date box showing its error) can
  * push this box down in between, so a click would be lost. On a phone the browser sends the press when the tap ends, so
  * starting to scroll on a drop-down does not open it.
  */
 function onBoxMousedown(event: MouseEvent): void {
-  if (event.button !== MAIN_MOUSE_BUTTON) return;
+  // only the main (left) button toggles, as a native select does
+  if (event.button !== 0) return;
   toggleOpen();
 }
 
@@ -431,7 +426,8 @@ function selectAllText(event: FocusEvent): void {
  * plain drop-down's, it does not close it, since a click in a text box moves the caret.
  */
 function openOnMousedown(event: MouseEvent): void {
-  if (event.button !== MAIN_MOUSE_BUTTON || isOpen.value) return;
+  // only the main (left) button opens it
+  if (event.button !== 0 || isOpen.value) return;
   open();
 }
 

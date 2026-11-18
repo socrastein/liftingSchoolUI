@@ -30,8 +30,6 @@ const MAX_PIXEL_RATIO = 2;
 const MAX_CANVAS_PIXELS = 3_000_000;
 /** The longest step of the show, in seconds: after a stall (a busy phone) the show carries on from where it was instead of jumping. */
 const MAX_FRAME_SECONDS = 0.05;
-/** requestAnimationFrame timestamps are in milliseconds; the show's steps are in seconds. */
-const MILLISECONDS_PER_SECOND = 1000;
 /** What the palette falls back to when a token is not defined (the library's CSS was not loaded): the canvas's own text colour. */
 const MISSING_TOKEN_COLOR = "currentColor";
 
@@ -95,7 +93,8 @@ function fitCanvas(canvas, context) {
  */
 function secondsBetween(previousTimestamp, timestamp) {
   if (previousTimestamp === null) return 0;
-  return (timestamp - previousTimestamp) / MILLISECONDS_PER_SECOND;
+  // requestAnimationFrame timestamps are in milliseconds, the show's steps are in seconds
+  return (timestamp - previousTimestamp) / 1000;
 }
 
 /**

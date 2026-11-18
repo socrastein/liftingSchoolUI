@@ -117,8 +117,6 @@ const TRAIL_LENGTH = 16;
 const CULL_MARGIN_PIXELS = 120;
 /** The step the fast-forward to a still picture takes: one frame at 60 per second. */
 const STILL_STEP_SECONDS = 1 / 60;
-/** A full turn, in radians. */
-const FULL_TURN_RADIANS = Math.PI * 2;
 
 /*
  * The ranges the random pieces are drawn from, each [minimum, maximum) in the unit its name gives. They were tuned by eye on the
@@ -271,13 +269,13 @@ function createConfettiPiece(show, x, y) {
     y,
     velocityX: Math.cos(angle) * speed,
     velocityY: Math.sin(angle) * speed,
-    rotation: randomBetween(show, 0, FULL_TURN_RADIANS),
+    rotation: randomBetween(show, 0, Math.PI * 2),
     spin: randomBetween(show, ...CONFETTI_SPIN_RANGE),
     size: randomBetween(show, ...CONFETTI_SIZE_RANGE),
     color: randomPieceColor(show),
     age: 0,
     lifetime: randomBetween(show, ...CONFETTI_LIFETIME_RANGE),
-    wobblePhase: randomBetween(show, 0, FULL_TURN_RADIANS),
+    wobblePhase: randomBetween(show, 0, Math.PI * 2),
   };
 }
 
@@ -339,7 +337,7 @@ function burstArrivedRockets(show) {
  * @returns {Spark}
  */
 function createSpark(show, rocket) {
-  const angle = randomBetween(show, 0, FULL_TURN_RADIANS);
+  const angle = randomBetween(show, 0, Math.PI * 2);
   const speed = randomBetween(show, ...SPARK_SPEED_RANGE);
   return {
     kind: "spark",

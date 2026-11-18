@@ -14,13 +14,7 @@ import { findPlaceholderCopy } from "./placeholderCopyCheck.js";
 const DEFAULT_FOLDERS = ["src"];
 
 /**
- * The exit code when drafted copy remains. Any non-zero code stops a deploy step, and 1 is the conventional one for a command
- * line tool that did not succeed.
- */
-const EXIT_CODE_DRAFTS_REMAIN = 1;
-
-/**
- * Scans, reports, and sets the exit code: 0 when no drafted copy remains, EXIT_CODE_DRAFTS_REMAIN when any does.
+ * Scans, reports, and sets the exit code: 0 when no drafted copy remains, 1 when any does.
  *
  * @param {string[]} folders The folders to scan.
  * @returns {void}
@@ -35,7 +29,8 @@ function main(folders) {
   for (const location of locations) {
     console.error(`  ${location}`);
   }
-  process.exitCode = EXIT_CODE_DRAFTS_REMAIN;
+  // any non-zero code stops a deploy step; 1 is the conventional one for a command line tool that did not succeed
+  process.exitCode = 1;
 }
 
 const folderArguments = process.argv.slice(2);
