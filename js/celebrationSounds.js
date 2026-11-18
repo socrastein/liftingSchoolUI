@@ -30,6 +30,14 @@ const NOTE_C5_HERTZ = 523.25;
 /** A music note rises by a twelfth root of 2 in pitch per semitone; each confetti pop's note is this many semitones above the last. */
 const POP_NOTE_STEP_SEMITONES = 3;
 const SEMITONES_PER_OCTAVE = 12;
+/** How long a note takes to rise to full volume: a quick attack, so each note starts with a click rather than a slow swell. */
+const ATTACK_SECONDS = 0.01;
+/** How long an oscillator runs past the end of its fade, so the fade has finished before the node stops and cuts the sound off. */
+const STOP_TAIL_SECONDS = 0.05;
+/** How many tiny clicks make up one burst's crackle of sparks. A sound-design choice, not a published figure. */
+const CRACKLE_CLICK_COUNT = 12;
+/** The time, after the crackle begins, over which its clicks are scattered. */
+const CRACKLE_SPAN_SECONDS = 0.8;
 
 /** @type {AudioContext | null} The page's one audio context, made on first use. */
 let sharedContext = null;
@@ -104,11 +112,11 @@ function playTone(context, output, note) {
   oscillator.type = note.type ?? "sine";
   oscillator.frequency.value = note.frequency;
   envelope.gain.setValueAtTime(SILENCE, note.startTime);
-  envelope.gain.exponentialRampToValueAtTime(note.volume, note.startTime + 0.01);
+  envelope.gain.exponentialRampToValueAtTime(note.volume, note.startTime + ATTACK_SECONDS);
   envelope.gain.exponentialRampToValueAtTime(SILENCE, note.startTime + note.duration);
   oscillator.connect(envelope).connect(output);
   oscillator.start(note.startTime);
-  oscillator.stop(note.startTime + note.duration + 0.05);
+  oscillator.stop(note.startTime + note.duration + STOP_TAIL_SECONDS);
 }
 
 /**
@@ -152,7 +160,7 @@ function playGlide(context, output, glide) {
   envelope.gain.exponentialRampToValueAtTime(SILENCE, glide.startTime + glide.duration);
   oscillator.connect(envelope).connect(output);
   oscillator.start(glide.startTime);
-  oscillator.stop(glide.startTime + glide.duration + 0.05);
+  oscillator.stop(glide.startTime + glide.duration + STOP_TAIL_SECONDS);
 }
 
 /**
@@ -200,16 +208,17 @@ function playFirework(context, output, launchTime) {
 }
 
 /**
- * The crackle of a burst's sparks: a dozen tiny high clicks scattered over the next 0.8 seconds.
+ * The crackle of a burst's sparks: a dozen tiny high clicks scattered over the next 0.8 seconds (see CRACKLE_CLICK_COUNT and
+ * CRACKLE_SPAN_SECONDS).
  *
  * @param {AudioContext} context The context.
  * @param {AudioNode} output Where the crackle goes.
  * @param {number} startTime When the crackle begins, on the context's clock.
  */
 function playCrackle(context, output, startTime) {
-  const clickCount = 12;
-  for (let index = 0; index < clickCount; index++) {
-    const clickTime = startTime + Math.random() * 0.8;
+  for (let index = 0; index < CRACKLE_CLICK_COUNT; index++) {
+    // Math.random gives each click an unpredictable moment within the span, so the crackle sounds like scattered sparks.
+    const clickTime = startTime + Math.random() * CRACKLE_SPAN_SECONDS;
     playNoise(context, output, {
       startTime: clickTime,
       duration: 0.03,
