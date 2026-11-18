@@ -32,6 +32,16 @@
 export const MAX_WAITING_TOASTS = 3;
 
 /**
+ * The state one queue keeps between calls. Its helpers below take it as their first argument, so each one reads and changes
+ * only the fields it names.
+ *
+ * @typedef {object} ToastQueueState
+ * @property {number} maxWaiting How many messages may wait behind the one on screen.
+ * @property {ToastRequest[]} waiting The requests waiting for their turn, oldest first.
+ * @property {ToastRequest | null} onScreen The request on screen now, or null when the screen is empty.
+ */
+
+/**
  * Makes a queue of toasts. The page shares one (`toastQueue`); tests make their own to start from empty.
  *
  * @param {number} [maxWaiting] How many messages may wait behind the one on screen; the oldest waiting ones are dropped first.
@@ -41,82 +51,104 @@ export const MAX_WAITING_TOASTS = 3;
  * }} `request` asks for a turn; `leave` is for a screen that is going away.
  */
 export function createToastQueue(maxWaiting = MAX_WAITING_TOASTS) {
-  /** @type {ToastRequest[]} Oldest first. */
-  let waiting = [];
-  /** @type {ToastRequest | null} The one on screen now. */
-  let onScreen = null;
+  /** @type {ToastQueueState} */
+  const state = { maxWaiting, waiting: [], onScreen: null };
+  return {
+    request: (screen, message) => requestTurn(state, screen, message),
+    leave: (screen) => leaveScreen(state, screen),
+  };
+}
 
-  /** Shows a request now and, when its screen reports it has gone, moves on to the next one. */
-  function start(/** @type {ToastRequest} */ toast) {
-    onScreen = toast;
-    toast.screen.display(toast.message, toast.settle).then(() => finish(toast));
-  }
-
-  /** Moves on after a toast has left, unless it was already released (its screen went away) and replaced. */
-  function finish(/** @type {ToastRequest} */ toast) {
-    if (onScreen !== toast) return;
-    onScreen = null;
-    startNext();
-  }
-
-  /** Starts the longest-waiting request, if any. */
-  function startNext() {
-    const next = waiting.shift();
-    if (next !== undefined) start(next);
-  }
-
-  /** Drops the oldest waiting requests until no more than `maxWaiting` are left, never the one on screen. */
-  function dropBeyondLimit() {
-    while (waiting.length > maxWaiting) {
-      const dropped = /** @type {ToastRequest} */ (waiting.shift());
-      dropped.settle();
+/**
+ * Asks for a turn. The message is shown at once when nothing is on screen, otherwise it waits behind the others. A message
+ * identical to one already waiting is not queued again, so a burst of the same news is shown once; the same message as the
+ * one on screen is queued, so it shows again after it.
+ *
+ * @param {ToastQueueState} state The queue asked.
+ * @param {ToastScreen} screen The instance that draws the message.
+ * @param {string} message What the toast says.
+ * @returns {Promise<void>} Resolves when the message is on the page, or when it was dropped or merged and never will be.
+ */
+function requestTurn(state, screen, message) {
+  return new Promise((settle) => {
+    if (state.onScreen === null) {
+      showToast(state, { screen, message, settle });
+      return;
     }
-  }
-
-  /**
-   * Asks for a turn. The message is shown at once when nothing is on screen, otherwise it waits behind the others. A message
-   * identical to one already waiting is not queued again, so a burst of the same news is shown once; the same message as the
-   * one on screen is queued, so it shows again after it.
-   *
-   * @param {ToastScreen} screen The instance that draws the message.
-   * @param {string} message What the toast says.
-   * @returns {Promise<void>} Resolves when the message is on the page, or when it was dropped or merged and never will be.
-   */
-  function request(screen, message) {
-    return new Promise((settle) => {
-      if (onScreen === null) {
-        start({ screen, message, settle });
-        return;
-      }
-      const isAlreadyWaiting = waiting.some((toast) => toast.message === message);
-      if (isAlreadyWaiting) {
-        settle();
-        return;
-      }
-      waiting.push({ screen, message, settle });
-      dropBeyondLimit();
-    });
-  }
-
-  /**
-   * Forgets everything a screen asked for, for when it is unmounted (the page changed): its waiting messages are dropped, and
-   * if it is the one showing, the next toast starts at once.
-   *
-   * @param {ToastScreen} screen The instance going away.
-   */
-  function leave(screen) {
-    const [theirs, others] = partition(waiting, (toast) => toast.screen === screen);
-    waiting = others;
-    theirs.forEach((toast) => toast.settle());
-
-    if (onScreen !== null && onScreen.screen === screen) {
-      onScreen.settle();
-      onScreen = null;
-      startNext();
+    // A repeat of a message already waiting adds nothing the reader does not already have coming.
+    const isAlreadyWaiting = state.waiting.some((toast) => toast.message === message);
+    if (isAlreadyWaiting) {
+      settle();
+      return;
     }
-  }
+    state.waiting.push({ screen, message, settle });
+    dropBeyondLimit(state);
+  });
+}
 
-  return { request, leave };
+/**
+ * Forgets everything a screen asked for, for when it is unmounted (the page changed): its waiting messages are dropped, and
+ * if it is the one showing, the next toast starts at once.
+ *
+ * @param {ToastQueueState} state The queue the screen was using.
+ * @param {ToastScreen} screen The instance going away.
+ */
+function leaveScreen(state, screen) {
+  const [theirs, others] = partition(state.waiting, (toast) => toast.screen === screen);
+  state.waiting = others;
+  theirs.forEach((toast) => toast.settle());
+
+  if (state.onScreen !== null && state.onScreen.screen === screen) {
+    // Settling releases the request's promise now, so the caller is not left waiting on a screen that no longer exists.
+    state.onScreen.settle();
+    state.onScreen = null;
+    showNextToast(state);
+  }
+}
+
+/**
+ * Shows a request now and, when its screen reports it has gone, moves on to the next one.
+ *
+ * @param {ToastQueueState} state The queue showing it.
+ * @param {ToastRequest} toast The request to show.
+ */
+function showToast(state, toast) {
+  state.onScreen = toast;
+  toast.screen.display(toast.message, toast.settle).then(() => finishToast(state, toast));
+}
+
+/**
+ * Moves on after a toast has left, unless it was already released (its screen went away) and replaced.
+ *
+ * @param {ToastQueueState} state The queue the toast was on.
+ * @param {ToastRequest} toast The toast that has left the page.
+ */
+function finishToast(state, toast) {
+  if (state.onScreen !== toast) return;
+  state.onScreen = null;
+  showNextToast(state);
+}
+
+/**
+ * Shows the longest-waiting request, if any; with none waiting, the screen stays empty.
+ *
+ * @param {ToastQueueState} state The queue to advance.
+ */
+function showNextToast(state) {
+  const next = state.waiting.shift();
+  if (next !== undefined) showToast(state, next);
+}
+
+/**
+ * Drops the oldest waiting requests until no more than `maxWaiting` are left, never the one on screen.
+ *
+ * @param {ToastQueueState} state The queue to trim.
+ */
+function dropBeyondLimit(state) {
+  while (state.waiting.length > state.maxWaiting) {
+    const dropped = /** @type {ToastRequest} */ (state.waiting.shift());
+    dropped.settle();
+  }
 }
 
 /**
