@@ -36,14 +36,25 @@ const layout = {
   /** The window is under 900px: CSS shows the phone menu whatever the row's width. */
   belowBreakpoint: false,
   barWidth: 1200,
-  titleWidth: 190,
+  logoWidth: 32,
+  /** The name's text, which is what the header measures, whether the name is drawn or clipped */
+  nameWidth: 150,
+  /** True when the name's box is clipped to 1px, as a hidden name is (its text still takes nameWidth) */
+  nameClipped: false,
   statusWidth: 55,
   rowWidth: 600,
+  /** The Menu button's block (the phone form's end), with no bell */
+  menuWidth: 90,
 };
+
+/** The title with its name shown: the logo, the gap between it and the name, and the name. */
+function titleWidthInLayout(): number {
+  return layout.logoWidth + GAP + layout.nameWidth;
+}
 
 /** The room the row has in the default layout: the bar inside its padding, less the title, the status and the gaps after them. */
 function roomInLayout(): number {
-  return layout.barWidth - BAR_PADDING * 2 - layout.titleWidth - GAP - (layout.statusWidth + GAP);
+  return layout.barWidth - BAR_PADDING * 2 - titleWidthInLayout() - GAP - (layout.statusWidth + GAP);
 }
 
 /** The classes of the elements whose width was read, in order, so a test can see what the header looked at. */
@@ -91,9 +102,12 @@ async function measureNow(): Promise<void> {
 
 /** The width the fake page gives an element: the bar's parts have the widths in `layout`, anything else none. */
 function fakeWidthOf(element: Element): number {
+  if (element.classList.contains("siteHeaderName") && layout.nameClipped) return 1;
   const widths: [string, number][] = [
     ["siteHeaderNav", layout.barWidth],
-    ["siteHeaderTitle", layout.titleWidth],
+    ["siteHeaderLogo", layout.logoWidth],
+    ["siteHeaderName", layout.nameWidth],
+    ["siteHeaderPhone", layout.menuWidth],
     ["siteHeaderLinks", layout.rowWidth],
     ["sampleStatus", layout.statusWidth],
   ];
@@ -131,9 +145,22 @@ function installFakeBarStyle(): void {
   });
 }
 
+/** The text width the fake page gives a range: the name's text is its full width even when its box is clipped. */
+function fakeTextWidthOf(element: Element): number {
+  return element.classList.contains("siteHeaderName") ? layout.nameWidth : fakeWidthOf(element);
+}
+
+/** The range's own getBoundingClientRect as it was before the fake page was installed, put back after each test. */
+let realRangeRect: typeof Range.prototype.getBoundingClientRect | undefined;
+
 /** Installs the fake page: element widths, which form is drawn, the bar's padding and gaps, and the observer. */
 function installFakePage(): void {
   vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+  realRangeRect = Range.prototype.getBoundingClientRect;
+  Range.prototype.getBoundingClientRect = function (this: Range): DOMRect {
+    const width = fakeTextWidthOf(this.startContainer as Element);
+    return { width, height: 20, top: 0, left: 0, right: width, bottom: 20, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+  };
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
     widthsRead.push(this.className);
     if (this.classList.contains("siteHeaderLinks") && this instanceof HTMLElement) rowStylesWhenRead.push(this.style.cssText);
@@ -165,14 +192,27 @@ function mountHeader(): VueWrapper {
 
 let header: VueWrapper;
 
-beforeEach(() => {
+/** Replaces localStorage with an in-memory one, so the theme button has somewhere to save its choice. */
+function stubLocalStorage(): void {
   const entries = new Map<string, string>();
   vi.stubGlobal("localStorage", {
     getItem: (key: string) => entries.get(key) ?? null,
     setItem: (key: string, value: string) => void entries.set(key, String(value)),
     removeItem: (key: string) => void entries.delete(key),
   });
-  Object.assign(layout, { belowBreakpoint: false, barWidth: 1200, titleWidth: 190, statusWidth: 55, rowWidth: 600 });
+}
+
+beforeEach(() => {
+  stubLocalStorage();
+  Object.assign(layout, {
+    belowBreakpoint: false,
+    barWidth: 1200,
+    logoWidth: 32,
+    nameWidth: 150,
+    statusWidth: 55,
+    rowWidth: 600,
+    menuWidth: 90,
+  });
   FakeResizeObserver.instances = [];
   widthsRead = [];
   rowStylesWhenRead = [];
@@ -182,6 +222,7 @@ beforeEach(() => {
 
 afterEach(() => {
   header.unmount();
+  if (realRangeRect !== undefined) Range.prototype.getBoundingClientRect = realRangeRect;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -248,19 +289,17 @@ describe("SiteHeader fit: the row against the room", () => {
     expect(isForcedCompact()).toBe(true);
   });
 
-  it("takes the room the title's content needs, even when a too-wide row has squeezed the title's box", async () => {
-    layout.rowWidth = roomInLayout();
-    vi.spyOn(Element.prototype, "scrollWidth", "get").mockImplementation(function (this: Element) {
-      // The title's box is 190px wide but its logo and name overflow it to 210px
-      return this.classList.contains("siteHeaderTitle") ? layout.titleWidth + 20 : 0;
-    });
+  it("takes the name's text width, even when the name's box is clipped to 1px (hidden for screen readers only)", async () => {
+    layout.nameClipped = true;
+    layout.rowWidth = roomInLayout() + 1;
     await measureNow();
     expect(isForcedCompact()).toBe(true);
   });
 
-  it("does not take a Menu button into account: it never reads the phone block's or the button's width", async () => {
+  it("reads the Menu button's block for the name's room, and never the button itself", async () => {
     await measureNow();
-    expect(widthsRead.filter((name) => name.includes("siteHeaderPhone") || name.includes("siteHeaderMenuButton"))).toEqual([]);
+    expect(widthsRead.some((name) => name.includes("siteHeaderPhone"))).toBe(true);
+    expect(widthsRead.filter((name) => name.includes("siteHeaderMenuButton"))).toEqual([]);
   });
 });
 
@@ -375,6 +414,63 @@ describe("SiteHeader fit: measuring a row that is not drawn", () => {
   });
 });
 
+describe("SiteHeader fit: the name", () => {
+  /**
+   * The bar width at which the name just fits beside the Menu button with no bell: the bar's inside width less the title with its
+   * gap, and the status with its gap, must leave room for the Menu button's block (90px in the layout).
+   */
+  const NAME_FITS_AT_BAR_WIDTH = 383;
+
+  /** Whether the name is drawn out of sight (the class `visuallyHidden`) right now. */
+  function isNameHidden(): boolean {
+    return header.get(".siteHeaderName").classes("visuallyHidden");
+  }
+
+  it("keeps the name when it fits beside the Menu button, at the bound itself", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH;
+    await measureNow();
+    expect(isNameHidden()).toBe(false);
+  });
+
+  it("hides the name one pixel under the bound, and the header then asks for the phone menu", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH - 1;
+    await measureNow();
+    expect(isNameHidden()).toBe(true);
+    expect(isForcedCompact()).toBe(true);
+  });
+
+  it("keeps the home link's name for screen readers while the name is hidden", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH - 1;
+    await measureNow();
+    expect(isNameHidden()).toBe(true);
+    expect(header.get(".siteHeaderHome").text()).toBe("The Sample App");
+  });
+
+  it("shows the name again when the window is wider", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH - 1;
+    await measureNow();
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH + 50;
+    await measureNow();
+    expect(isNameHidden()).toBe(false);
+  });
+
+  it("is in the phone form whenever the name is hidden", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH - 1;
+    layout.rowWidth = 100;
+    await measureNow();
+    expect(isNameHidden()).toBe(true);
+    expect(isForcedCompact()).toBe(true);
+  });
+
+  it("does not hide the name for a row that is wide, when the name still fits beside the Menu button", async () => {
+    layout.barWidth = NAME_FITS_AT_BAR_WIDTH + 200;
+    layout.rowWidth = roomInLayout() + 100;
+    await measureNow();
+    expect(isNameHidden()).toBe(false);
+    expect(isForcedCompact()).toBe(true);
+  });
+});
+
 describe("SiteHeader fit: what is watched", () => {
   it("measures again when a page is added to the row, even while the row is not drawn", async () => {
     await measureNow();
@@ -410,12 +506,17 @@ describe("SiteHeader fit: what is watched", () => {
     header = mountHeader();
   });
 
-  it("watches the bar, the title, the row and the status, and nothing in the phone menu", () => {
+  it("watches the bar, the title, the row, the Menu button's block and the status", () => {
     const watched = [...theObserver().observed].map((element) => element.className);
     expect(watched).toEqual(
-      expect.arrayContaining(["siteHeaderNav", "siteHeaderTitle", expect.stringContaining("siteHeaderLinks"), "sampleStatus"]),
+      expect.arrayContaining([
+        "siteHeaderNav",
+        "siteHeaderTitle",
+        expect.stringContaining("siteHeaderLinks"),
+        expect.stringContaining("siteHeaderPhone"),
+        "sampleStatus",
+      ]),
     );
-    expect(watched.some((name) => name.includes("siteHeaderPhone"))).toBe(false);
   });
 
   it("watches a status element that replaces the old one", async () => {
@@ -513,7 +614,7 @@ describe("SiteHeader fit: where focus goes when its control is hidden", () => {
 
     layout.barWidth += 200;
     await measureNow();
-    expect(document.activeElement).toBe(header.get(".siteHeaderName").element);
+    expect(document.activeElement).toBe(header.get(".siteHeaderHome").element);
   });
 
   it("moves focus from a row inside the open phone menu to the name too", async () => {
@@ -524,15 +625,15 @@ describe("SiteHeader fit: where focus goes when its control is hidden", () => {
 
     layout.barWidth += 200;
     await measureNow();
-    expect(document.activeElement).toBe(header.get(".siteHeaderName").element);
+    expect(document.activeElement).toBe(header.get(".siteHeaderHome").element);
   });
 
   it("leaves focus alone when it is somewhere that stays on screen", async () => {
-    const name = header.get<HTMLElement>(".siteHeaderName").element;
-    name.focus();
+    const home = header.get<HTMLElement>(".siteHeaderHome").element;
+    home.focus();
     layout.rowWidth = roomInLayout() + 100;
     await measureNow();
-    expect(document.activeElement).toBe(name);
+    expect(document.activeElement).toBe(home);
 
     const outside = document.createElement("button");
     document.body.append(outside);

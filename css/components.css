@@ -1124,10 +1124,15 @@ textarea.input {
   transform: rotate(360deg);
 }
 
-/* The name is plain text colour, not the accent that links take, and never wraps */
-.siteHeaderName,
-.siteHeaderName:link,
-.siteHeaderName:visited {
+/* The logo and the name are one link home, so its focus ring goes round both */
+.siteHeaderHome {
+  align-items: center;
+  display: flex;
+  gap: var(--space1);
+}
+
+/* The name is plain text colour, not the accent that links take, and never wraps: when it does not fit it is hidden, never wrapped */
+.siteHeaderName {
   color: var(--textFull);
   font-size: var(--fontSizeXl);
   white-space: nowrap;
@@ -1452,22 +1457,8 @@ textarea.input {
 
 /* Where the name leaves little room: a smaller name under 400px, and under 350px the icon alone, without its word */
 @media (max-width: 399px) {
-  .siteHeaderName,
-  .siteHeaderName:link,
-  .siteHeaderName:visited {
+  .siteHeaderName {
     font-size: var(--fontSizeLg);
-  }
-}
-
-/* With a bell there is no room for the name on one line on a phone (name, bell and Menu button measured to collide up to about
-   417px wide), so the name may wrap onto two short lines, which the header's height holds at this size */
-@media (max-width: 439px) {
-  .siteHeaderWithBell .siteHeaderName,
-  .siteHeaderWithBell .siteHeaderName:link,
-  .siteHeaderWithBell .siteHeaderName:visited {
-    font-size: var(--fontSizeMd);
-    line-height: 1.1;
-    white-space: normal;
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { roomLeftForRow, rowFits, SUBPIXEL_TOLERANCE_PX } from "../js/headerFit.js";
+import { nameFitsBesideMenu, roomLeftForRow, rowFits, SUBPIXEL_TOLERANCE_PX } from "../js/headerFit.js";
 
 /**
  * Whether the header's wide row fits: the room it has is what the bar leaves after the title and the statuses, and it fits
@@ -13,7 +13,7 @@ import { roomLeftForRow, rowFits, SUBPIXEL_TOLERANCE_PX } from "../js/headerFit.
  * @returns {import("../js/headerFit.js").HeaderWidths} The measured widths.
  */
 function widths(changes = {}) {
-  return { barWidth: 1000, barPadding: 32, barGap: 8, titleWidth: 200, statusWidths: [], endGap: 8, ...changes };
+  return { barWidth: 1000, barPadding: 32, barGap: 8, titleWidth: 200, statusWidths: [], endGap: 8, menuWidth: 0, ...changes };
 }
 
 describe("roomLeftForRow", () => {
@@ -55,5 +55,25 @@ describe("rowFits", () => {
   it("does not fit when there is no room at all, and a row of no width (not drawn) fits any room that is not negative", () => {
     expect(rowFits(1, -10)).toBe(false);
     expect(rowFits(0, 0)).toBe(true);
+  });
+});
+
+describe("nameFitsBesideMenu", () => {
+  // The same bar as above: 760px of room after the title, with the Menu button's block as wide as that room at the bound
+  it("fits when the Menu button's block is exactly the room left", () => {
+    expect(nameFitsBesideMenu(widths({ menuWidth: 760 }))).toBe(true);
+  });
+
+  it("does not fit one pixel past the room left (the name would collide with the Menu button)", () => {
+    expect(nameFitsBesideMenu(widths({ menuWidth: 761 }))).toBe(false);
+  });
+
+  it("takes the statuses before the Menu button out of the room too", () => {
+    expect(nameFitsBesideMenu(widths({ menuWidth: 760 - 60 - 8, statusWidths: [60] }))).toBe(true);
+    expect(nameFitsBesideMenu(widths({ menuWidth: 760 - 60 - 8 + 1, statusWidths: [60] }))).toBe(false);
+  });
+
+  it("does not fit when the title alone overflows the bar", () => {
+    expect(nameFitsBesideMenu(widths({ barWidth: 200, menuWidth: 0 }))).toBe(false);
   });
 });

@@ -84,11 +84,11 @@ describe("SiteHeader: the bar", () => {
     expect(header.get("nav").attributes("aria-label")).toBe("Main");
   });
 
-  it("names the product beside the logo, as a link to its first page", () => {
-    const name = header.get(".siteHeaderName");
-    expect(name.text()).toBe("The Sample App");
-    expect(name.attributes("href")).toBe("/");
-    expect(header.get(".siteHeaderLogo").attributes("alt")).toBe("");
+  it("names the product beside the logo, as one link to its first page", () => {
+    const home = header.get(".siteHeaderHome");
+    expect(home.text()).toBe("The Sample App");
+    expect(home.attributes("href")).toBe("/");
+    expect(home.get(".siteHeaderLogo").attributes("alt")).toBe("");
   });
 
   it("puts the project's status before the Menu button and before the links", () => {

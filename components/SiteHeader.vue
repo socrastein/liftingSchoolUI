@@ -104,14 +104,18 @@ const announcement = ref("");
 // The parts the fit is measured from (see useHeaderFit)
 const navElement = ref<HTMLElement | null>(null);
 const titleElement = ref<HTMLElement | null>(null);
+const logoElement = ref<HTMLElement | null>(null);
+const nameElement = ref<HTMLElement | null>(null);
 const endElement = ref<HTMLElement | null>(null);
 const rowElement = ref<HTMLElement | null>(null);
 const phoneElement = ref<HTMLElement | null>(null);
 
-/** True once the row has been measured as too wide: the header then forces the phone menu, whatever the window's width. */
-const { isForcedCompact } = useHeaderFit({
+/** The row's fit and the name's fit, measured once mounted: a row too wide, or a name that collides with the Menu button, forces the phone menu. */
+const { isForcedCompact, isNameShown } = useHeaderFit({
   nav: navElement,
   title: titleElement,
+  logo: logoElement,
+  name: nameElement,
   end: endElement,
   row: rowElement,
   phone: phoneElement,
@@ -131,8 +135,11 @@ watch(notificationCount, (count) => {
     <!-- Named, because a page can have navigation of its own: a screen reader lists this one as "Main navigation" -->
     <nav ref="navElement" class="siteHeaderNav" aria-label="Main">
       <div ref="titleElement" class="siteHeaderTitle">
-        <img :src="logoIcon" alt="" class="siteHeaderLogo" />
-        <component :is="linkComponent" :to="homeTo" class="siteHeaderName">{{ name }}</component>
+        <!-- The logo and the name are one link home. When the name does not fit it is hidden from the eye only: the link keeps its name for screen readers -->
+        <component :is="linkComponent" :to="homeTo" class="siteHeaderHome">
+          <img ref="logoElement" :src="logoIcon" alt="" class="siteHeaderLogo" />
+          <span ref="nameElement" class="siteHeaderName" :class="{ visuallyHidden: !isNameShown }">{{ name }}</span>
+        </component>
       </div>
       <div ref="endElement" class="siteHeaderEnd">
         <slot name="status" />

@@ -684,8 +684,8 @@ async function checkRowReturning(page) {
   await page.setViewportSize({ width: 1280, height: 900 });
   await waitForHeaderToSettle(page);
   if (!(await isGone(page.locator("#phoneMenuPanel")))) lines.push("the phone menu stayed open when the row returned");
-  const isOnName = await page.evaluate(() => document.activeElement?.classList.contains("siteHeaderName"));
-  if (!isOnName) lines.push("focus was not moved to the name when the row returned");
+  const isOnHomeLink = await page.evaluate(() => document.activeElement?.classList.contains("siteHeaderHome"));
+  if (!isOnHomeLink) lines.push("focus was not moved to the home link (logo and name) when the row returned");
   return lines;
 }
 

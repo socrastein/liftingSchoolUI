@@ -1,5 +1,5 @@
 import { inject, nextTick, onBeforeUnmount, onMounted, provide, ref, watch, type InjectionKey, type Ref } from "vue";
-import { roomLeftForRow, rowFits, type HeaderWidths } from "../js/headerFit.js";
+import { nameFitsBesideMenu, roomLeftForRow, rowFits, type HeaderWidths } from "../js/headerFit.js";
 
 /**
  * How SiteHeader decides between its wide row and its phone menu, beyond the 900px rule in CSS: it measures whether the row
@@ -17,9 +17,13 @@ import { roomLeftForRow, rowFits, type HeaderWidths } from "../js/headerFit.js";
  * and so was keeping the row laid out but invisible (`visibility`), which holds "visible" through a transition and so showed
  * both forms for a frame under reduced motion.
  *
- * The room it has is worked out from parts that are drawn in both forms (the bar, the title, the project's status), never from
- * the row or the Menu button, so which form is shown cannot change what is measured and the form cannot flip back and forth by
- * itself. The title is read by its content's width, since a row that is too wide squeezes the title's box.
+ * The room it has is worked out from parts whatever form is shown, so which form is shown cannot change what is measured and the
+ * form cannot flip back and forth by itself. The title is worked out from its logo and its name's own widths, not the title's box,
+ * since a row that is too wide squeezes that box, and a name that is hidden takes no room in it.
+ *
+ * The name hides (the logo alone shows) only when it would not fit beside the Menu button's block and the statuses (js/headerFit.js
+ * nameFitsBesideMenu). The header is then in the phone form, whatever the window: a row that fits has room for the name too, so the
+ * name is hidden only where even the phone form would collide.
  *
  * Re-measured when: the window or bar resizes, the title or status changes size, anything in the row changes (a page added at
  * sign-in, the bell's count: a MutationObserver, since a row that is not drawn has no size for a ResizeObserver to report) and
@@ -36,8 +40,12 @@ const HEADER_FORM_KEY: InjectionKey<Ref<HeaderForm>> = Symbol("siteHeaderForm");
 export interface HeaderParts {
   /** The bar itself (.siteHeaderNav), whose inside width is the room. */
   nav: Ref<HTMLElement | null>;
-  /** The logo and name (.siteHeaderTitle). */
+  /** The title (.siteHeaderTitle): the home link, which holds the logo and the name. */
   title: Ref<HTMLElement | null>;
+  /** The logo (.siteHeaderLogo), inside the home link. */
+  logo: Ref<HTMLElement | null>;
+  /** The name (.siteHeaderName), inside the home link; hidden visually, not from screen readers, when it does not fit. */
+  name: Ref<HTMLElement | null>;
   /** Everything on the right (.siteHeaderEnd): the status, the phone menu and the row. */
   end: Ref<HTMLElement | null>;
   /** The wide row (.siteHeaderLinks). */
@@ -48,8 +56,13 @@ export interface HeaderParts {
 
 /** What the header reads from useHeaderFit. */
 export interface HeaderFit {
-  /** True when the row does not fit: the header then asks CSS for the phone menu even at a window of 900px or more. */
+  /**
+   * True when the row does not fit, or the name does not fit beside the Menu button: the header then asks CSS for the phone menu
+   * even at a window of 900px or more. Set on every measurement, so it is never true for a row the name stays on (see the top).
+   */
   isForcedCompact: Ref<boolean>;
+  /** False when the name does not fit beside the Menu button: the name is then drawn out of sight (the logo alone shows). */
+  isNameShown: Ref<boolean>;
   /** The form on screen now (forced or by the 900px rule), which the popups follow. */
   shownForm: Ref<HeaderForm>;
 }
@@ -84,7 +97,7 @@ export function closeWhenHeaderFormChanges(close: () => void): void {
  * @returns Whether the row is forced out, and the form shown.
  */
 export function useHeaderFit(parts: HeaderParts): HeaderFit {
-  const fit: HeaderFit = { isForcedCompact: ref(false), shownForm: ref<HeaderForm>("wide") };
+  const fit: HeaderFit = { isForcedCompact: ref(false), isNameShown: ref(true), shownForm: ref<HeaderForm>("wide") };
   provide(HEADER_FORM_KEY, fit.shownForm);
 
   /** Stops the observers; undefined until mounted, and for good in a browser that cannot observe (CSS then decides alone). */
@@ -111,7 +124,8 @@ async function updateFit(parts: HeaderParts, fit: HeaderFit): Promise<void> {
   if (measured === undefined) return;
 
   const regionWithFocus = regionHoldingFocus(parts);
-  fit.isForcedCompact.value = !rowFits(measured.rowWidth, roomLeftForRow(measured.widths));
+  fit.isNameShown.value = nameFitsBesideMenu(measured.widths);
+  fit.isForcedCompact.value = !rowFits(measured.rowWidth, roomLeftForRow(measured.widths)) || !fit.isNameShown.value;
   // The class that forces the phone menu is applied by Vue on the next tick; the form on screen is read after it
   await nextTick();
   if (parts.nav.value === null) return;
@@ -124,8 +138,9 @@ async function updateFit(parts: HeaderParts, fit: HeaderFit): Promise<void> {
 
 /**
  * Watches everything that can change the answer and calls `onChange` when any does, and once as soon as it starts (the first
- * measurement): the sizes of the bar, the title, the row and each thing in the status slot; the contents of the row and the
- * list of things in the status slot; and the fonts finishing loading.
+ * measurement): the sizes of the bar, the title, the row, the Menu button's block and each thing in the status slot; the
+ * contents of the title, the row, the Menu button's block and the list of things in the status slot; and the fonts finishing
+ * loading.
  *
  * @returns A function that stops watching, or undefined when this browser cannot observe sizes.
  */
@@ -148,19 +163,21 @@ function watchParts(parts: HeaderParts, onChange: () => void): (() => void) | un
 }
 
 /**
- * Calls `onChange` when what is in the row changes (a page added at sign-in, the bell's count: a row that is not drawn has no size
- * for a ResizeObserver to report, so its content is watched directly) or when the project replaces what is in the status slot
- * (a badge that appears).
+ * Calls `onChange` when what is in the row, the title or the Menu button's block changes (a page added at sign-in, the bell's count,
+ * a product name that is changed: a part that is not drawn has no size for a ResizeObserver to report, so its content is watched
+ * directly) or when the project replaces what is in the status slot (a badge that appears).
  *
  * @returns A function that stops watching; one that does nothing when this browser has no MutationObserver.
  */
 function watchContent(parts: HeaderParts, onChange: () => void): () => void {
-  const { end, row } = parts;
-  if (typeof MutationObserver === "undefined" || end.value === null || row.value === null) return () => {};
+  const { end, row, title, phone } = parts;
+  if (typeof MutationObserver === "undefined" || end.value === null) return () => {};
 
   const contentChanges = new MutationObserver(onChange);
   contentChanges.observe(end.value, { childList: true });
-  contentChanges.observe(row.value, { childList: true, subtree: true, characterData: true });
+  for (const part of [row.value, title.value, phone.value]) {
+    if (part !== null) contentChanges.observe(part, { childList: true, subtree: true, characterData: true });
+  }
   return () => contentChanges.disconnect();
 }
 
@@ -192,20 +209,21 @@ function widthOf(element: Element): number {
 }
 
 /**
- * The width an element's content needs, even when its box has been squeezed narrower. A row too wide for its room squeezes the
- * title's box (a flex item that may shrink) while its logo and name keep their size and overflow it, so the box's own width
- * would hide how much room the title really takes and make the row look as if it fit. `scrollWidth` is the content's extent;
- * it is a whole number, so it can read up to half a pixel high, which the tolerance in rowFits absorbs.
+ * The width of an element's text, read from the text itself rather than the element's box. A range over the contents is not cut to
+ * the box, so it is the same whether the name is drawn or clipped to 1px for screen readers (.visuallyHidden). It is exact to a
+ * fraction of a pixel, unlike `scrollWidth`, which is a whole number and would tip a row that fits exactly at a window width.
  */
-function naturalWidthOf(element: HTMLElement): number {
-  return Math.max(widthOf(element), element.scrollWidth);
+function textWidthOf(element: HTMLElement): number {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return range.getBoundingClientRect().width;
 }
 
 /**
- * Inline styles that lay the row out as the wide form does, out of sight and out of the flow: its natural width (max-content,
+ * Inline styles that lay a part out as it is in the page, out of sight and out of the flow: its natural width (max-content,
  * not cut to the bar's width by the global max-width: 100%), wherever it is placed.
  */
-const ROW_PROBE_STYLE = {
+const PART_PROBE_STYLE = {
   display: "flex",
   maxWidth: "none",
   position: "absolute",
@@ -214,17 +232,18 @@ const ROW_PROBE_STYLE = {
 } as const;
 
 /**
- * The width the row needs: its own width when it is drawn (in the wide form it never shrinks), and otherwise the width it takes
- * when laid out for a moment out of sight. The styles are put back exactly as they were before anything is painted.
+ * The width a part of the bar needs: its own width when it is drawn, and otherwise the width it takes when laid out for a moment
+ * out of sight. The styles are put back exactly as they were before anything is painted. In the wide form the row never shrinks,
+ * so its own width is its natural one.
  */
-function naturalWidthOfRow(row: HTMLElement): number {
-  if (isDrawn(row)) return widthOf(row);
+function widthOfWhenLaidOut(element: HTMLElement): number {
+  if (isDrawn(element)) return widthOf(element);
 
-  const inlineStyleBefore = row.getAttribute("style");
-  Object.assign(row.style, ROW_PROBE_STYLE);
-  const width = widthOf(row);
-  if (inlineStyleBefore === null) row.removeAttribute("style");
-  else row.setAttribute("style", inlineStyleBefore);
+  const inlineStyleBefore = element.getAttribute("style");
+  Object.assign(element.style, PART_PROBE_STYLE);
+  const width = widthOf(element);
+  if (inlineStyleBefore === null) element.removeAttribute("style");
+  else element.setAttribute("style", inlineStyleBefore);
   return width;
 }
 
@@ -242,34 +261,59 @@ function statusElements(parts: HeaderParts): Element[] {
   return children.filter((child) => child !== parts.phone.value && child !== parts.row.value && isDrawn(child));
 }
 
-/** What the observers watch: the bar, the title, the row and the status elements. */
+/** What the observers watch: the bar, the title, the row, the Menu button's block and the status elements. */
 function partsToObserve(parts: HeaderParts): Element[] {
-  const watched = [parts.nav.value, parts.title.value, parts.row.value, ...statusElements(parts)];
+  const watched = [parts.nav.value, parts.title.value, parts.row.value, parts.phone.value, ...statusElements(parts)];
   return watched.filter((element): element is Element => element !== null);
+}
+
+/**
+ * The title's width with its name shown: the logo, the gap between it and the name, and the name's text. Read from the parts, not
+ * from the title's box, so it is the same whether the name is hidden now or not (a hidden name is clipped to 1px; its text is not).
+ */
+function titleWidthWithName(parts: HeaderParts): number | undefined {
+  const { logo, name } = parts;
+  if (logo.value === null || name.value === null) return undefined;
+
+  // The logo and the name share the home link, whose gap sits between them (.siteHeaderHome)
+  const gapBetweenLogoAndName = pixelsOf(getComputedStyle(name.value.parentElement ?? name.value).columnGap);
+  return widthOf(logo.value) + gapBetweenLogoAndName + textWidthOf(name.value);
 }
 
 /**
  * Reads every width the decision needs, or undefined when a part is not there (the header is not on the page).
  *
- * The row is read as it lays out, in either form: in the wide form it keeps all the room it wants (it never shrinks) and in the
- * phone form CSS gives it its natural width (`width: max-content`), so both readings are the same number.
+ * The row and the Menu button's block are read as they lay out, or, when they are not drawn in this form, as they would lay out
+ * for a moment out of sight, so the widths do not depend on the form shown.
  */
 function measure(parts: HeaderParts): Measurements | undefined {
-  const { nav, title, end, row } = parts;
-  if (nav.value === null || title.value === null || end.value === null || row.value === null) return undefined;
+  const { row, phone } = parts;
+  const bar = barWidths(parts);
+  const titleWidth = titleWidthWithName(parts);
+  if (bar === undefined || titleWidth === undefined || row.value === null || phone.value === null) return undefined;
+
+  return {
+    widths: { ...bar, titleWidth, menuWidth: widthOfWhenLaidOut(phone.value) },
+    rowWidth: widthOfWhenLaidOut(row.value),
+  };
+}
+
+/**
+ * The bar's widths other than the title's and the Menu button's: the bar, its padding and gaps, and the statuses. Undefined when
+ * the bar is not on the page.
+ */
+function barWidths(parts: HeaderParts): Omit<HeaderWidths, "titleWidth" | "menuWidth"> | undefined {
+  const { nav, end } = parts;
+  if (nav.value === null || end.value === null) return undefined;
 
   const barStyle = getComputedStyle(nav.value);
   const endStyle = getComputedStyle(end.value);
   return {
-    widths: {
-      barWidth: widthOf(nav.value),
-      barPadding: pixelsOf(barStyle.paddingLeft) + pixelsOf(barStyle.paddingRight),
-      barGap: pixelsOf(barStyle.columnGap),
-      titleWidth: naturalWidthOf(title.value),
-      statusWidths: statusElements(parts).map(widthOf),
-      endGap: pixelsOf(endStyle.columnGap),
-    },
-    rowWidth: naturalWidthOfRow(row.value),
+    barWidth: widthOf(nav.value),
+    barPadding: pixelsOf(barStyle.paddingLeft) + pixelsOf(barStyle.paddingRight),
+    barGap: pixelsOf(barStyle.columnGap),
+    statusWidths: statusElements(parts).map(widthOf),
+    endGap: pixelsOf(endStyle.columnGap),
   };
 }
 
@@ -288,14 +332,14 @@ function regionHoldingFocus(parts: HeaderParts): FocusRegion {
 
 /**
  * When the control that had focus belongs to the form that is no longer shown, moves focus to the nearest control that is:
- * from the row to the Menu button (where the navigation went), from the Menu button or its panel to the home link (the name,
- * which is drawn in both forms and is the bar's first stop in the tab order). Otherwise focus is left where it is.
+ * from the row to the Menu button (where the navigation went), from the Menu button or its panel to the home link (the logo and
+ * name, which are drawn in both forms and are the bar's first stop in the tab order). Otherwise focus is left where it is.
  */
 function moveFocusIfHidden(parts: HeaderParts, regionWithFocus: FocusRegion, form: HeaderForm): void {
   if (regionWithFocus === "row" && form === "compact") {
     parts.phone.value?.querySelector<HTMLElement>(".siteHeaderMenuButton")?.focus();
   }
   if (regionWithFocus === "phone" && form === "wide") {
-    parts.title.value?.querySelector<HTMLElement>(".siteHeaderName")?.focus();
+    parts.title.value?.querySelector<HTMLElement>(".siteHeaderHome")?.focus();
   }
 }

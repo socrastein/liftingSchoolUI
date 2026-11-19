@@ -19,9 +19,10 @@ export const SUBPIXEL_TOLERANCE_PX = 0.5;
  * @property {number} barWidth The bar's whole width, padding included.
  * @property {number} barPadding The bar's left and right padding added together.
  * @property {number} barGap The space between the bar's title (logo and name) and the end, where the row is.
- * @property {number} titleWidth The title's width (logo and name).
+ * @property {number} titleWidth The title's width with its name shown (logo, gap and name), whether or not the name is hidden now.
  * @property {number[]} statusWidths The width of each thing the project put before the row (the `status` slot), in order.
  * @property {number} endGap The space between two neighbours in the end, which is also between the last status and the row.
+ * @property {number} menuWidth The Menu button's block (with the bell beside it, when there is one): what the phone form takes at the end.
  */
 
 /**
@@ -47,4 +48,16 @@ export function roomLeftForRow(widths) {
  */
 export function rowFits(naturalRowWidth, roomForRow) {
   return naturalRowWidth <= roomForRow + SUBPIXEL_TOLERANCE_PX;
+}
+
+/**
+ * Whether the title's name fits on the bar beside the things at the end that the phone form always shows: the statuses and the
+ * Menu button's block. The name is hidden (the logo alone shows) only when this is false, so it hides only where it would
+ * collide with the Menu button or overflow the bar, never because of a fixed width.
+ *
+ * @param {HeaderWidths} widths What the header measured, with the name's width included in titleWidth.
+ * @returns {boolean} True when the name can stay; false when it must be hidden.
+ */
+export function nameFitsBesideMenu(widths) {
+  return rowFits(widths.menuWidth, roomLeftForRow(widths));
 }
