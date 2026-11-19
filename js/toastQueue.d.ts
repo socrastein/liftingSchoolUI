@@ -1,4 +1,13 @@
 /**
+ * The state one queue keeps between calls. Its helpers below take it as their first argument, so each one reads and changes
+ * only the fields it names.
+ *
+ * @typedef {object} ToastQueueState
+ * @property {number} maxWaiting How many messages may wait behind the one on screen.
+ * @property {ToastRequest[]} waiting The requests waiting for their turn, oldest first.
+ * @property {ToastRequest | null} onScreen The request on screen now, or null when the screen is empty.
+ */
+/**
  * Makes a queue of toasts. The page shares one (`toastQueue`); tests make their own to start from empty.
  *
  * @param {number} [maxWaiting] How many messages may wait behind the one on screen; the oldest waiting ones are dropped first.
@@ -44,6 +53,24 @@ export const MAX_WAITING_TOASTS: 3;
 export const toastQueue: {
     request: (screen: ToastScreen, message: string) => Promise<void>;
     leave: (screen: ToastScreen) => void;
+};
+/**
+ * The state one queue keeps between calls. Its helpers below take it as their first argument, so each one reads and changes
+ * only the fields it names.
+ */
+export type ToastQueueState = {
+    /**
+     * How many messages may wait behind the one on screen.
+     */
+    maxWaiting: number;
+    /**
+     * The requests waiting for their turn, oldest first.
+     */
+    waiting: ToastRequest[];
+    /**
+     * The request on screen now, or null when the screen is empty.
+     */
+    onScreen: ToastRequest | null;
 };
 /**
  * Where a toast is drawn: one StatusToast instance.
