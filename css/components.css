@@ -1138,6 +1138,14 @@ textarea.input {
   white-space: nowrap;
 }
 
+/* With a bell a phone's header is crowded (name, status, bell and the Menu button), so the name is a step smaller there and
+   shows on more phones before it has to hide */
+@media (max-width: 439px) {
+  .siteHeaderWithBell .siteHeaderName {
+    font-size: var(--fontSizeMd);
+  }
+}
+
 .siteHeaderEnd {
   align-items: center;
   display: flex;
