@@ -772,10 +772,15 @@ textarea.input {
 
 /*
  * The visible title at the top of a page other than home (the page's h1), centred above its content, which starts one step
- * below. The words match the menu link that leads to the page, so a visitor knows they landed where they meant to.
+ * below. The words match the menu link that leads to the page, so a visitor knows they landed where they meant to. A single
+ * long word ("Measurements") would otherwise overflow a phone at this size: break-word keeps the word inside the column,
+ * and hyphens lets the browser split it at a hyphen by the page's lang (both the site and the app set it to "en"); a
+ * title that fits is untouched, so it looks exactly as before.
  */
 .pageTitle {
+  hyphens: auto;
   margin-block-end: var(--space3);
+  overflow-wrap: break-word;
   padding-inline: var(--space2);
   text-align: center;
 }
