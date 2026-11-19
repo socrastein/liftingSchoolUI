@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 import searchIcon from "../icons/search.svg";
 import clearIcon from "../icons/x.svg";
 
 /**
  * A search bar on a card, the way every search in the business's sites and apps looks: on the card a "Showing 12 of 66 studies"
  * line (announced politely, so a screen reader hears the new count after each change), then the search box with a magnifying
- * glass at its start, an x at its end while there is text, and no visible label. The default slot is for what a page adds under the box (more
- * options, a Clear button). `v-model` is the search text; the page does the filtering and passes the counts.
+ * glass at its start, an x at its end while there is text, and no visible label. A `hint` says what the search covers, under the box
+ * where it is always fully visible and stays while typing (a placeholder is cut off on a phone and gone once typing starts),
+ * and the box is described by it. The default slot is for what a page adds under the box (more options). `v-model` is the search text; the page does the filtering and passes the counts.
  */
 const searchText = defineModel<string>({ required: true });
 
@@ -24,6 +25,8 @@ const props = withDefaults(
     /** The input's accessible name, such as "Search studies"; the box has no visible label. */
     label: string;
     placeholder?: string;
+    /** What the search covers, shown under the box, such as "Search by name, muscle group, or movement." Optional. */
+    hint?: string;
   }>(),
   { placeholder: "Search" },
 );
@@ -43,6 +46,8 @@ const searchIconStyle = { maskImage: `url("${searchIcon}")` };
 const clearIconStyle = { maskImage: `url("${clearIcon}")` };
 
 const input = ref<HTMLInputElement>();
+/** The hint's id, so the box can name it as its description. */
+const hintId = useId();
 
 /** Empties the box and keeps the person typing: focus goes back to the input, which the pressed button would otherwise keep. */
 function clearSearch(): void {
@@ -65,19 +70,22 @@ function clearSearch(): void {
         type="search"
         :aria-label="label"
         :placeholder="placeholder"
+        :aria-describedby="hint ? hintId : undefined"
         autocomplete="off"
       />
       <button v-if="searchText !== ''" type="button" class="searchClear" aria-label="Clear search" @click="clearSearch">
         <span class="searchClearIcon" aria-hidden="true" :style="clearIconStyle" />
       </button>
     </div>
+    <p v-if="hint" :id="hintId" class="fieldNote searchHint">{{ hint }}</p>
     <slot />
   </div>
 </template>
 
 <style scoped>
-/* The note's own top margin would double the card's gap under it */
-.searchCount {
+/* The notes' own top margins would double the card's gap */
+.searchCount,
+.searchHint {
   margin: 0;
 }
 

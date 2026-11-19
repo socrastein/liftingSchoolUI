@@ -104,3 +104,18 @@ describe("SearchCard slot", () => {
     expect(mountCard().findAll(".card > *")).toHaveLength(2);
   });
 });
+
+describe("SearchCard hint", () => {
+  it("shows what the search covers under the box, and describes the box with it", () => {
+    const wrapper = mountCard({ hint: "Search by name, muscle group, or movement." });
+    const hint = wrapper.get(".searchHint");
+    expect(hint.text()).toBe("Search by name, muscle group, or movement.");
+    expect(wrapper.get("input").attributes("aria-describedby")).toBe(hint.attributes("id"));
+  });
+
+  it("draws nothing, and describes nothing, without one", () => {
+    const wrapper = mountCard();
+    expect(wrapper.find(".searchHint").exists()).toBe(false);
+    expect(wrapper.get("input").attributes("aria-describedby")).toBeUndefined();
+  });
+});

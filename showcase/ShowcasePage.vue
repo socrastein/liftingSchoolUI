@@ -884,6 +884,7 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
         noun="studies"
         noun-one="study"
         label="Search studies"
+        hint="Search by title, author, journal or topic."
       />
     </section>
 
