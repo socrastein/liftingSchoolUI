@@ -19,6 +19,7 @@ import ToggleSwitch from "../components/ToggleSwitch.vue";
 import CelebrationOverlay, { type CelebrationName } from "../components/CelebrationOverlay.vue";
 import ChoiceSwitch from "../components/ChoiceSwitch.vue";
 import LoadingScreen from "../components/LoadingScreen.vue";
+import SearchCard from "../components/SearchCard.vue";
 import ScrollToTop from "../components/ScrollToTop.vue";
 import SiteHeader, { type HeaderItem, type HeaderNotification } from "../components/SiteHeader.vue";
 import type { Product } from "../js/businessTools.js";
@@ -211,6 +212,10 @@ const sampleHintSwitch = ref(false);
 
 /** Whether the disclosure sample is open. */
 const isDisclosureOpen = ref(false);
+
+/** The search card sample: any text narrows the 66 sample studies to 12, so both count lines can be seen. */
+const sampleSearchText = ref("");
+const sampleSearchShown = computed(() => (sampleSearchText.value === "" ? 66 : 12));
 
 /** The anchored card sample: the button that opens it, and what was typed in it. */
 const cardOpener = ref<HTMLButtonElement | null>(null);
@@ -868,6 +873,18 @@ const arrowRightIcon = iconModules["../icons/arrow-right.svg"];
           </p>
         </DisclosureSection>
       </div>
+    </section>
+
+    <section class="showcaseSection" aria-labelledby="searchCard">
+      <h2 id="searchCard" class="h3">Search Card</h2>
+      <SearchCard
+        v-model="sampleSearchText"
+        :shown="sampleSearchShown"
+        :total="66"
+        noun="studies"
+        noun-one="study"
+        label="Search studies"
+      />
     </section>
 
     <section class="showcaseSection" aria-labelledby="highlights">
