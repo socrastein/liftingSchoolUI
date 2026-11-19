@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick } from "vue";
 import SiteHeader, { type HeaderItem, type HeaderNotification } from "../../components/SiteHeader.vue";
-import {
+import SiteHeaderNotifications, {
   notificationBadgeText,
   notificationsAnnouncement,
   notificationsButtonName,
@@ -211,6 +211,61 @@ describe("SiteHeader: the notifications panel", () => {
       "/food-log",
       "/check-in",
     ]);
+  });
+});
+
+describe("SiteHeaderNotifications: the opened event", () => {
+  /** Mounts the bell alone (outside clicks need a real document). */
+  function mountBell(notifications: HeaderNotification[] = [FOOD_LOG]): VueWrapper {
+    const bell = mount(SiteHeaderNotifications, {
+      props: { notifications, layout: "wide", linkComponent: FakeRouterLink },
+      attachTo: document.body,
+    });
+    mountedHeaders.push(bell);
+    return bell;
+  }
+
+  it("emits opened once when the panel goes from closed to open, and not on first render", async () => {
+    const bell = mountBell();
+    const button = bell.get("button.siteHeaderBell");
+
+    expect(bell.emitted("opened")).toBeUndefined();
+
+    await button.trigger("click");
+    expect(bell.emitted("opened")).toHaveLength(1);
+  });
+
+  it("emits nothing when the panel closes, and once more when it opens again", async () => {
+    const bell = mountBell();
+    const button = bell.get("button.siteHeaderBell");
+
+    await button.trigger("click");
+    await button.trigger("click");
+    expect(bell.emitted("opened")).toHaveLength(1);
+
+    await button.trigger("click");
+    expect(bell.emitted("opened")).toHaveLength(2);
+  });
+});
+
+describe("SiteHeader: the noticesOpened event", () => {
+  it("re-emits the bell's opened as noticesOpened, once per opening and not on close", async () => {
+    header = mountHeader([FOOD_LOG]);
+    const bell = header.get(".siteHeaderLinks .siteHeaderBell");
+
+    await bell.trigger("click");
+    expect(header.emitted("noticesOpened")).toHaveLength(1);
+
+    await bell.trigger("click");
+    expect(header.emitted("noticesOpened")).toHaveLength(1);
+  });
+
+  it("also comes from the phone bell, which is its own bell component", async () => {
+    header = mountHeader([FOOD_LOG]);
+    const phoneBell = header.get(".siteHeaderPhone .siteHeaderBell");
+
+    await phoneBell.trigger("click");
+    expect(header.emitted("noticesOpened")).toHaveLength(1);
   });
 });
 

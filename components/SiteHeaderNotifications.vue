@@ -33,7 +33,7 @@ export function notificationsAnnouncement(count: number): string {
 </script>
 
 <script setup lang="ts">
-import { computed, type Component } from "vue";
+import { computed, watch, type Component } from "vue";
 import bellIcon from "../icons/bell.svg";
 import SiteHeaderEntry, { type HeaderMenuEntry } from "./SiteHeaderEntry.vue";
 import { useHeaderPopup } from "./useHeaderPopup";
@@ -55,10 +55,21 @@ const props = defineProps<{
   linkComponent: Component;
 }>();
 
+const emit = defineEmits<{
+  /** The panel went from closed to open, by any means (a click, the keyboard); not on close, not on first render. */
+  opened: [];
+}>();
+
 const { isOpen, root, toggle, close, closeFromKeyboard } = useHeaderPopup();
 
 const count = computed(() => props.notifications.length);
 const panelId = computed(() => `notificationsPanel-${props.layout}`);
+
+// Opening is only ever by the bell (a click, or the keyboard on it), so the panel's open state says when it opens; the
+// watch means no other opening path can forget the event, and it starts closed, so first render emits nothing
+watch(isOpen, (open) => {
+  if (open) emit("opened");
+});
 
 /** The notifications as the header's menu rows, so a row looks and behaves like a Tools row (SiteHeaderEntry). */
 const rows = computed<HeaderMenuEntry[]>(() =>

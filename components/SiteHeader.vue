@@ -124,6 +124,12 @@ const { isForcedCompact, isNameShown } = useHeaderFit({
 watch(notificationCount, (count) => {
   announcement.value = count === undefined ? "" : notificationsAnnouncement(count);
 });
+
+const emit = defineEmits<{
+  /** The bell's panel went from closed to open: a page that refreshes what the bell lists (the app's coach's waiting
+   * counts) listens for this instead of every click on the document. */
+  noticesOpened: [];
+}>();
 </script>
 
 <template>
@@ -149,6 +155,7 @@ watch(notificationCount, (count) => {
             layout="phone"
             :notifications="notifications"
             :link-component="linkComponent"
+            @opened="emit('noticesOpened')"
           />
           <SiteHeaderPhoneMenu
             :items="items"
@@ -171,6 +178,7 @@ watch(notificationCount, (count) => {
             layout="wide"
             :notifications="notifications"
             :link-component="linkComponent"
+            @opened="emit('noticesOpened')"
           />
           <ThemeButton :storage-key="themeStorageKey" />
         </div>
